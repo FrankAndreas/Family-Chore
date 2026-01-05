@@ -1,0 +1,224 @@
+{
+    "common": {
+        "loading": "Loading...",
+        "error": "Error",
+        "success": "Success",
+        "cancel": "Cancel",
+        "save": "Save",
+        "edit": "Edit",
+        "delete": "Delete",
+        "create": "Create",
+        "update": "Update",
+        "close": "Close",
+        "yes": "Yes",
+        "no": "No",
+        "points": "points",
+        "pts": "pts"
+    },
+    "login": {
+        "title": "Welcome to ChoreSpec",
+        "subtitle": "Family Chore Management System",
+        "nickname": "Nickname",
+        "pin": "PIN (4 digits)",
+        "loginButton": "Login",
+        "error": {
+            "userNotFound": "User not found",
+            "incorrectPin": "Incorrect PIN",
+            "loginFailed": "Login failed. Please try again."
+        }
+    },
+    "navigation": {
+        "dashboard": "Dashboard",
+        "tasks": "Tasks",
+        "rewards": "Rewards",
+        "users": "Users",
+        "roles": "Roles",
+        "settings": "Settings",
+        "logout": "Logout",
+        "admin": "Admin"
+    },
+    "dashboard": {
+        "title": "Dashboard",
+        "welcome": "Welcome, {{name}}!",
+        "stats": {
+            "totalUsers": "Total Users",
+            "totalTasks": "Total Tasks",
+            "totalRewards": "Total Rewards",
+            "currentPoints": "Current Points",
+            "lifetimePoints": "Lifetime Points"
+        }
+    },
+    "tasks": {
+        "title": "Task Management",
+        "subtitle": "Create and manage household chores",
+        "addNew": "+ Add New Task",
+        "editTask": "Edit Task: {{name}}",
+        "createTask": "Create Task",
+        "updateTask": "Update Task",
+        "myDailyTasks": "My Daily Tasks",
+        "completeChores": "Complete your chores to earn points!",
+        "fields": {
+            "name": "Task Name",
+            "description": "Description",
+            "basePoints": "Base Points",
+            "assignedTo": "Assigned To",
+            "scheduleType": "Schedule Type",
+            "dueTime": "Due Time",
+            "dueDay": "Due Day",
+            "minDays": "Minimum Days Between",
+            "maxDays": "Maximum Days Between"
+        },
+        "scheduleTypes": {
+            "daily": "Daily - Task appears every day",
+            "weekly": "Weekly - Task appears on specific weekday",
+            "recurring": "Recurring - Task with cooldown period"
+        },
+        "scheduleInfo": {
+            "daily": "Appears at the same time every day",
+            "weekly": "Appears once per week on chosen day",
+            "recurring": "Reappears after cooldown period expires"
+        },
+        "assignedToAll": "All Family Members",
+        "todaysToDo": "Today's To-Do",
+        "completedToday": "Completed Today",
+        "noPendingTasks": "No pending tasks for today. Great job! 🌟",
+        "noCompletedTasks": "You haven't completed any tasks yet today.",
+        "markComplete": "Mark Complete",
+        "completing": "Completing...",
+        "doneAt": "Done at",
+        "dueAt": "Due",
+        "cooldown": "Cooldown",
+        "every": "Every",
+        "messages": {
+            "created": "Task created successfully! 🎉",
+            "updated": "Task updated successfully! ✅",
+            "completed": "Task completed! Points awarded. 🎉",
+            "createFailed": "Failed to create task",
+            "updateFailed": "Failed to update task",
+            "loadFailed": "Failed to load tasks",
+            "completeFailed": "Failed to complete task. Please try again."
+        },
+        "cooldownSettings": "Cooldown Settings",
+        "waitAtLeast": "Wait at least",
+        "day": "day",
+        "days": "days",
+        "afterCompletion": "after completion",
+        "shouldBeDoneWithin": "Should be done within",
+        "cooldownRange": "Cooldown Range",
+        "canReappear": "Can reappear",
+        "overdue": "Overdue",
+        "examples": "Examples: Vacuum (3-5 days), Car Wash (7-10 days), Deep Clean (4-6 days)"
+    },
+    "rewards": {
+        "title": "Reward Hub",
+        "subtitle": "You have <1>{{points}} points</1> to spend!",
+        "add_button": "Add New Reward",
+        "cancel_button": "Cancel",
+        "loading": "Loading rewards...",
+        "current_goal": {
+            "title": "Your Current Goal",
+            "ready": "READY TO REDEEM!",
+            "achieved": "✨ Goal achieved!",
+            "points_needed": "{{points}} more points needed"
+        },
+        "create_form": {
+            "title": "Create New Reward",
+            "name_label": "Reward Name *",
+            "name_placeholder": "e.g., Extra Screen Time",
+            "cost_label": "Cost (Points) *",
+            "tier_label": "Tier Level",
+            "tiers": {
+                "bronze": "🥉 Bronze (Small rewards)",
+                "silver": "🥈 Silver (Medium rewards)",
+                "gold": "🥇 Gold (Big rewards)"
+            },
+            "description_label": "Description",
+            "description_placeholder": "Describe what this reward includes...",
+            "submit_button": "Create Reward",
+            "submitting": "Creating..."
+        },
+        "card": {
+            "goal_indicator": "🎯 Current Goal",
+            "no_description": "No description provided",
+            "cost_label": "Cost:",
+            "points": "points",
+            "points_val": "💰 {{points}} points",
+            "set_goal_button": "Set as Goal",
+            "can_afford_badge": "✨ Can afford!"
+        },
+        "empty_state": {
+            "message": "No rewards available yet.",
+            "admin_hint": "Create one to get started!"
+        },
+        "toasts": {
+            "create_success": "Reward created successfully! 🎉",
+            "goal_success": "Goal set successfully! 🎯",
+            "load_error": "Failed to load rewards",
+            "create_error": "Failed to create reward",
+            "goal_error": "Failed to set goal"
+        },
+        "tier_names": {
+            "1": "Bronze",
+            "2": "Silver",
+            "3": "Gold"
+        }
+    },
+    "users": {
+        "title": "User Management",
+        "subtitle": "Manage family members",
+        "addNew": "+ Add New User",
+        "fields": {
+            "nickname": "Nickname",
+            "pin": "PIN (4 digits)",
+            "role": "Role"
+        },
+        "currentPoints": "Current",
+        "lifetimePoints": "Lifetime",
+        "messages": {
+            "created": "User created successfully! 🎉",
+            "createFailed": "Failed to create user",
+            "loadFailed": "Failed to load users"
+        }
+    },
+    "roles": {
+        "title": "Role Management",
+        "subtitle": "Configure point multipliers",
+        "multiplier": "Multiplier",
+        "edit": "Edit",
+        "currentValue": "Current: {{value}}x",
+        "messages": {
+            "updated": "Role multiplier updated! ✅",
+            "updateFailed": "Failed to update multiplier",
+            "loadFailed": "Failed to load roles"
+        }
+    },
+    "settings": {
+        "title": "Settings",
+        "subtitle": "Configure your preferences",
+        "language": {
+            "title": "Language",
+            "description": "Choose your preferred language",
+            "familyDefault": "Family Default",
+            "userPreference": "Your Preference",
+            "useDefault": "Use Family Default",
+            "override": "Override for me",
+            "languages": {
+                "en": "English",
+                "de": "Deutsch (German)"
+            }
+        },
+        "messages": {
+            "saved": "Settings saved successfully! ✅",
+            "saveFailed": "Failed to save settings"
+        }
+    },
+    "weekdays": {
+        "monday": "Monday",
+        "tuesday": "Tuesday",
+        "wednesday": "Wednesday",
+        "thursday": "Thursday",
+        "friday": "Friday",
+        "saturday": "Saturday",
+        "sunday": "Sunday"
+    }
+}

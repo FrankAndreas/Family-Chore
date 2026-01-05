@@ -1,0 +1,224 @@
+{
+    "common": {
+        "loading": "Lädt...",
+        "error": "Fehler",
+        "success": "Erfolg",
+        "cancel": "Abbrechen",
+        "save": "Speichern",
+        "edit": "Bearbeiten",
+        "delete": "Löschen",
+        "create": "Erstellen",
+        "update": "Aktualisieren",
+        "close": "Schließen",
+        "yes": "Ja",
+        "no": "Nein",
+        "points": "Punkte",
+        "pts": "Pkt"
+    },
+    "login": {
+        "title": "Willkommen bei ChoreSpec",
+        "subtitle": "Familien-Aufgaben-Verwaltungssystem",
+        "nickname": "Spitzname",
+        "pin": "PIN (4 Ziffern)",
+        "loginButton": "Anmelden",
+        "error": {
+            "userNotFound": "Benutzer nicht gefunden",
+            "incorrectPin": "Falsche PIN",
+            "loginFailed": "Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut."
+        }
+    },
+    "navigation": {
+        "dashboard": "Dashboard",
+        "tasks": "Aufgaben",
+        "rewards": "Belohnungen",
+        "users": "Benutzer",
+        "roles": "Rollen",
+        "settings": "Einstellungen",
+        "logout": "Abmelden",
+        "admin": "Admin"
+    },
+    "dashboard": {
+        "title": "Dashboard",
+        "welcome": "Willkommen, {{name}}!",
+        "stats": {
+            "totalUsers": "Benutzer insgesamt",
+            "totalTasks": "Aufgaben insgesamt",
+            "totalRewards": "Belohnungen insgesamt",
+            "currentPoints": "Aktuelle Punkte",
+            "lifetimePoints": "Lebenszeitpunkte"
+        }
+    },
+    "tasks": {
+        "title": "Aufgabenverwaltung",
+        "subtitle": "Haushaltsaufgaben erstellen und verwalten",
+        "addNew": "+ Neue Aufgabe",
+        "editTask": "Aufgabe bearbeiten: {{name}}",
+        "createTask": "Aufgabe erstellen",
+        "updateTask": "Aufgabe aktualisieren",
+        "myDailyTasks": "Meine täglichen Aufgaben",
+        "completeChores": "Erledige deine Aufgaben, um Punkte zu verdienen!",
+        "fields": {
+            "name": "Aufgabenname",
+            "description": "Beschreibung",
+            "basePoints": "Basispunkte",
+            "assignedTo": "Zugewiesen an",
+            "scheduleType": "Zeitplan-Typ",
+            "dueTime": "Fälligkeitszeit",
+            "dueDay": "Fälligkeitstag",
+            "minDays": "Minimale Tage dazwischen",
+            "maxDays": "Maximale Tage dazwischen"
+        },
+        "scheduleTypes": {
+            "daily": "Täglich - Aufgabe erscheint jeden Tag",
+            "weekly": "Wöchentlich - Aufgabe erscheint an bestimmtem Wochentag",
+            "recurring": "Wiederkehrend - Aufgabe mit Abkühlzeit"
+        },
+        "scheduleInfo": {
+            "daily": "Erscheint jeden Tag zur gleichen Zeit",
+            "weekly": "Erscheint einmal pro Woche am gewählten Tag",
+            "recurring": "Erscheint nach Ablauf der Abkühlzeit erneut"
+        },
+        "assignedToAll": "Alle Familienmitglieder",
+        "todaysToDo": "Heutige Aufgaben",
+        "completedToday": "Heute erledigt",
+        "noPendingTasks": "Keine ausstehenden Aufgaben für heute. Toll gemacht! 🌟",
+        "noCompletedTasks": "Du hast heute noch keine Aufgaben erledigt.",
+        "markComplete": "Als erledigt markieren",
+        "completing": "Wird erledigt...",
+        "doneAt": "Erledigt um",
+        "dueAt": "Fällig",
+        "cooldown": "Abkühlzeit",
+        "every": "Jeden",
+        "messages": {
+            "created": "Aufgabe erfolgreich erstellt! 🎉",
+            "updated": "Aufgabe erfolgreich aktualisiert! ✅",
+            "completed": "Aufgabe erledigt! Punkte vergeben. 🎉",
+            "createFailed": "Aufgabe konnte nicht erstellt werden",
+            "updateFailed": "Aufgabe konnte nicht aktualisiert werden",
+            "loadFailed": "Aufgaben konnten nicht geladen werden",
+            "completeFailed": "Aufgabe konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut."
+        },
+        "cooldownSettings": "Abkühlzeit-Einstellungen",
+        "waitAtLeast": "Mindestens warten",
+        "day": "Tag",
+        "days": "Tage",
+        "afterCompletion": "nach Erledigung",
+        "shouldBeDoneWithin": "Sollte erledigt werden innerhalb von",
+        "cooldownRange": "Abkühlzeitbereich",
+        "canReappear": "Kann wieder erscheinen",
+        "overdue": "Überfällig",
+        "examples": "Beispiele: Staubsaugen (3-5 Tage), Autowäsche (7-10 Tage), Gründliche Reinigung (4-6 Tage)"
+    },
+    "rewards": {
+        "title": "Prämien-Shop",
+        "subtitle": "Du hast <1>{{points}} Punkte</1> zum Ausgeben!",
+        "add_button": "Neue Belohnung hinzufügen",
+        "cancel_button": "Abbrechen",
+        "loading": "Lade Belohnungen...",
+        "current_goal": {
+            "title": "Dein aktuelles Ziel",
+            "ready": "BEREIT ZUM EINLÖSEN!",
+            "achieved": "✨ Ziel erreicht!",
+            "points_needed": "noch {{points}} Punkte benötigt"
+        },
+        "create_form": {
+            "title": "Neue Belohnung erstellen",
+            "name_label": "Name der Belohnung *",
+            "name_placeholder": "z.B. Extra Bildschirmzeit",
+            "cost_label": "Kosten (Punkte) *",
+            "tier_label": "Stufe",
+            "tiers": {
+                "bronze": "🥉 Bronze (Kleine Belohnungen)",
+                "silver": "🥈 Silber (Mittlere Belohnungen)",
+                "gold": "🥇 Gold (Große Belohnungen)"
+            },
+            "description_label": "Beschreibung",
+            "description_placeholder": "Beschreibe, was diese Belohnung beinhaltet...",
+            "submit_button": "Erstellen",
+            "submitting": "Erstelle..."
+        },
+        "card": {
+            "goal_indicator": "🎯 Aktuelles Ziel",
+            "no_description": "Keine Beschreibung verfügbar",
+            "cost_label": "Kosten:",
+            "points": "Punkte",
+            "points_val": "💰 {{points}} Punkte",
+            "set_goal_button": "Als Ziel setzen",
+            "can_afford_badge": "✨ Leistbar!"
+        },
+        "empty_state": {
+            "message": "Noch keine Belohnungen verfügbar.",
+            "admin_hint": "Erstelle eine, um zu beginnen!"
+        },
+        "toasts": {
+            "create_success": "Belohnung erfolgreich erstellt! 🎉",
+            "goal_success": "Ziel erfolgreich gesetzt! 🎯",
+            "load_error": "Fehler beim Laden der Belohnungen",
+            "create_error": "Fehler beim Erstellen der Belohnung",
+            "goal_error": "Fehler beim Setzen des Ziels"
+        },
+        "tier_names": {
+            "1": "Bronze",
+            "2": "Silber",
+            "3": "Gold"
+        }
+    },
+    "users": {
+        "title": "Benutzerverwaltung",
+        "subtitle": "Familienemitglieder verwalten",
+        "addNew": "+ Neuer Benutzer",
+        "fields": {
+            "nickname": "Spitzname",
+            "pin": "PIN (4 Ziffern)",
+            "role": "Rolle"
+        },
+        "currentPoints": "Aktuell",
+        "lifetimePoints": "Lebenszeit",
+        "messages": {
+            "created": "Benutzer erfolgreich erstellt! 🎉",
+            "createFailed": "Benutzer konnte nicht erstellt werden",
+            "loadFailed": "Benutzer konnten nicht geladen werden"
+        }
+    },
+    "roles": {
+        "title": "Rollenverwaltung",
+        "subtitle": "Punkte-Multiplikatoren konfigurieren",
+        "multiplier": "Multiplikator",
+        "edit": "Bearbeiten",
+        "currentValue": "Aktuell: {{value}}x",
+        "messages": {
+            "updated": "Rollen-Multiplikator aktualisiert! ✅",
+            "updateFailed": "Multiplikator konnte nicht aktualisiert werden",
+            "loadFailed": "Rollen konnten nicht geladen werden"
+        }
+    },
+    "settings": {
+        "title": "Einstellungen",
+        "subtitle": "Konfiguriere deine Einstellungen",
+        "language": {
+            "title": "Sprache",
+            "description": "Wähle deine bevorzugte Sprache",
+            "familyDefault": "Familien-Standard",
+            "userPreference": "Deine Einstellung",
+            "useDefault": "Familien-Standard verwenden",
+            "override": "Für mich überschreiben",
+            "languages": {
+                "en": "English (Englisch)",
+                "de": "Deutsch"
+            }
+        },
+        "messages": {
+            "saved": "Einstellungen erfolgreich gespeichert! ✅",
+            "saveFailed": "Einstellungen konnten nicht gespeichert werden"
+        }
+    },
+    "weekdays": {
+        "monday": "Montag",
+        "tuesday": "Dienstag",
+        "wednesday": "Mittwoch",
+        "thursday": "Donnerstag",
+        "friday": "Freitag",
+        "saturday": "Samstag",
+        "sunday": "Sonntag"
+    }
+}

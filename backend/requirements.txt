@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+python-multipart
+
+# Testing dependencies
+pytest==7.4.3
+pytest-bdd==7.0.1
+httpx==0.25.2
+pytest-cov==4.1.0
+pytest-asyncio==0.21.1
+flake8>=6.0.0
