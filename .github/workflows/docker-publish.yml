@@ -26,6 +26,9 @@ jobs:
           # Run flake8 on backend and tests directories
           # Enforce max line length of 120 chars
           flake8 backend tests --count --max-line-length=120 --statistics
+      - name: Type check with mypy
+        run: |
+          mypy backend/
       - name: Run Tests
         run: |
           export PYTHONPATH=$PWD
@@ -45,6 +48,9 @@ jobs:
       - name: Lint
         working-directory: ./frontend
         run: npm run lint
+      - name: Type check
+        working-directory: ./frontend
+        run: npx tsc --noEmit
       - name: Build
         working-directory: ./frontend
         run: npm run build
