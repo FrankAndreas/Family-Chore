@@ -70,3 +70,4 @@ For any significant feature:
 2. **NO_BLIND_FIXES** - Always identify root cause first.
 3. **SPEC_FIRST** - Ask for clarification on ambiguous requirements.
 4. **QUOTA_INTELLIGENCE** - Always verify model-task fit to save credits.
+5. **FRESH_CONTEXT** - After major milestones, suggest committing and restarting for a clean session.
