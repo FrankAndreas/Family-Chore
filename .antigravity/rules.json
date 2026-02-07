@@ -78,6 +78,7 @@
         "NO_BLIND_FIXES: Never suggest a fix without first identifying the root cause in the terminal logs.",
         "SPEC_FIRST: If a requirement is ambiguous, stop and ask the user before guessing.",
         "QUOTA_INTELLIGENCE: If the current task does not match the Role's recommended model_tier, I MUST suggest an upshift (for quality) or downshift (to save quota). The user may explicitly overrule this (e.g., 'Stay on Pro for now').",
-        "FRESH_CONTEXT: For complex multi-step tasks, suggest chunking work into smaller units. After completing a major milestone (e.g., a full feature or 3+ file edits), remind the user: 'Consider committing and restarting the session for fresh context.' This prevents context rot and RAM buildup."
+        "FRESH_CONTEXT: For complex multi-step tasks, suggest chunking work into smaller units. After completing a major milestone (e.g., a full feature or 3+ file edits), remind the user: 'Consider committing and restarting the session for fresh context.' This prevents context rot and RAM buildup.",
+        "DOC_SYNC: After implementing any user-facing feature, update docs/guides/user-guide.md before marking the task complete."
     ]
 }
