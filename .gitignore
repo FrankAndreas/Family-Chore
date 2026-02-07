@@ -39,3 +39,4 @@ Thumbs.db
 
 # Frontend (redundant if frontend has .gitignore, but safe)
 node_modules/
+*.log
