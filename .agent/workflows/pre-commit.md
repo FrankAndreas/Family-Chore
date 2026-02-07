@@ -2,7 +2,11 @@
 description: Run all quality checks before committing
 ---
 
-Run these checks before git commit/push to catch CI failures early:
+Run these checks before git commit/push to catch CI failures early.
+
+---
+**💡 Quota Recommendation**: Use **Gemini 3 Flash** for this workflow. Running tests and linting are QA tasks.
+---
 
 // turbo-all
 

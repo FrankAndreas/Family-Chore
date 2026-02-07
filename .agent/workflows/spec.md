@@ -4,6 +4,10 @@ description: Create a feature specification before implementation
 
 Use this workflow when starting a new feature. Run before any coding.
 
+---
+**💡 Quota Recommendation**: Use **Gemini 3 Pro** or **Claude** for this workflow. Drafting specifications requires high-tier reasoning.
+---
+
 ## 1. Describe the Feature
 Tell me what you want to build in plain language.
 

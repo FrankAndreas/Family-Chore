@@ -4,6 +4,10 @@ description: Trigger a manual daily reset or cron job
 
 Use this workflow to manually trigger the daily reset logic (e.g., for testing or if a cron job failed).
 
+---
+**💡 Quota Recommendation**: Use **Gemini 3 Flash** for this workflow. This is a simple administrative task.
+---
+
 // turbo
 1. **Trigger Backend Daily Reset**
 ```bash

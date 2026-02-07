@@ -4,27 +4,27 @@
     "agent_roles": [
         {
             "role": "Architect",
-            "model": "gemini-3-pro-high",
+            "model_tier": "High (Pro/Claude)",
             "focus": "Logic flow, API design, and PLAN.md ownership. References docs/master-spec.md for system truth."
         },
         {
             "role": "Executor",
-            "model": "gemini-3-pro-low",
+            "model_tier": "Mid/Low (Pro-low/Flash)",
             "focus": "Standard code implementation and modular refactoring."
         },
         {
             "role": "QA_Nerd",
-            "model": "gemini-3-flash",
+            "model_tier": "Low (Flash)",
             "focus": "Test automation, bug hunting, and browser verification."
         },
         {
             "role": "Librarian",
-            "model": "gemini-3-flash",
+            "model_tier": "Low (Flash)",
             "focus": "State tracking, context pruning, and updating STATE.md."
         },
         {
             "role": "Product_Owner",
-            "model": "gemini-3-pro-high",
+            "model_tier": "High (Pro/Claude)",
             "focus": "Requirement gathering, updating docs/master-spec.md, and verifying feature alignment with user goals."
         }
     ],
@@ -51,6 +51,6 @@
         "STRICT_NO_DELETE: Never delete blocks of code; comment them out or move to /temp/legacy.",
         "NO_BLIND_FIXES: Never suggest a fix without first identifying the root cause in the terminal logs.",
         "SPEC_FIRST: If a requirement is ambiguous, stop and ask the user before guessing.",
-        "QUOTA_SAFETY: For repetitive tasks (linting, docs), always switch to 'Fast Mode' (Gemini 3 Flash)."
+        "QUOTA_INTELLIGENCE: If the current task does not match the Role's recommended model_tier, I MUST suggest an upshift (for quality) or downshift (to save quota). The user may explicitily overrule this (e.g., 'Stay on Pro for now')."
     ]
 }

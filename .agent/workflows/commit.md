@@ -4,6 +4,10 @@ description: Create clean, meaningful commits and push to remote
 
 Use this workflow to stage changes intelligently and create descriptive commits.
 
+---
+**💡 Quota Recommendation**: Use **Gemini 3 Flash** for this workflow. Staging and committing are librarian/chore tasks.
+---
+
 // turbo-all
 
 1. **Review Changed Files**

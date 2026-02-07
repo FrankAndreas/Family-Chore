@@ -1,86 +1,72 @@
 # Quick Reference: Agent Prompting Guide
 
-## Agent Roles
+## Agent Roles & Model Tiers
 
-### 🏗️ Architect (gemini-3-pro-high)
-**Use for:** Planning, API design, logic flow, PLAN.md updates
+### 🏗️ Architect
+**Recommended Tier:** High (Pro/Claude)  
+**Use for:** Planning, API design, logic flow, docs/master-spec.md updates.
 **Prompt prefix:** "As Architect..."
-```
-Examples:
-- "As Architect, design the notification system architecture"
-- "As Architect, review and update PLAN.md for the rewards feature"
-- "As Architect, what's the best approach for real-time sync?"
-```
 
-### ⚡ Executor (gemini-3-pro-low)
-**Use for:** Code implementation, refactoring, standard changes
-**Prompt prefix:** "As Executor..." or just describe the task
-```
-Examples:
-- "Implement the notification service"
-- "Add CRUD endpoints for rewards"
-- "Refactor the task completion logic"
-```
+### ⚡ Executor
+**Recommended Tier:** Mid/Low (Pro-low/Flash)  
+**Use for:** Code implementation, refactoring, standard changes.
+**Prompt prefix:** "As Executor..." or just describe the task.
 
-### 🔍 QA_Nerd (gemini-3-flash)
-**Use for:** Testing, browser verification, bug hunting
+### 🔍 QA_Nerd
+**Recommended Tier:** Low (Flash)  
+**Use for:** Testing, browser verification, bug hunting.
 **Prompt prefix:** "As QA_Nerd..."
-```
-Examples:
-- "As QA_Nerd, verify the login flow works in browser"
-- "As QA_Nerd, run all tests and fix failures"
-- "As QA_Nerd, find the root cause of this error: [paste error]"
-```
 
-### 📚 Librarian (gemini-3-flash)
-**Use for:** Context management, STATE.md updates, summarization
+### 📚 Librarian
+**Recommended Tier:** Low (Flash)  
+**Use for:** Context management, STATE.md updates, summarization.
 **Prompt prefix:** "As Librarian..."
-```
-Examples:
-- "As Librarian, update STATE.md with today's changes"
-- "As Librarian, summarize what we've done this session"
-- "As Librarian, what's the current state of the project?"
-```
 
-### 📋 Product_Owner (gemini-3-pro-high)
+### 📋 Product_Owner
+**Recommended Tier:** High (Pro/Claude)  
 **Use for:** Drafting specs, requirement gathering, and updating docs/master-spec.md.
 **Prompt prefix:** "As Product_Owner..." or use `/spec`
-```
-Examples:
-- "As Product_Owner, draft a spec for [feature]"
-- "As Product_Owner, what clarifications do you need for [requirement]?"
-- "As Product_Owner, update docs/master-spec.md with the latest implementation"
-```
+
+---
+
+## 💡 Quota Intelligence Protocol
+
+I am now calibrated to monitor your quota usage.
+1. **Model Check**: If you use a **High** model for a **Low** task (e.g., using Claude to update `STATE.md`), I will suggest a **Downshift** to Flash.
+2. **Quality Check**: If you use a **Low** model for a **High** task (e.g., using Flash for complex API design), I will suggest an **Upshift** to Pro/Claude.
+3. **Overrule**: You can always ignore these suggestions by saying "Stay on [model]" or "Overrule: I have plenty of credits."
+
+---
 
 ## Workflow: SPEC-PLAN-EXECUTE-VERIFY
 
 For any significant feature:
 
-0. **SPEC** (Product_Owner)
+0. **SPEC** (Product_Owner - High Tier)
    "As Product_Owner, draft a spec for [feature]"
 
-1. **PLAN** (Architect)
+1. **PLAN** (Architect - High Tier)
    "Plan the [feature] - what files, endpoints, and components are needed?"
 
-2. **EXECUTE** (Executor)
+2. **EXECUTE** (Executor - Mid/Low Tier)
    "Implement the plan" or "Implement [specific part]"
 
-3. **VERIFY** (QA_Nerd)
+3. **VERIFY** (QA_Nerd - Low Tier)
    "Verify [feature] works in browser" or "/pre-commit"
 
 ## Quick Commands
 
-| Command | What it does |
-|---------|--------------|
-| `/pre-commit` | Run all quality checks |
-| `/spec` | Draft a feature specification |
-| "Run tests" | Execute pytest |
-| "Check in browser" | Browser verification |
-| "Update STATE.md" | Librarian context sync |
+| Command | What it does | Recommended Model |
+|---------|--------------|-------------------|
+| `/pre-commit` | Run all quality checks | Flash |
+| `/spec` | Draft a feature specification | Pro/Claude |
+| "Run tests" | Execute pytest | Flash |
+| "Check in browser" | Browser verification | Flash |
+| "Update STATE.md" | Librarian context sync | Flash |
 
 ## Global Constraints (from rules.json)
 
-1. **STRICT_NO_DELETE** - Code is commented/moved, not deleted
-2. **NO_BLIND_FIXES** - Always identify root cause first
-3. **SPEC_FIRST** - Ask for clarification on ambiguous requirements
-4. **QUOTA_SAFETY** - Use Flash model for repetitive tasks
+1. **STRICT_NO_DELETE** - Code is commented/moved, not deleted.
+2. **NO_BLIND_FIXES** - Always identify root cause first.
+3. **SPEC_FIRST** - Ask for clarification on ambiguous requirements.
+4. **QUOTA_INTELLIGENCE** - Always verify model-task fit to save credits.
