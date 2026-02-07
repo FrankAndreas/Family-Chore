@@ -182,6 +182,8 @@ class TaskInstance(TaskInstanceBase):
     id: int
     completed_at: Optional[datetime] = None
     completion_photo_url: Optional[str] = None
+    task: Optional[Task] = None  # Include task details for Family Dashboard
+    user: Optional[User] = None  # Include user details
 
     model_config = ConfigDict(from_attributes=True)
 
