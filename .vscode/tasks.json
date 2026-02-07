@@ -2,9 +2,37 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Backend: Lint & Test",
+            "label": "Backend: Lint (flake8)",
             "type": "shell",
-            "command": "./venv/bin/flake8 backend tests --count --max-line-length=120 --statistics && export PYTHONPATH=${workspaceFolder} && ./venv/bin/pytest tests/ -v",
+            "command": "./venv/bin/python -m flake8 backend tests --max-line-length=120",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": "test",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Backend: Type Check (mypy)",
+            "type": "shell",
+            "command": "./venv/bin/python -m mypy backend/",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": "test",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Backend: Tests (pytest)",
+            "type": "shell",
+            "command": "export PYTHONPATH=${workspaceFolder} && ./venv/bin/pytest tests/ -v",
             "options": {
                 "cwd": "${workspaceFolder}"
             },
@@ -19,9 +47,9 @@
             "problemMatcher": []
         },
         {
-            "label": "Frontend: Lint & Build",
+            "label": "Frontend: Lint (ESLint)",
             "type": "shell",
-            "command": "npm run lint && npm run build",
+            "command": "npm run lint",
             "options": {
                 "cwd": "${workspaceFolder}/frontend"
             },
@@ -33,13 +61,48 @@
             "problemMatcher": []
         },
         {
-            "label": "Full CI Check",
+            "label": "Frontend: Type Check (TypeScript)",
+            "type": "shell",
+            "command": "npx tsc --noEmit",
+            "options": {
+                "cwd": "${workspaceFolder}/frontend"
+            },
+            "group": "test",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Frontend: Build",
+            "type": "shell",
+            "command": "npm run build",
+            "options": {
+                "cwd": "${workspaceFolder}/frontend"
+            },
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "🚀 Full Pre-Commit Check",
             "dependsOn": [
-                "Backend: Lint & Test",
-                "Frontend: Lint & Build"
+                "Backend: Lint (flake8)",
+                "Backend: Type Check (mypy)",
+                "Backend: Tests (pytest)",
+                "Frontend: Lint (ESLint)",
+                "Frontend: Type Check (TypeScript)"
             ],
+            "dependsOrder": "sequence",
             "problemMatcher": [],
-            "group": "build"
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         },
         {
             "label": "Fix Python Format (autopep8)",

@@ -1,0 +1,21 @@
+#!/bin/sh
+
+echo "🔍 Running pre-commit checks..."
+
+# Frontend lint
+echo "📋 Frontend ESLint..."
+cd frontend && npm run lint || exit 1
+
+# Frontend TypeScript
+echo "📋 Frontend TypeScript..."
+npx tsc --noEmit || exit 1
+
+# Backend flake8
+echo "🐍 Backend flake8..."
+cd .. && ./venv/bin/python -m flake8 backend tests --max-line-length=120 || exit 1
+
+# Backend mypy
+echo "🐍 Backend mypy..."
+./venv/bin/python -m mypy backend/ || exit 1
+
+echo "✅ All checks passed!"

@@ -1,0 +1,16 @@
+{
+  "name": "family-chore",
+  "private": true,
+  "scripts": {
+    "lint:backend": "cd backend && flake8 . --max-line-length=120",
+    "lint:frontend": "cd frontend && npm run lint",
+    "typecheck:backend": "mypy backend/",
+    "typecheck:frontend": "cd frontend && npx tsc --noEmit",
+    "test:backend": "pytest tests/ -v",
+    "precommit": "npm run lint:frontend && npm run typecheck:frontend",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.0.0"
+  }
+}
