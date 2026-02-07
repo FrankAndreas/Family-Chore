@@ -24,7 +24,11 @@
         }
     ],
     "agent_behaviors": {
-        "workflow_protocol": "PLAN-EXECUTE-VERIFY",
+        "workflow_protocol": "SPEC-PLAN-EXECUTE-VERIFY",
+        "spec_phase": {
+            "require": "User confirmation",
+            "action": "Define acceptance criteria, edge cases, and BDD scenarios before any technical planning."
+        },
         "pre_flight_check": {
             "require": "PLAN.md",
             "action": "Architect must validate technical approach before Executor writes code."
