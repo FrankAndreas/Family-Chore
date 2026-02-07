@@ -54,6 +54,23 @@ For any significant feature:
 3. **VERIFY** (QA_Nerd - Low Tier)
    "Verify [feature] works in browser" or "/pre-commit"
 
+---
+
+## 🔄 Agent Handoff Protocol
+
+At the end of each session, I will suggest the next agent based on this flow:
+
+| Current Role | Next Role | Suggested Prompt |
+|--------------|-----------|------------------|
+| Product_Owner | Architect | "As Architect, plan the implementation for this spec." |
+| Architect | Executor | "As Executor, implement the plan." |
+| Executor | QA_Nerd | "As QA_Nerd, verify the implementation." |
+| QA_Nerd | Librarian | "As Librarian, update STATE.md and LEARNINGS.md." |
+| Librarian | Fresh Session | Start new conversation: "What's my next step?" |
+
+**To resume after a break**: Open a new conversation and say: **"What's my next step?"**  
+I will read `STATE.md` and suggest the appropriate action.
+
 ## Quick Commands
 
 | Command | What it does | Recommended Model |

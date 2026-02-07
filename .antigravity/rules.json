@@ -47,6 +47,32 @@
             "action": "Librarian summarizes recent changes into STATE.md to prevent context rot."
         }
     },
+    "agent_handoff": {
+        "description": "At the end of each session, suggest the next agent role based on this flow.",
+        "flow": {
+            "Product_Owner": {
+                "next": "Architect",
+                "prompt": "As Architect, plan the implementation for this spec."
+            },
+            "Architect": {
+                "next": "Executor",
+                "prompt": "As Executor, implement the plan."
+            },
+            "Executor": {
+                "next": "QA_Nerd",
+                "prompt": "As QA_Nerd, verify the implementation."
+            },
+            "QA_Nerd": {
+                "next": "Librarian",
+                "prompt": "As Librarian, update STATE.md and LEARNINGS.md."
+            },
+            "Librarian": {
+                "next": "Fresh Session",
+                "prompt": "Start a new conversation and ask: 'What's my next step?'"
+            }
+        },
+        "state_field": "next_session_prompt"
+    },
     "global_constraints": [
         "STRICT_NO_DELETE: Never delete blocks of code; comment them out or move to /temp/legacy.",
         "NO_BLIND_FIXES: Never suggest a fix without first identifying the root cause in the terminal logs.",

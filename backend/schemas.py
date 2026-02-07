@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, Field, field_validator, model_validator, ConfigDict
 from datetime import datetime
 
@@ -205,3 +205,69 @@ class Reward(RewardBase):
     id: int
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# --- Task Import/Export Schemas ---
+
+
+class TaskImportItem(BaseModel):
+    """Single task in import format - uses role name instead of ID for readability."""
+    name: str = Field(..., min_length=1, max_length=100, description="Task name")
+    description: str = Field(..., min_length=1, max_length=500, description="Task description")
+    base_points: int = Field(..., gt=0, le=1000, description="Base points (1-1000)")
+    assigned_role: Optional[str] = Field(None, description="Role name (e.g., 'Child', 'Teenager')")
+    schedule_type: str = Field("daily", description="Schedule type: daily, weekly, or recurring")
+    default_due_time: str = Field(
+        ...,
+        description="Time in HH:MM format for daily, day name for weekly, or any value for recurring"
+    )
+    recurrence_min_days: Optional[int] = Field(None, ge=1, le=365)
+    recurrence_max_days: Optional[int] = Field(None, ge=1, le=365)
+
+    @model_validator(mode='after')
+    def validate_schedule_and_time(self):
+        """Validate default_due_time and recurrence fields based on schedule_type."""
+        if self.schedule_type == "daily":
+            try:
+                hour, minute = map(int, self.default_due_time.split(':'))
+                if not (0 <= hour < 24 and 0 <= minute < 60):
+                    raise ValueError('Hour must be 0-23 and minute must be 0-59')
+            except (ValueError, AttributeError):
+                raise ValueError('For daily tasks, default_due_time must be in HH:MM format')
+        elif self.schedule_type == "weekly":
+            valid_days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+            if self.default_due_time not in valid_days:
+                raise ValueError('For weekly tasks, default_due_time must be a day name')
+        elif self.schedule_type == "recurring":
+            if self.recurrence_min_days is None or self.recurrence_max_days is None:
+                raise ValueError('For recurring tasks, both recurrence_min_days and recurrence_max_days required')
+            if self.recurrence_min_days > self.recurrence_max_days:
+                raise ValueError('recurrence_min_days must be <= recurrence_max_days')
+        else:
+            raise ValueError('schedule_type must be "daily", "weekly", or "recurring"')
+        return self
+
+
+class TasksImport(BaseModel):
+    """Import payload for bulk task creation."""
+    tasks: List[TaskImportItem]
+    skip_duplicates: bool = Field(False, description="Skip tasks with names that already exist")
+
+
+class TaskExportItem(BaseModel):
+    """Single task in export format - uses role name for readability."""
+    name: str
+    description: str
+    base_points: int
+    assigned_role: Optional[str] = None
+    schedule_type: str
+    default_due_time: str
+    recurrence_min_days: Optional[int] = None
+    recurrence_max_days: Optional[int] = None
+
+
+class TasksExport(BaseModel):
+    """Export payload containing all tasks."""
+    version: str = "1.0"
+    exported_at: str
+    tasks: List[TaskExportItem]
