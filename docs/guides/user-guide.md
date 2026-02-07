@@ -43,7 +43,24 @@ Go to **"Tasks"** (or "Aufgaben").
 3. **Assign To**: Choose specific people or "All Family Members".
 4. Click **"Create Task"**.
 
-### 3. Creating Rewards
+### 3. Import & Export Tasks
+Use **Export** and **Import** to manage tasks in bulk:
+
+**📤 Export Tasks**
+1. Go to **"Tasks"** and click **"Export"**.
+2. A JSON file downloads with all your tasks.
+3. Use this for backups or as a template for AI-generated tasks.
+
+**📥 Import Tasks**
+1. Click **"Import"** to open the import modal.
+2. Paste JSON or click **"Upload File"** to load a JSON file.
+3. Review the preview showing tasks to be created.
+4. Check **"Skip duplicates"** to avoid creating tasks that already exist.
+5. Click **"Import"** to create the tasks.
+
+**💡 Tip:** Export your tasks, then ask ChatGPT: *"Create 5 meal prep tasks following this format..."* and paste the JSON. Import the AI's response to quickly add new tasks!
+
+### 4. Creating Rewards
 Go to **"Rewards"** (or "Belohnungen").
 1. Click **"+ Add New Reward"**.
 2. Enter details:
@@ -52,7 +69,7 @@ Go to **"Rewards"** (or "Belohnungen").
    - **Tier**: Bronze/Silver/Gold (affects badge color).
 3. Click **"Create Reward"**.
 
-### 4. System Settings
+### 5. System Settings
 Go to **"Settings"** (or "Einstellungen").
 - **Language**: Change the language for the whole family or just for your session (English or German).
 
