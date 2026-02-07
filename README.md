@@ -140,10 +140,11 @@ npm run dev
 │   │       └── Login.tsx # Login component
 │   └── package.json
 ├── docs/
-│   ├── prq.md                    # Product requirements
-│   ├── mvp-spec.md               # Data model spec
-│   ├── implementation-plan.md    # Development plan
-│   └── progress-summary.md       # This file
+│   ├── master-spec.md            # 🟢 System Truth (Latest)
+│   ├── product-requirements.md   # 🔵 Original user stories
+│   ├── guides/                   # 📖 Feature walkthroughs
+│   ├── reports/                  # 📊 Testing & QA reports
+│   └── archive/                  # 📦 Legacy/Archive
 └── chorespec_mvp.db              # SQLite database
 ```
 
