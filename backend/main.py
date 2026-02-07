@@ -6,6 +6,7 @@ from typing import List
 import logging
 import asyncio
 import json
+from datetime import datetime, timezone
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 
@@ -339,6 +340,105 @@ async def delete_task(task_id: int, db: Session = Depends(get_db)):
     await broadcaster.broadcast("task_deleted", {"task_id": task_id})
 
     return {"message": f"Task {task_id} deleted successfully"}
+
+
+@app.get("/tasks/export", response_model=schemas.TasksExport)
+def export_tasks(db: Session = Depends(get_db)):
+    """Export all tasks in a human-readable format for backup or AI generation."""
+    logger.info("Exporting all tasks...")
+    tasks = crud.get_tasks(db)
+
+    # Build role name lookup
+    roles = {r.id: r.name for r in crud.get_roles(db)}
+
+    export_items = []
+    for task in tasks:
+        export_items.append(schemas.TaskExportItem(
+            name=task.name,
+            description=task.description,
+            base_points=task.base_points,
+            assigned_role=roles.get(task.assigned_role_id) if task.assigned_role_id else None,
+            schedule_type=task.schedule_type,
+            default_due_time=task.default_due_time,
+            recurrence_min_days=task.recurrence_min_days,
+            recurrence_max_days=task.recurrence_max_days,
+        ))
+
+    logger.info(f"Exported {len(export_items)} tasks")
+    return schemas.TasksExport(
+        version="1.0",
+        exported_at=datetime.now(timezone.utc).isoformat(),
+        tasks=export_items
+    )
+
+
+@app.post("/tasks/import")
+async def import_tasks(import_data: schemas.TasksImport, db: Session = Depends(get_db)):
+    """Import tasks from a structured format. Uses role names instead of IDs."""
+    logger.info(f"Importing {len(import_data.tasks)} tasks...")
+
+    # Build role name to ID lookup
+    roles = {r.name.lower(): r.id for r in crud.get_roles(db)}
+
+    # Get existing task names for duplicate detection
+    existing_names = {t.name.lower() for t in crud.get_tasks(db)}
+
+    created = []
+    skipped = []
+    errors = []
+
+    for i, task_item in enumerate(import_data.tasks):
+        try:
+            # Check for duplicates
+            if task_item.name.lower() in existing_names:
+                if import_data.skip_duplicates:
+                    skipped.append(task_item.name)
+                    continue
+                else:
+                    errors.append(f"Task '{task_item.name}' already exists")
+                    continue
+
+            # Resolve role name to ID
+            assigned_role_id = None
+            if task_item.assigned_role:
+                role_name_lower = task_item.assigned_role.lower()
+                if role_name_lower not in roles:
+                    errors.append(f"Task '{task_item.name}': Unknown role '{task_item.assigned_role}'")
+                    continue
+                assigned_role_id = roles[role_name_lower]
+
+            # Create the task using existing schema
+            task_create = schemas.TaskCreate(
+                name=task_item.name,
+                description=task_item.description,
+                base_points=task_item.base_points,
+                assigned_role_id=assigned_role_id,
+                schedule_type=task_item.schedule_type,
+                default_due_time=task_item.default_due_time,
+                recurrence_min_days=task_item.recurrence_min_days,
+                recurrence_max_days=task_item.recurrence_max_days,
+            )
+            new_task = crud.create_task(db=db, task=task_create)
+            created.append(new_task.name)
+            existing_names.add(task_item.name.lower())  # Prevent duplicates within import
+            logger.info(f"Imported task: {new_task.name} (ID: {new_task.id})")
+
+        except Exception as e:
+            errors.append(f"Task '{task_item.name}': {str(e)}")
+
+    # Broadcast SSE event if any tasks were created
+    if created:
+        await broadcaster.broadcast("tasks_imported", {"count": len(created)})
+
+    logger.info(f"Import complete: {len(created)} created, {len(skipped)} skipped, {len(errors)} errors")
+
+    return {
+        "success": len(errors) == 0,
+        "created": created,
+        "skipped": skipped,
+        "errors": errors,
+        "summary": f"Created {len(created)} tasks, skipped {len(skipped)}, {len(errors)} errors"
+    }
 
 
 @app.post("/daily-reset/")

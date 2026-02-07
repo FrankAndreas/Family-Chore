@@ -72,6 +72,37 @@ export const updateTask = (task_id: number, taskData: Partial<{
 
 export const deleteTask = (task_id: number) => api.delete(`/tasks/${task_id}`);
 
+// Task Import/Export APIs
+export interface TaskImportItem {
+    name: string;
+    description: string;
+    base_points: number;
+    assigned_role: string | null;
+    schedule_type: string;
+    default_due_time: string;
+    recurrence_min_days?: number | null;
+    recurrence_max_days?: number | null;
+}
+
+export interface TasksExport {
+    version: string;
+    exported_at: string;
+    tasks: TaskImportItem[];
+}
+
+export interface ImportResult {
+    success: boolean;
+    created: string[];
+    skipped: string[];
+    errors: string[];
+    summary: string;
+}
+
+export const exportTasks = () => api.get<TasksExport>('/tasks/export');
+
+export const importTasks = (data: { tasks: TaskImportItem[], skip_duplicates?: boolean }) =>
+    api.post<ImportResult>('/tasks/import', data);
+
 
 // Reward APIs
 export const getRewards = () => api.get('/rewards/');

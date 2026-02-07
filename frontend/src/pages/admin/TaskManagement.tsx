@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { getTasks, createTask, updateTask, deleteTask, getRoles } from '../../api';
+import { getTasks, createTask, updateTask, deleteTask, getRoles, exportTasks } from '../../api';
 import type { Task, Role } from '../../types';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import Toast from '../../components/Toast';
 import Modal from '../../components/Modal';
 import TaskForm from '../../components/TaskForm';
+import ImportTasksModal from '../../components/ImportTasksModal';
 import { useToast } from '../../hooks/useToast';
 import './Dashboard.css';
 
@@ -14,6 +15,7 @@ const TaskManagement: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [showAddForm, setShowAddForm] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
+    const [showImportModal, setShowImportModal] = useState(false);
     const [editingTask, setEditingTask] = useState<Task | null>(null);
     const [submitting, setSubmitting] = useState(false);
     const { toasts, removeToast, success, error: showError } = useToast();
@@ -120,6 +122,24 @@ const TaskManagement: React.FC = () => {
         } catch (err) {
             console.error('Failed to delete task', err);
             showError('Failed to delete task');
+        }
+    };
+
+    const handleExport = async () => {
+        try {
+            const response = await exportTasks();
+            const json = JSON.stringify(response.data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `tasks-export-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            success(`Exported ${response.data.tasks.length} tasks`);
+        } catch (err) {
+            console.error('Failed to export tasks', err);
+            showError('Failed to export tasks');
         }
     };
 
@@ -246,23 +266,49 @@ const TaskManagement: React.FC = () => {
                 />
             </Modal>
 
+            {/* Import Modal */}
+            <ImportTasksModal
+                isOpen={showImportModal}
+                onClose={() => setShowImportModal(false)}
+                onSuccess={() => {
+                    fetchData();
+                    success('Tasks imported successfully!');
+                }}
+            />
+
             <header className="page-header">
                 <div className="header-content">
                     <div>
                         <h1 className="page-title">Task Management</h1>
                         <p className="page-subtitle">Create and manage household chores</p>
                     </div>
-                    <button
-                        className="btn btn-primary"
-                        onClick={() => {
-                            setShowAddForm(!showAddForm);
-                            if (!showAddForm) {
-                                resetForm();
-                            }
-                        }}
-                    >
-                        {showAddForm ? 'Cancel' : '+ Add New Task'}
-                    </button>
+                    <div className="header-actions" style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button
+                            className="btn btn-secondary"
+                            onClick={handleExport}
+                            title="Export all tasks as JSON"
+                        >
+                            📤 Export
+                        </button>
+                        <button
+                            className="btn btn-secondary"
+                            onClick={() => setShowImportModal(true)}
+                            title="Import tasks from JSON"
+                        >
+                            📥 Import
+                        </button>
+                        <button
+                            className="btn btn-primary"
+                            onClick={() => {
+                                setShowAddForm(!showAddForm);
+                                if (!showAddForm) {
+                                    resetForm();
+                                }
+                            }}
+                        >
+                            {showAddForm ? 'Cancel' : '+ Add New Task'}
+                        </button>
+                    </div>
                 </div>
             </header>
 
