@@ -287,7 +287,10 @@ def delete_role(role_id: int, reassign_to_role_id: int = None, db: Session = Dep
     db.commit()
     logger.info(f"Role deleted: {role_id}")
 
-    return {"message": f"Role deleted successfully. {len(users_with_role)} users reassigned, {len(tasks_with_role)} tasks updated."}
+    return {
+        "message": f"Role deleted successfully. "
+                   f"{len(users_with_role)} users reassigned, {len(tasks_with_role)} tasks updated."
+    }
 
 # --- Task Endpoints ---
 
