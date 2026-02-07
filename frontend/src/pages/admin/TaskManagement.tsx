@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getTasks, createTask, updateTask, getRoles } from '../../api';
+import { getTasks, createTask, updateTask, deleteTask, getRoles } from '../../api';
 import type { Task, Role } from '../../types';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import Toast from '../../components/Toast';
@@ -85,6 +85,42 @@ const TaskManagement: React.FC = () => {
         setShowEditModal(false);
         setEditingTask(null);
         resetForm();
+    };
+
+    const handleCopyTask = (task: Task) => {
+        // Pre-fill the form with the task's data and open add form
+        fillFormWithTask(task);
+
+        // Generate unique copy name
+        const baseName = task.name.replace(/ \(Copy( \d+)?\)$/, ''); // Remove existing copy suffix
+        let copyName = `${baseName} (Copy)`;
+        let counter = 2;
+
+        // Check if name already exists and increment counter
+        while (tasks.some(t => t.name === copyName)) {
+            copyName = `${baseName} (Copy ${counter})`;
+            counter++;
+        }
+
+        setName(copyName);
+        setShowAddForm(true);
+        setShowEditModal(false);
+        success('Task copied to form. Edit and save as new task.');
+    };
+
+    const handleDeleteTask = async (task: Task) => {
+        if (!confirm(`Are you sure you want to delete "${task.name}"? This will also delete all related task instances.`)) {
+            return;
+        }
+
+        try {
+            await deleteTask(task.id);
+            success(`Task "${task.name}" deleted successfully`);
+            fetchData();
+        } catch (err) {
+            console.error('Failed to delete task', err);
+            showError('Failed to delete task');
+        }
     };
 
     const handleCreateTask = async (e: React.FormEvent) => {
@@ -259,14 +295,78 @@ const TaskManagement: React.FC = () => {
                 </div>
             )}
 
-            <div className="tasks-grid">
-                {tasks.length === 0 && (
-                    <div className="empty-state">
-                        <p>No tasks yet. Create one to get started!</p>
-                    </div>
-                )}
+            {tasks.length === 0 && (
+                <div className="empty-state">
+                    <p>No tasks yet. Create one to get started!</p>
+                </div>
+            )}
 
-                {tasks.map(task => {
+            {/* Group tasks by role - "All Family Members" first */}
+            {(() => {
+                // Create groups: null role first, then each role
+                const allFamilyTasks = tasks.filter(t => !t.assigned_role_id);
+                const roleGroups = roles.map(role => ({
+                    role,
+                    tasks: tasks.filter(t => t.assigned_role_id === role.id)
+                })).filter(g => g.tasks.length > 0);
+
+                return (
+                    <>
+                        {/* All Family Members section */}
+                        {allFamilyTasks.length > 0 && (
+                            <div className="role-group" style={{ marginBottom: '2rem' }}>
+                                <h3 style={{
+                                    color: '#10b981',
+                                    marginBottom: '1rem',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem'
+                                }}>
+                                    🏠 All Family Members
+                                    <span style={{
+                                        background: 'rgba(16, 185, 129, 0.2)',
+                                        padding: '0.25rem 0.75rem',
+                                        borderRadius: '12px',
+                                        fontSize: '0.875rem'
+                                    }}>
+                                        {allFamilyTasks.length} tasks
+                                    </span>
+                                </h3>
+                                <div className="tasks-grid">
+                                    {allFamilyTasks.map(task => renderTaskCard(task))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Role-specific sections */}
+                        {roleGroups.map(({ role, tasks: roleTasks }) => (
+                            <div key={role.id} className="role-group" style={{ marginBottom: '2rem' }}>
+                                <h3 style={{
+                                    color: '#8b5cf6',
+                                    marginBottom: '1rem',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem'
+                                }}>
+                                    👤 {role.name}
+                                    <span style={{
+                                        background: 'rgba(139, 92, 246, 0.2)',
+                                        padding: '0.25rem 0.75rem',
+                                        borderRadius: '12px',
+                                        fontSize: '0.875rem'
+                                    }}>
+                                        {roleTasks.length} tasks • {role.multiplier_value}x
+                                    </span>
+                                </h3>
+                                <div className="tasks-grid">
+                                    {roleTasks.map(task => renderTaskCard(task))}
+                                </div>
+                            </div>
+                        ))}
+                    </>
+                );
+
+                function renderTaskCard(task: Task) {
                     const role = task.assigned_role_id ? roles.find(r => r.id === task.assigned_role_id) : null;
                     const assignedTo = role ? role.name : '🏠 All Family Members';
                     const scheduleInfo = getScheduleInfo(task.schedule_type);
@@ -313,18 +413,34 @@ const TaskManagement: React.FC = () => {
                                         <span>⏳ Cooldown: {task.recurrence_min_days}-{task.recurrence_max_days} days</span>
                                     )}
                                 </div>
-                                <button
-                                    className="btn btn-secondary btn-sm"
-                                    onClick={() => handleEditClick(task)}
-                                    style={{ marginLeft: 'auto' }}
-                                >
-                                    ✏️ Edit
-                                </button>
+                                <div className="task-actions" style={{ display: 'flex', gap: '0.5rem', marginLeft: 'auto' }}>
+                                    <button
+                                        className="btn btn-ghost btn-sm"
+                                        onClick={() => handleCopyTask(task)}
+                                        title="Copy Task"
+                                    >
+                                        📋
+                                    </button>
+                                    <button
+                                        className="btn btn-ghost btn-sm"
+                                        onClick={() => handleDeleteTask(task)}
+                                        title="Delete Task"
+                                        style={{ color: '#ef4444' }}
+                                    >
+                                        🗑️
+                                    </button>
+                                    <button
+                                        className="btn btn-secondary btn-sm"
+                                        onClick={() => handleEditClick(task)}
+                                    >
+                                        ✏️ Edit
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     );
-                })}
-            </div>
+                }
+            })()}
         </div>
     );
 };
