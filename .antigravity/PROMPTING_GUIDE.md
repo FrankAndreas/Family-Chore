@@ -43,13 +43,13 @@ Examples:
 ```
 
 ### 📋 Product_Owner (gemini-3-pro-high)
-**Use for:** Drafting SPEC.md, requirement gathering, user confirmation
+**Use for:** Drafting specs, requirement gathering, and updating docs/master-spec.md.
 **Prompt prefix:** "As Product_Owner..." or use `/spec`
 ```
 Examples:
 - "As Product_Owner, draft a spec for [feature]"
 - "As Product_Owner, what clarifications do you need for [requirement]?"
-- "As Product_Owner, define the acceptance criteria for [task]"
+- "As Product_Owner, update docs/master-spec.md with the latest implementation"
 ```
 
 ## Workflow: SPEC-PLAN-EXECUTE-VERIFY

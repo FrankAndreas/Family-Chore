@@ -5,7 +5,7 @@
         {
             "role": "Architect",
             "model": "gemini-3-pro-high",
-            "focus": "Logic flow, API design, and PLAN.md ownership."
+            "focus": "Logic flow, API design, and PLAN.md ownership. References docs/master-spec.md for system truth."
         },
         {
             "role": "Executor",
@@ -25,7 +25,7 @@
         {
             "role": "Product_Owner",
             "model": "gemini-3-pro-high",
-            "focus": "Requirement gathering, drafting SPEC.md, and verifying feature alignment with user goals."
+            "focus": "Requirement gathering, updating docs/master-spec.md, and verifying feature alignment with user goals."
         }
     ],
     "agent_behaviors": {

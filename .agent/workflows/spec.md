@@ -32,7 +32,12 @@ Then [expected result]
 ## 3. You Confirm the SPEC
 Review and approve, or request changes.
 
-## 4. Then we PLAN → EXECUTE → VERIFY
+## 4. Integration
+Once confirmed, I will:
+1. Update **docs/master-spec.md** with any architectural changes.
+2. Create a specific feature guide in **docs/guides/** if the feature is complex.
+
+## 5. Then we PLAN → EXECUTE → VERIFY
 
 ---
 
