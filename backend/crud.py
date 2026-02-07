@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from datetime import datetime
+from datetime import datetime, date
 from . import models, schemas
 
 # --- User CRUD ---
@@ -58,7 +58,75 @@ def create_task(db: Session, task: schemas.TaskCreate):
     db.add(db_task)
     db.commit()
     db.refresh(db_task)
+    
+    # Auto-generate instances for the new task so it appears on Family Dashboard immediately
+    generate_instances_for_task(db, db_task)
+    
     return db_task
+
+
+def generate_instances_for_task(db: Session, task: models.Task) -> int:
+    """Generate task instances for a single task (for today). Used when creating new tasks."""
+    created_count = 0
+    today = datetime.now()
+    today_weekday = today.strftime("%A")
+    
+    # Skip weekly tasks if today is not the scheduled day
+    if task.schedule_type == "weekly":
+        if task.default_due_time != today_weekday:
+            return 0
+    
+    # For recurring tasks, check if cooldown period has elapsed
+    if task.schedule_type == "recurring":
+        last_completion = db.query(models.TaskInstance).filter(
+            models.TaskInstance.task_id == task.id,
+            models.TaskInstance.status == "COMPLETED"
+        ).order_by(models.TaskInstance.completed_at.desc()).first()
+        
+        if last_completion and last_completion.completed_at:
+            completion_date = last_completion.completed_at.date()
+            today_date = today.date()
+            days_since_completion = (today_date - completion_date).days
+            if days_since_completion < task.recurrence_min_days:
+                return 0
+    
+    # Find target users
+    if task.assigned_role_id:
+        target_users = db.query(models.User).filter(models.User.role_id == task.assigned_role_id).all()
+    else:
+        target_users = db.query(models.User).all()
+    
+    for user in target_users:
+        # Construct due_time for today
+        if task.schedule_type == "daily":
+            try:
+                hour, minute = map(int, task.default_due_time.split(":"))
+                due_time = today.replace(hour=hour, minute=minute, second=0, microsecond=0)
+            except ValueError:
+                due_time = today.replace(hour=17, minute=0, second=0, microsecond=0)
+        else:  # weekly or recurring
+            due_time = today.replace(hour=23, minute=59, second=0, microsecond=0)
+        
+        # Check for existing instance today
+        start_of_day = today.replace(hour=0, minute=0, second=0, microsecond=0)
+        existing = db.query(models.TaskInstance).filter(
+            models.TaskInstance.task_id == task.id,
+            models.TaskInstance.user_id == user.id,
+            models.TaskInstance.due_time >= start_of_day
+        ).first()
+        
+        if not existing:
+            instance = models.TaskInstance(
+                task_id=task.id,
+                user_id=user.id,
+                due_time=due_time,
+                status="PENDING"
+            )
+            db.add(instance)
+            created_count += 1
+    
+    db.commit()
+    return created_count
 
 
 def get_tasks(db: Session, skip: int = 0, limit: int = 100):
@@ -79,6 +147,21 @@ def update_task(db: Session, task_id: int, task_update: schemas.TaskUpdate):
     db.commit()
     db.refresh(db_task)
     return db_task
+
+
+def delete_task(db: Session, task_id: int) -> bool:
+    """Delete a task and all its related instances."""
+    db_task = db.query(models.Task).filter(models.Task.id == task_id).first()
+    if not db_task:
+        return False
+    
+    # Delete related task instances first (cascade)
+    db.query(models.TaskInstance).filter(models.TaskInstance.task_id == task_id).delete()
+    
+    # Delete the task
+    db.delete(db_task)
+    db.commit()
+    return True
 
 
 # --- Daily Logic ---
@@ -183,7 +266,16 @@ def get_user_daily_tasks(db: Session, user_id: int):
     ).all()
 
 
-def complete_task_instance(db: Session, instance_id: int):
+def get_all_pending_tasks(db: Session):
+    """Get ALL pending tasks for the Family Dashboard."""
+    start_of_day = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    return db.query(models.TaskInstance).filter(
+        models.TaskInstance.due_time >= start_of_day,
+        models.TaskInstance.status == "PENDING"
+    ).all()
+
+
+def complete_task_instance(db: Session, instance_id: int, actual_user_id: int = None):
     instance = db.query(models.TaskInstance).filter(models.TaskInstance.id == instance_id).first()
     if not instance:
         return None
@@ -191,7 +283,15 @@ def complete_task_instance(db: Session, instance_id: int):
     if instance.status == "COMPLETED":
         return instance  # Already done
 
-    # 1. Get related data
+    # 1. Get related data (and handle reassignment if needed)
+    if actual_user_id and actual_user_id != instance.user_id:
+        # User B is claiming User A's task
+        # We update the instance to point to User B
+        # This is a transient change for this instance only; it does not affect the recurring Task definition.
+        instance.user_id = actual_user_id
+        db.commit()
+        db.refresh(instance)
+
     task = instance.task
     user = instance.user
     role = user.role
@@ -290,3 +390,39 @@ def update_user_language(db: Session, user_id: int, language: str):
         db.commit()
         db.refresh(user)
     return user
+
+
+# --- Daily Reset Tracking ---
+
+def get_last_reset_date(db: Session) -> date | None:
+    """Get the date of the last daily reset."""
+    setting = get_system_setting(db, "last_daily_reset")
+    if setting:
+        try:
+            return datetime.strptime(setting.value, "%Y-%m-%d").date()
+        except ValueError:
+            return None
+    return None
+
+
+def set_last_reset_date(db: Session, reset_date: date):
+    """Record when the daily reset was performed."""
+    set_system_setting(db, "last_daily_reset", reset_date.strftime("%Y-%m-%d"), "Date of last daily task generation")
+
+
+def is_reset_needed(db: Session) -> bool:
+    """Check if a daily reset is needed (last reset was before today)."""
+    last_reset = get_last_reset_date(db)
+    if last_reset is None:
+        return True
+    return last_reset < date.today()
+
+
+def perform_daily_reset_if_needed(db: Session) -> int:
+    """Check if reset is needed and perform it. Returns count of created instances."""
+    if not is_reset_needed(db):
+        return 0
+    
+    count = generate_daily_instances(db)
+    set_last_reset_date(db, date.today())
+    return count
