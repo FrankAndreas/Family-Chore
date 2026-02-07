@@ -21,8 +21,17 @@ export const createUser = (nickname: string, login_pin: string, role_id: number)
 // Role APIs
 export const getRoles = () => api.get('/roles/');
 
-export const updateRoleMultiplier = (role_id: number, multiplier_value: number) =>
+export const updateRole = (role_id: number, multiplier_value: number) =>
     api.put(`/roles/${role_id}`, { multiplier_value });
+
+export const createRole = (name: string, multiplier_value: number) =>
+    api.post('/roles/', { name, multiplier_value });
+
+export const deleteRole = (role_id: number, reassign_to_role_id?: number) =>
+    api.delete(`/roles/${role_id}`, { params: { reassign_to_role_id } });
+
+export const getRoleUsers = (role_id: number) =>
+    api.get(`/roles/${role_id}/users`);
 
 // Task APIs
 export const getTasks = () => api.get('/tasks/');
@@ -43,8 +52,12 @@ export const triggerDailyReset = () => api.post('/daily-reset/');
 export const getUserDailyTasks = (user_id: number) =>
     api.get(`/tasks/daily/${user_id}`);
 
-export const completeTask = (instance_id: number) =>
-    api.post(`/tasks/${instance_id}/complete`);
+export const getPendingTasks = () => api.get('/tasks/pending');
+
+export const completeTask = (instance_id: number, actual_user_id?: number) =>
+    api.post(`/tasks/${instance_id}/complete`, null, {
+        params: { actual_user_id }
+    });
 
 export const updateTask = (task_id: number, taskData: Partial<{
     name: string;
@@ -56,6 +69,8 @@ export const updateTask = (task_id: number, taskData: Partial<{
     recurrence_min_days?: number | null;
     recurrence_max_days?: number | null;
 }>) => api.put(`/tasks/${task_id}`, taskData);
+
+export const deleteTask = (task_id: number) => api.delete(`/tasks/${task_id}`);
 
 
 // Reward APIs
