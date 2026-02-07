@@ -28,7 +28,7 @@ class EventBroadcaster:
         self.clients: List[asyncio.Queue] = []
 
     async def subscribe(self) -> asyncio.Queue:
-        queue = asyncio.Queue()
+        queue: asyncio.Queue = asyncio.Queue()
         self.clients.append(queue)
         return queue
 
@@ -410,7 +410,7 @@ def set_default_language(setting: schemas.SystemSettingsBase, db: Session = Depe
 
 @app.put("/users/{user_id}/language", response_model=schemas.User)
 def update_user_language(user_id: int, lang_update: schemas.UserLanguageUpdate, db: Session = Depends(get_db)):
-    user = crud.update_user_language(db, user_id=user_id, language=lang_update.preferred_language)
+    user = crud.update_user_language(db, user_id=user_id, language=lang_update.preferred_language or "")
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user

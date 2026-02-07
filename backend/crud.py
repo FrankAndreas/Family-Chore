@@ -425,4 +425,4 @@ def perform_daily_reset_if_needed(db: Session) -> int:
 
     count = generate_daily_instances(db)
     set_last_reset_date(db, date.today())
-    return count
+    return int(count)
