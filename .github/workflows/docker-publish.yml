@@ -101,8 +101,8 @@ jobs:
 
       - name: Build and Smoke Test
         run: |
-          # 1. Start services using docker-compose
-          docker-compose up -d --build
+          # 1. Start services using docker compose
+          docker compose up -d --build
           
           # 2. Wait and Verify
           MAX_RETRIES=10
@@ -122,20 +122,20 @@ jobs:
               fi
             fi
             echo "Waiting... (attempt $((COUNT+1))/$MAX_RETRIES)"
-            docker-compose logs --tail 10
+            docker compose logs --tail 10
             sleep 3
             COUNT=$((COUNT+1))
           done
           
           if [ $SUCCESS -ne 1 ]; then
             echo "Smoke test FAILED."
-            docker-compose logs
-            docker-compose down
+            docker compose logs
+            docker compose down
             exit 1
           fi
           
           echo "Smoke test PASSED."
-          docker-compose down
+          docker compose down
 
       - name: Build and push Backend
         uses: docker/build-push-action@v5
