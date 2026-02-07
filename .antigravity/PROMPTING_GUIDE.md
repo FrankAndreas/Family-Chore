@@ -42,9 +42,22 @@ Examples:
 - "As Librarian, what's the current state of the project?"
 ```
 
-## Workflow: PLAN-EXECUTE-VERIFY
+### 📋 Product_Owner (gemini-3-pro-high)
+**Use for:** Drafting SPEC.md, requirement gathering, user confirmation
+**Prompt prefix:** "As Product_Owner..." or use `/spec`
+```
+Examples:
+- "As Product_Owner, draft a spec for [feature]"
+- "As Product_Owner, what clarifications do you need for [requirement]?"
+- "As Product_Owner, define the acceptance criteria for [task]"
+```
+
+## Workflow: SPEC-PLAN-EXECUTE-VERIFY
 
 For any significant feature:
+
+0. **SPEC** (Product_Owner)
+   "As Product_Owner, draft a spec for [feature]"
 
 1. **PLAN** (Architect)
    "Plan the [feature] - what files, endpoints, and components are needed?"
@@ -60,6 +73,7 @@ For any significant feature:
 | Command | What it does |
 |---------|--------------|
 | `/pre-commit` | Run all quality checks |
+| `/spec` | Draft a feature specification |
 | "Run tests" | Execute pytest |
 | "Check in browser" | Browser verification |
 | "Update STATE.md" | Librarian context sync |

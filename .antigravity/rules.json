@@ -21,6 +21,11 @@
             "role": "Librarian",
             "model": "gemini-3-flash",
             "focus": "State tracking, context pruning, and updating STATE.md."
+        },
+        {
+            "role": "Product_Owner",
+            "model": "gemini-3-pro-high",
+            "focus": "Requirement gathering, drafting SPEC.md, and verifying feature alignment with user goals."
         }
     ],
     "agent_behaviors": {
