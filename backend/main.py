@@ -21,26 +21,28 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="ChoreSpec MVP")
 
+
 # SSE: Event broadcasting system
 class EventBroadcaster:
     def __init__(self):
         self.clients: List[asyncio.Queue] = []
-    
+
     async def subscribe(self) -> asyncio.Queue:
         queue = asyncio.Queue()
         self.clients.append(queue)
         return queue
-    
+
     def unsubscribe(self, queue: asyncio.Queue):
         if queue in self.clients:
             self.clients.remove(queue)
-    
+
     async def broadcast(self, event_type: str, data: dict = None):
         """Broadcast event to all connected clients."""
         message = {"type": event_type, "data": data}
         for queue in self.clients:
             await queue.put(message)
         logger.info(f"SSE broadcast: {event_type} to {len(self.clients)} clients")
+
 
 broadcaster = EventBroadcaster()
 
@@ -74,7 +76,7 @@ def on_startup():
         seed_data()
     except Exception as e:
         logger.error(f"Failed to seed data: {e}")
-    
+
     # Smart daily reset: Only generate if not already done today
     try:
         db = SessionLocal()
@@ -86,7 +88,7 @@ def on_startup():
         db.close()
     except Exception as e:
         logger.error(f"Failed to generate daily instances on startup: {e}")
-    
+
     # Start the midnight scheduler
     scheduler.add_job(
         scheduled_daily_reset,
@@ -117,6 +119,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # --- SSE Endpoint ---
 @app.get("/events")
 async def sse_events():
@@ -126,7 +129,7 @@ async def sse_events():
         try:
             # Send initial connection confirmation
             yield f"data: {json.dumps({'type': 'connected'})}\n\n"
-            
+
             while True:
                 # Wait for new events (with timeout for keepalive)
                 try:
@@ -137,7 +140,7 @@ async def sse_events():
                     yield f"data: {json.dumps({'type': 'ping'})}\n\n"
         finally:
             broadcaster.unsubscribe(queue)
-    
+
     return StreamingResponse(
         event_stream(),
         media_type="text/event-stream",
@@ -205,10 +208,10 @@ def create_role(role: schemas.RoleCreate, db: Session = Depends(get_db)):
     existing = db.query(models.Role).filter(models.Role.name == role.name).first()
     if existing:
         raise HTTPException(status_code=400, detail="Role with this name already exists")
-    
+
     if role.multiplier_value < 0.1:
         raise HTTPException(status_code=400, detail="Multiplier must be >= 0.1")
-    
+
     db_role = models.Role(name=role.name, multiplier_value=role.multiplier_value)
     db.add(db_role)
     db.commit()
@@ -247,43 +250,43 @@ def update_role(role_id: int, role_update: schemas.RoleUpdate, db: Session = Dep
 def delete_role(role_id: int, reassign_to_role_id: int = None, db: Session = Depends(get_db)):
     """Delete a role. If users are assigned, reassign_to_role_id must be provided."""
     logger.info(f"Deleting role: {role_id}, reassign to: {reassign_to_role_id}")
-    
+
     db_role = crud.get_role(db, role_id=role_id)
     if not db_role:
         raise HTTPException(status_code=404, detail="Role not found")
-    
+
     # Check if users are assigned to this role
     users_with_role = db.query(models.User).filter(models.User.role_id == role_id).all()
-    
+
     if users_with_role:
         if not reassign_to_role_id:
             raise HTTPException(
-                status_code=400, 
+                status_code=400,
                 detail=f"Cannot delete role: {len(users_with_role)} users are assigned. Provide reassign_to_role_id."
             )
-        
+
         # Validate target role exists
         target_role = crud.get_role(db, role_id=reassign_to_role_id)
         if not target_role:
             raise HTTPException(status_code=400, detail="Target role for reassignment not found")
-        
+
         # Reassign all users
         for user in users_with_role:
             user.role_id = reassign_to_role_id
         db.commit()
         logger.info(f"Reassigned {len(users_with_role)} users from role {role_id} to {reassign_to_role_id}")
-    
+
     # Also update tasks assigned to this role
     tasks_with_role = db.query(models.Task).filter(models.Task.assigned_role_id == role_id).all()
     for task in tasks_with_role:
         task.assigned_role_id = None  # Set to "All Family Members"
     db.commit()
-    
+
     # Delete the role
     db.delete(db_role)
     db.commit()
     logger.info(f"Role deleted: {role_id}")
-    
+
     return {"message": f"Role deleted successfully. {len(users_with_role)} users reassigned, {len(tasks_with_role)} tasks updated."}
 
 # --- Task Endpoints ---
@@ -294,10 +297,10 @@ async def create_task(task: schemas.TaskCreate, db: Session = Depends(get_db)):
     logger.info(f"Creating task: {task.name} with {task.base_points} base points")
     created_task = crud.create_task(db=db, task=task)
     logger.info(f"Task created successfully: {created_task.name} (ID: {created_task.id})")
-    
+
     # Broadcast SSE event for real-time updates
     await broadcaster.broadcast("task_created", {"task_id": created_task.id, "name": created_task.name})
-    
+
     return created_task
 
 
@@ -328,10 +331,10 @@ async def delete_task(task_id: int, db: Session = Depends(get_db)):
         logger.error(f"Task not found: {task_id}")
         raise HTTPException(status_code=404, detail="Task not found")
     logger.info(f"Task deleted successfully: {task_id}")
-    
+
     # Broadcast SSE event for real-time updates
     await broadcaster.broadcast("task_deleted", {"task_id": task_id})
-    
+
     return {"message": f"Task {task_id} deleted successfully"}
 
 
@@ -361,10 +364,10 @@ async def complete_task(instance_id: int, actual_user_id: int = None, db: Sessio
         logger.error(f"Task instance not found: {instance_id}")
         raise HTTPException(status_code=404, detail="Task instance not found")
     logger.info(f"Task completed successfully: instance {instance_id} by user {instance.user_id}")
-    
+
     # Broadcast SSE event for real-time updates
     await broadcaster.broadcast("task_completed", {"instance_id": instance_id, "user_id": instance.user_id})
-    
+
     return instance
 
 # --- Reward Endpoints ---
