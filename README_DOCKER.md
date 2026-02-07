@@ -13,18 +13,9 @@ This guide explains how to deploy the Family Chore App using Docker images hoste
 Create a folder on your NAS (e.g., `/docker/chorespec`) and upload only the `docker-compose.yml` file.
 
 ### 2. Configure
-Open `docker-compose.yml` with a text editor and replace `YOUR_GITHUB_USERNAME` with your actual GitHub username (lowercase).
+The `docker-compose.yml` is pre-configured to use the images from `ghcr.io/frankandreas/`. You can use it as is.
 
-### 3. Authenticate (Required only for Private Repos)
-If your Docker images are private, you must log in to the registry so Docker can pull them.
-SSH into your NAS and run:
-```bash
-# Generate a PAT on GitHub (Settings > Developer Settings > Personal access tokens)
-# Scope needed: read:packages
-echo "YOUR_GITHUB_PAT" | sudo docker login ghcr.io -u "YOUR_USERNAME" --password-stdin
-```
-
-### 4. Run the Application
+### 3. Run the Application
 Navigate to the folder and start the services:
 
 ```bash
@@ -39,7 +30,7 @@ sudo docker-compose up -d     # Starts the containers in background
 - Select the folder/file.
 - Click "Next" -> "Done".
 
-### 5. Access the App
+### 4. Access the App
 Open your browser and navigate to:
 `http://<YOUR_NAS_IP>:8080`
 

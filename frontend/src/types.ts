@@ -34,6 +34,8 @@ export interface TaskInstance {
     completed_at: string | null;
     status: string;
     completion_photo_url: string | null;
+    task?: Task;
+    user?: User;
 }
 
 export interface Reward {

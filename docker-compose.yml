@@ -3,8 +3,8 @@ version: '3.8'
 services:
   backend:
     # Use image from GitHub Container Registry
-    # Replace YOUR_GITHUB_USERNAME with your GitHub username (lowercase)
-    image: ghcr.io/YOUR_GITHUB_USERNAME/family-chore-backend:latest
+
+    image: ghcr.io/frankandreas/family-chore-backend:latest
     container_name: chorespec-backend
     volumes:
       - chores_data:/app/data
@@ -20,8 +20,8 @@ services:
 
   frontend:
     # Use image from GitHub Container Registry
-    # Replace YOUR_GITHUB_USERNAME with your GitHub username (lowercase)
-    image: ghcr.io/YOUR_GITHUB_USERNAME/family-chore-frontend:latest
+
+    image: ghcr.io/frankandreas/family-chore-frontend:latest
     container_name: chorespec-frontend
     ports:
       - "8080:80"

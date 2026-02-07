@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { login } from '../api';
 import type { User } from '../types';
+import FamilyDashboardView from './FamilyDashboard';
 import './Login.css';
 
 interface LoginProps {
@@ -12,6 +13,11 @@ export default function Login({ onLogin }: LoginProps) {
     const [pin, setPin] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [showFamilyDash, setShowFamilyDash] = useState(false);
+
+    if (showFamilyDash) {
+        return <FamilyDashboardView onExit={() => setShowFamilyDash(false)} />;
+    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -76,6 +82,16 @@ export default function Login({ onLogin }: LoginProps) {
                     >
                         {loading ? 'Logging in...' : 'Login'}
                     </button>
+                    <div style={{ marginTop: '1rem' }}>
+                        <button
+                            type="button"
+                            className="btn btn-secondary btn-block"
+                            onClick={() => setShowFamilyDash(true)}
+                        >
+                            🏡 Family Dashboard
+                        </button>
+                    </div>
+
                 </form>
 
                 <div className="login-footer">
