@@ -1,0 +1,47 @@
+{
+    "project_name": "Universal-GSD-Core",
+    "version": "2.0",
+    "agent_roles": [
+        {
+            "role": "Architect",
+            "model": "gemini-3-pro-high",
+            "focus": "Logic flow, API design, and PLAN.md ownership."
+        },
+        {
+            "role": "Executor",
+            "model": "gemini-3-pro-low",
+            "focus": "Standard code implementation and modular refactoring."
+        },
+        {
+            "role": "QA_Nerd",
+            "model": "gemini-3-flash",
+            "focus": "Test automation, bug hunting, and browser verification."
+        },
+        {
+            "role": "Librarian",
+            "model": "gemini-3-flash",
+            "focus": "State tracking, context pruning, and updating STATE.md."
+        }
+    ],
+    "agent_behaviors": {
+        "workflow_protocol": "PLAN-EXECUTE-VERIFY",
+        "pre_flight_check": {
+            "require": "PLAN.md",
+            "action": "Architect must validate technical approach before Executor writes code."
+        },
+        "post_flight_check": {
+            "require": "QA_Report",
+            "action": "QA_Nerd must verify fix in integrated browser or terminal."
+        },
+        "context_sync": {
+            "frequency": "After every 3 commits",
+            "action": "Librarian summarizes recent changes into STATE.md to prevent context rot."
+        }
+    },
+    "global_constraints": [
+        "STRICT_NO_DELETE: Never delete blocks of code; comment them out or move to /temp/legacy.",
+        "NO_BLIND_FIXES: Never suggest a fix without first identifying the root cause in the terminal logs.",
+        "SPEC_FIRST: If a requirement is ambiguous, stop and ask the user before guessing.",
+        "QUOTA_SAFETY: For repetitive tasks (linting, docs), always switch to 'Fast Mode' (Gemini 3 Flash)."
+    ]
+}
