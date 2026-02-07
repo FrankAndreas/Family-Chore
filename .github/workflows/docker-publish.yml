@@ -101,24 +101,17 @@ jobs:
 
       - name: Build and Smoke Test
         run: |
-          # Create a private network so frontend can resolve 'backend' hostname
-          docker network create smoke-test-net
+          # 1. Start services using docker-compose
+          docker-compose up -d --build
           
-          # 1. Build and Run Backend
-          docker build -t backend-smoke-test -f backend/Dockerfile .
-          docker run -d --name test-backend --network smoke-test-net --network-alias backend backend-smoke-test
-          
-          # 2. Build and Run Frontend
-          docker build -t frontend-smoke-test -f frontend/Dockerfile ./frontend
-          docker run -d --name test-frontend --network smoke-test-net -p 8080:80 frontend-smoke-test
-          
-          # 3. Wait and Verify
+          # 2. Wait and Verify
           MAX_RETRIES=10
           COUNT=0
           SUCCESS=0
           
           echo "Waiting for services to be healthy..."
           until [ $COUNT -eq $MAX_RETRIES ]; do
+            # Check if frontend is up
             if curl -s --fail http://localhost:8080/ > /dev/null; then
               echo "Frontend is UP"
               # Verify backend is reachable through frontend proxy
@@ -129,26 +122,20 @@ jobs:
               fi
             fi
             echo "Waiting... (attempt $((COUNT+1))/$MAX_RETRIES)"
-            docker logs test-frontend --tail 5
+            docker-compose logs --tail 10
             sleep 3
             COUNT=$((COUNT+1))
           done
           
           if [ $SUCCESS -ne 1 ]; then
             echo "Smoke test FAILED."
-            echo "--- Backend Logs ---"
-            docker logs test-backend
-            echo "--- Frontend Logs ---"
-            docker logs test-frontend
-            docker stop test-frontend test-backend
-            docker network rm smoke-test-net
+            docker-compose logs
+            docker-compose down
             exit 1
           fi
           
           echo "Smoke test PASSED."
-          docker stop test-frontend test-backend
-          docker rm test-frontend test-backend
-          docker network rm smoke-test-net
+          docker-compose down
 
       - name: Build and push Backend
         uses: docker/build-push-action@v5
