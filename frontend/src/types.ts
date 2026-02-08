@@ -53,6 +53,7 @@ export interface Transaction {
     base_points_value: number;
     multiplier_used: number;
     awarded_points: number;
+    description: string | null;
     reference_instance_id: number | null;
     timestamp: string;
 }

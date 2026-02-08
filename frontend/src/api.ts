@@ -144,8 +144,29 @@ export interface SplitRedemptionResponse {
     error?: string;
 }
 
+
 export const redeemRewardSplit = (reward_id: number, contributions: SplitContribution[]) =>
     api.post<SplitRedemptionResponse>(`/rewards/${reward_id}/redeem-split`, { contributions });
+
+
+// Transaction APIs
+export interface TransactionHeader {
+    skip?: number;
+    limit?: number;
+    type?: string;
+    search?: string;
+    start_date?: string;
+    end_date?: string;
+    user_id?: number;
+}
+
+export const getUserTransactions = (user_id: number, filters: TransactionHeader = {}) =>
+    api.get(`/users/${user_id}/transactions`, { params: { skip: 0, limit: 100, ...filters } });
+
+export const getAllTransactions = (filters: TransactionHeader = {}) =>
+    api.get('/transactions', { params: { skip: 0, limit: 100, ...filters } });
+
+
 
 export default api;
 

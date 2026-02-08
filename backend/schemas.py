@@ -237,6 +237,31 @@ class SplitRedemptionResponse(BaseModel):
     error: Optional[str] = None
 
 
+# --- Transaction Schemas ---
+
+
+class TransactionBase(BaseModel):
+    user_id: int
+    type: str  # 'EARN' or 'REDEEM'
+    base_points_value: int
+    multiplier_used: float
+    awarded_points: int
+    description: Optional[str] = None
+    reference_instance_id: Optional[int] = None
+    timestamp: datetime
+
+
+class Transaction(TransactionBase):
+    id: int
+    # We might want to include nested objects for display, but for now let's keep it simple
+    # or use separate schemas if needed for detailed history views.
+    # For now, let's include the user nickname if possible via a validator or separate field,
+    # but strictly speaking the model has a relationship.
+    # Let's stick to the base fields first.
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 # --- Task Import/Export Schemas ---
 
 

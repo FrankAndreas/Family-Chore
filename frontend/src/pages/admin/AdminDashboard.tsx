@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getUsers, getTasks, triggerDailyReset } from '../../api';
-import type { User, Task } from '../../types';
+import { getUsers, getTasks, triggerDailyReset, getAllTransactions } from '../../api';
+import type { User, Task, Transaction } from '../../types';
 import './Dashboard.css';
 
 const AdminDashboard: React.FC = () => {
     const navigate = useNavigate();
     const [users, setUsers] = useState<User[]>([]);
     const [tasks, setTasks] = useState<Task[]>([]);
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loading, setLoading] = useState(true);
     const [resetting, setResetting] = useState(false);
 
@@ -15,14 +16,20 @@ const AdminDashboard: React.FC = () => {
         fetchData();
     }, []);
 
-    const fetchData = async () => {
+    const [filters, setFilters] = useState({});
+
+    const fetchData = async (newFilters = {}) => {
+        const updatedFilters = { ...filters, ...newFilters };
+        setFilters(updatedFilters);
         try {
-            const [usersRes, tasksRes] = await Promise.all([
+            const [usersRes, tasksRes, transactionsRes] = await Promise.all([
                 getUsers(),
-                getTasks()
+                getTasks(),
+                getAllTransactions({ limit: 50, ...updatedFilters })
             ]);
             setUsers(usersRes.data);
             setTasks(tasksRes.data);
+            setTransactions(transactionsRes.data);
         } catch (err) {
             console.error('Failed to fetch dashboard data', err);
         } finally {
@@ -41,6 +48,14 @@ const AdminDashboard: React.FC = () => {
         } finally {
             setResetting(false);
         }
+    };
+
+    const formatDate = (dateString: string) => {
+        return new Date(dateString).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+    };
+
+    const getUserName = (userId: number) => {
+        return users.find(u => u.id === userId)?.nickname || `User #${userId}`;
     };
 
     if (loading) return <div className="loading">Loading dashboard...</div>;
@@ -136,6 +151,78 @@ const AdminDashboard: React.FC = () => {
                         </button>
                     </div>
                 </div>
+            </div>
+
+            <div className="section glass-panel full-width">
+                <h2>📜 Global Activity Log</h2>
+
+                {/* Filters */}
+                <div className="filters-bar">
+                    <select
+                        onChange={(e) => fetchData({ user_id: e.target.value ? Number(e.target.value) : undefined })}
+                        className="filter-select"
+                    >
+                        <option value="">All Users</option>
+                        {users.map(u => <option key={u.id} value={u.id}>{u.nickname}</option>)}
+                    </select>
+
+                    <select
+                        onChange={(e) => fetchData({ type: e.target.value || undefined })}
+                        className="filter-select"
+                    >
+                        <option value="">All Activity</option>
+                        <option value="EARN">Earned</option>
+                        <option value="REDEEM">Redeemed</option>
+                    </select>
+
+                    <input
+                        type="text"
+                        placeholder="Search description..."
+                        onChange={(e) => fetchData({ search: e.target.value || undefined })}
+                        className="filter-input"
+                    />
+                </div>
+
+                {transactions.length === 0 ? (
+                    <div className="empty-state">
+                        <p>No recent activity matching your filters.</p>
+                    </div>
+                ) : (
+                    <div className="transaction-list table-container">
+                        <table className="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>User</th>
+                                    <th>Action</th>
+                                    <th>Points</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {transactions.map(tx => (
+                                    <tr key={tx.id}>
+                                        <td>{formatDate(tx.timestamp)}</td>
+                                        <td>{getUserName(tx.user_id)}</td>
+                                        <td>
+                                            <span className={`badge ${tx.type === 'EARN' ? 'badge-success' : 'badge-warning'}`}>
+                                                {tx.type}
+                                            </span>
+                                        </td>
+                                        <td className={tx.awarded_points >= 0 ? 'text-success' : 'text-danger'}>
+                                            {tx.awarded_points > 0 ? '+' : ''}{tx.awarded_points}
+                                        </td>
+                                        <td>
+                                            {tx.description || (tx.type === 'EARN' ?
+                                                `Task Completion (Base: ${tx.base_points_value})` :
+                                                'Reward Redemption')}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
             </div>
         </div>
     );

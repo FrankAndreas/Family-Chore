@@ -124,6 +124,7 @@ class Transaction(Base):
     base_points_value = Column(Integer, nullable=False)
     multiplier_used = Column(Float, nullable=False)
     awarded_points = Column(Integer, nullable=False)
+    description = Column(String, nullable=True)  # Snapshot of task/reward name
 
     reference_instance_id = Column(Integer, ForeignKey("task_instances.id"), nullable=True)
 

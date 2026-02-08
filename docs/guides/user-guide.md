@@ -69,9 +69,14 @@ Go to **"Rewards"** (or "Belohnungen").
    - **Tier**: Bronze/Silver/Gold (affects badge color).
 3. Click **"Create Reward"**.
 
-### 5. System Settings
-Go to **"Settings"** (or "Einstellungen").
-- **Language**: Change the language for the whole family or just for your session (English or German).
+### 6. Monitoring Activity
+The **Dashboard** features a **Global Activity Log** where you can see all family actions.
+- **History**: View a list of all earned points and redeemed rewards.
+- **Filtering**:
+  - **User**: Select a specific family member to see only their activity.
+  - **Type**: Filter by "Earned" (completed tasks) or "Redeemed" (rewards).
+  - **Search**: Type to find specific tasks or rewards by name.
+- **Details**: The table shows exactly what task was done or what reward was claimed.
 
 ---
 
@@ -90,14 +95,20 @@ Go to **"Dashboard"** or **"Tasks"**.
 3. Click **"Mark Complete"** (or the checkmark button).
 4. 🎉 **Success!** You instantly get points added to your score.
 
-### 3. Setting a Goal
+### 3. Checking Your History
+Go to the **"History"** tab on your Dashboard.
+- See a list of everything you've done.
+- **Filter**: You can search for specific chores to see when you last did them.
+- **Track**: See how many points you earned for each task.
+
+### 4. Setting a Goal
 Go to **"Rewards"**.
 1. Browse the rewards your parents created.
 2. Find one you really want.
 3. Click **"Set as Goal"**.
 4. This reward will now appear on your Dashboard with a progress bar showing how close you are!
 
-### 4. Redeeming Rewards
+### 5. Redeeming Rewards
 Go to the **Dashboard** and switch to the **"Redeem"** tab.
 1. Browse rewards you can afford.
 2. Click **"Redeem"** on a reward you want.
@@ -143,5 +154,8 @@ A: Someone else might have done it recently, so it's in "Cooldown". Wait a few d
 **Q: How do I change the language to German?**
 A: Go to the **Settings** page and select "Deutsch". You can set it as your personal preference or the family default.
 
+**Q: Why does the dashboard say "Reconnecting"?**
+A: This usually means the server is restarting or you lost internet connection. It should disappear automatically once connected.
+
 ---
-*Generated for ChoreSpec v1.0*
+*Generated for ChoreSpec v1.1*

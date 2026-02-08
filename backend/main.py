@@ -2,11 +2,12 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 import logging
 import asyncio
 import json
-from datetime import datetime, timezone
+import datetime
+from datetime import timezone
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 
@@ -290,7 +291,7 @@ def delete_role(role_id: int, reassign_to_role_id: int = None, db: Session = Dep
 
     return {
         "message": f"Role deleted successfully. "
-                   f"{len(users_with_role)} users reassigned, {len(tasks_with_role)} tasks updated."
+        f"{len(users_with_role)} users reassigned, {len(tasks_with_role)} tasks updated."
     }
 
 # --- Task Endpoints ---
@@ -367,7 +368,7 @@ def export_tasks(db: Session = Depends(get_db)):
     logger.info(f"Exported {len(export_items)} tasks")
     return schemas.TasksExport(
         version="1.0",
-        exported_at=datetime.now(timezone.utc).isoformat(),
+        exported_at=datetime.datetime.now(timezone.utc).isoformat(),
         tasks=export_items
     )
 
@@ -533,10 +534,10 @@ async def redeem_reward_split(
     Each contributing user gets their own transaction record.
     """
     logger.info(f"Split redemption for reward {reward_id} with {len(request.contributions)} contributors")
-    
+
     # Convert contributions to list of dicts
     contributions = [{"user_id": c.user_id, "points": c.points} for c in request.contributions]
-    
+
     result = crud.redeem_reward_split(db, reward_id=reward_id, contributions=contributions)
 
     if not result["success"]:
@@ -555,6 +556,46 @@ async def redeem_reward_split(
     })
 
     return result
+
+
+# --- Transaction Endpoints ---
+
+
+@app.get("/users/{user_id}/transactions", response_model=List[schemas.Transaction])
+def read_user_transactions(
+    user_id: int,
+    skip: int = 0,
+    limit: int = 100,
+    type: Optional[str] = None,
+    search: Optional[str] = None,
+    start_date: Optional[datetime.datetime] = None,
+    end_date: Optional[datetime.datetime] = None,
+    db: Session = Depends(get_db)
+):
+    """Get history for a specific user."""
+    return crud.get_user_transactions(
+        db, user_id=user_id, skip=skip, limit=limit,
+        type=type, search=search, start_date=start_date, end_date=end_date
+    )
+
+
+@app.get("/transactions", response_model=List[schemas.Transaction])
+def read_all_transactions(
+    skip: int = 0,
+    limit: int = 100,
+    user_id: Optional[int] = None,
+    type: Optional[str] = None,
+    search: Optional[str] = None,
+    start_date: Optional[datetime.datetime] = None,
+    end_date: Optional[datetime.datetime] = None,
+    db: Session = Depends(get_db)
+):
+    """Get global history (for Admin/Family Dashboard)."""
+    return crud.get_all_transactions(
+        db, skip=skip, limit=limit,
+        user_id=user_id, type=type, search=search, start_date=start_date, end_date=end_date
+    )
+
 
 # --- Settings Endpoints ---
 

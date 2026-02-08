@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { getPendingTasks, getUsers, completeTask, getRewards, redeemRewardSplit } from '../api';
-import type { TaskInstance, User, Reward } from '../types';
+import { getPendingTasks, getUsers, getRewards, completeTask, redeemRewardSplit, getAllTransactions } from '../api';
+import type { TaskInstance, User, Reward, Transaction } from '../types';
 import './FamilyDashboard.css';
 
 interface ClaimModalProps {
@@ -49,7 +49,6 @@ interface SplitRedeemModalProps {
 }
 
 function SplitRedeemModal({ reward, users, onConfirm, onClose, redeeming }: SplitRedeemModalProps) {
-    // Initialize contributions - start with 0 for all users
     const [contributions, setContributions] = useState<{ [userId: number]: number }>(
         () => Object.fromEntries(users.map(u => [u.id, 0]))
     );
@@ -61,13 +60,11 @@ function SplitRedeemModal({ reward, users, onConfirm, onClose, redeeming }: Spli
     const updateContribution = (userId: number, points: number) => {
         const user = users.find(u => u.id === userId);
         if (!user) return;
-        // Clamp to user's available points
         const clamped = Math.max(0, Math.min(points, user.current_points));
         setContributions(prev => ({ ...prev, [userId]: clamped }));
     };
 
     const handleSplitEvenly = () => {
-        // Filter users who have points
         const eligibleUsers = users.filter(u => u.current_points > 0);
         if (eligibleUsers.length === 0) return;
 
@@ -93,8 +90,6 @@ function SplitRedeemModal({ reward, users, onConfirm, onClose, redeeming }: Spli
     const handleMaxFromEach = () => {
         let remaining = reward.cost_points;
         const newContribs: { [userId: number]: number } = {};
-
-        // Sort by points descending to fill from richest first
         const sorted = [...users].sort((a, b) => b.current_points - a.current_points);
 
         sorted.forEach(user => {
@@ -170,13 +165,14 @@ function SplitRedeemModal({ reward, users, onConfirm, onClose, redeeming }: Spli
     );
 }
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
-    const [activeTab, setActiveTab] = useState<'tasks' | 'redeem'>('tasks');
+    const [activeTab, setActiveTab] = useState<'tasks' | 'redeem' | 'history'>('tasks');
     const [tasks, setTasks] = useState<TaskInstance[]>([]);
     const [users, setUsers] = useState<User[]>([]);
     const [rewards, setRewards] = useState<Reward[]>([]);
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedTask, setSelectedTask] = useState<TaskInstance | null>(null);
     const [selectedRedeem, setSelectedRedeem] = useState<Reward | null>(null);
@@ -189,7 +185,6 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
     useEffect(() => {
         loadData();
 
-        // Connect to Server-Sent Events for real-time updates
         const eventSource = new EventSource(`${API_BASE}/events`);
         eventSourceRef.current = eventSource;
 
@@ -206,11 +201,13 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
                 setConnected(true);
             } else if (data.type === 'task_created' || data.type === 'task_completed' || data.type === 'task_deleted') {
                 refreshTasks();
+                // If we're on history tab, refresh that too
+                if (activeTab === 'history') refreshTransactions();
             } else if (data.type === 'reward_redeemed') {
-                // Refresh users to get updated points
                 refreshData();
                 setToast(`🎉 ${data.payload?.reward_name || 'Reward'} redeemed!`);
                 setTimeout(() => setToast(null), 3000);
+                if (activeTab === 'history') refreshTransactions();
             }
             setLastUpdate(new Date());
         };
@@ -220,13 +217,19 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
             setConnected(false);
         };
 
-        // Cleanup on unmount
         return () => {
             if (eventSourceRef.current) {
                 eventSourceRef.current.close();
             }
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    useEffect(() => {
+        if (activeTab === 'history') {
+            refreshTransactions();
+        }
+    }, [activeTab]);
 
     const loadData = async () => {
         try {
@@ -256,6 +259,23 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
         }
     };
 
+    const [filters, setFilters] = useState({});
+
+    const refreshTransactions = async (newFilters = {}) => {
+        const updatedFilters = { ...filters, ...newFilters };
+        setFilters(updatedFilters);
+        try {
+            const transactionsRes = await getAllTransactions({
+                skip: 0,
+                limit: 50,
+                ...updatedFilters
+            });
+            setTransactions(transactionsRes.data);
+        } catch (error) {
+            console.error("Failed to refresh transactions", error);
+        }
+    };
+
     const refreshData = async () => {
         try {
             const [usersRes, rewardsRes] = await Promise.all([getUsers(), getRewards()]);
@@ -278,6 +298,7 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
             await completeTask(selectedTask.id, userId);
             setTasks(prev => prev.filter(t => t.id !== selectedTask.id));
             setSelectedTask(null);
+            refreshTransactions(); // Refresh history if needed
         } catch (error) {
             console.error("Failed to complete task", error);
             alert("Error completing task");
@@ -299,6 +320,7 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
             setTimeout(() => setToast(null), 4000);
             setSelectedRedeem(null);
             refreshData();
+            refreshTransactions();
         } catch (error) {
             console.error("Failed to redeem", error);
             setToast('❌ Redemption failed. Check contributions?');
@@ -308,25 +330,29 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
         }
     };
 
-    // Get affordable rewards for a user
+    const formatDate = (dateString: string) => {
+        return new Date(dateString).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+    };
+
+    const getUserName = (userId: number) => {
+        return users.find(u => u.id === userId)?.nickname || `User #${userId}`;
+    };
+
     const getAffordableRewards = (user: User) => {
         return rewards.filter(r => user.current_points >= r.cost_points);
     };
 
-    // Group tasks by assigned user
     const groupedTasks = users.reduce((acc, user) => {
         acc[user.id] = tasks.filter(t => t.user_id === user.id);
         return acc;
     }, {} as Record<number, TaskInstance[]>);
 
-    // Create a group for unassigned or unknown users if any (safety check)
     const unknownTasks = tasks.filter(t => !users.find(u => u.id === t.user_id));
 
     if (loading) return <div className="loading">Loading Family Board...</div>;
 
     return (
         <div className="family-dashboard">
-            {/* Toast notification */}
             {toast && (
                 <div className="dashboard-toast">
                     {toast}
@@ -345,7 +371,6 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
                 </button>
             </div>
 
-            {/* Tab buttons */}
             <div className="dashboard-tabs">
                 <button
                     className={`tab-btn ${activeTab === 'tasks' ? 'active' : ''}`}
@@ -359,11 +384,16 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
                 >
                     🎁 Redeem
                 </button>
+                <button
+                    className={`tab-btn ${activeTab === 'history' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('history')}
+                >
+                    📜 History
+                </button>
             </div>
 
-            {/* Tasks Tab */}
             {activeTab === 'tasks' && (
-                <>
+                <div className="tab-content fade-in">
                     {users.map(user => {
                         const userTasks = groupedTasks[user.id] || [];
                         if (userTasks.length === 0) return null;
@@ -419,12 +449,11 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
                             <h2>🎉 All caught up! No pending tasks.</h2>
                         </div>
                     )}
-                </>
+                </div>
             )}
 
-            {/* Redeem Tab */}
             {activeTab === 'redeem' && (
-                <>
+                <div className="tab-content fade-in">
                     {users.map(user => {
                         const affordable = getAffordableRewards(user);
                         if (affordable.length === 0) return null;
@@ -466,10 +495,83 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
                             <p>Complete more tasks to earn points!</p>
                         </div>
                     )}
-                </>
+                </div>
             )}
 
-            {/* Task Claim Modal */}
+            {activeTab === 'history' && (
+                <div className="tab-content fade-in">
+                    <div className="glass-card history-panel">
+                        <h2>📜 Recent Activity</h2>
+
+                        {/* Filters */}
+                        <div className="filters-bar">
+                            <select
+                                onChange={(e) => refreshTransactions({ user_id: e.target.value ? Number(e.target.value) : undefined })}
+                                className="filter-select"
+                            >
+                                <option value="">All Users</option>
+                                {users.map(u => <option key={u.id} value={u.id}>{u.nickname}</option>)}
+                            </select>
+
+                            <select
+                                onChange={(e) => refreshTransactions({ type: e.target.value || undefined })}
+                                className="filter-select"
+                            >
+                                <option value="">All Activity</option>
+                                <option value="EARN">Earned</option>
+                                <option value="REDEEM">Redeemed</option>
+                            </select>
+
+                            <input
+                                type="text"
+                                placeholder="Search..."
+                                onChange={(e) => refreshTransactions({ search: e.target.value || undefined })}
+                                className="filter-input"
+                            />
+                        </div>
+
+                        {transactions.length === 0 ? (
+                            <div className="empty-state">
+                                <p>No recent activity matching your filters.</p>
+                            </div>
+                        ) : (
+                            <div className="table-container">
+                                <table className="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Time</th>
+                                            <th>Who</th>
+                                            <th>Action</th>
+                                            <th>Points</th>
+                                            <th>Details</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {transactions.map(tx => (
+                                            <tr key={tx.id}>
+                                                <td>{formatDate(tx.timestamp)}</td>
+                                                <td><strong>{getUserName(tx.user_id)}</strong></td>
+                                                <td>
+                                                    <span className={`badge ${tx.type === 'EARN' ? 'badge-success' : 'badge-warning'}`}>
+                                                        {tx.type}
+                                                    </span>
+                                                </td>
+                                                <td className={tx.awarded_points >= 0 ? 'text-success' : 'text-danger'}>
+                                                    {tx.awarded_points > 0 ? '+' : ''}{tx.awarded_points}
+                                                </td>
+                                                <td>
+                                                    {tx.description || (tx.type === 'EARN' ? 'Completed task' : 'Redeemed reward')}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
             {selectedTask && (
                 <ClaimModal
                     taskName={selectedTask.task?.name || 'Task'}
@@ -479,7 +581,6 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
                 />
             )}
 
-            {/* Split Redeem Modal */}
             {selectedRedeem && (
                 <SplitRedeemModal
                     reward={selectedRedeem}
@@ -492,3 +593,4 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
         </div>
     );
 }
+

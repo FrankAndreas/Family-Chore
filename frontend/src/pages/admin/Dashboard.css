@@ -599,3 +599,159 @@
     font-size: var(--font-size-lg);
     color: var(--text-secondary);
 }
+
+/* Table Styles - Premium Enhancement */
+.table-container {
+    overflow-x: auto;
+    width: 100%;
+    margin-top: var(--spacing-md);
+    border-radius: var(--radius-md);
+    /* Soft shadow for depth */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: separate;
+    /* Allows for border-radius on rows/cells */
+    border-spacing: 0;
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+.data-table thead {
+    background: rgba(0, 0, 0, 0.2);
+    /* Darker header background */
+}
+
+.data-table th {
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border-color);
+    text-align: left;
+}
+
+.data-table th:first-child {
+    border-top-left-radius: var(--radius-md);
+}
+
+.data-table th:last-child {
+    border-top-right-radius: var(--radius-md);
+}
+
+.data-table tbody tr {
+    transition: background-color var(--transition-base);
+}
+
+.data-table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.03);
+    /* Subtle hover effect */
+}
+
+.data-table td {
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+    color: var(--text-primary);
+    /* Use primary text color for data */
+}
+
+.data-table tbody tr:last-child td {
+    border-bottom: none;
+    /* Remove bottom border for last row */
+}
+
+.data-table td strong {
+    font-weight: 600;
+    color: #fff;
+    /* Emphasize user names */
+}
+
+/* Filter Bar Styles */
+.filters-bar {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    background: rgba(0, 0, 0, 0.2);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    align-items: center;
+    flex-wrap: wrap;
+    /* Responsive wrapping */
+}
+
+.filter-select,
+.filter-input {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 0.6rem 1rem;
+    /* Slightly larger padding */
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
+    transition: all var(--transition-fast);
+}
+
+.filter-select:focus,
+.filter-input:focus {
+    outline: none;
+    border-color: #667eea;
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    /* Focus ring */
+}
+
+.filter-input {
+    flex: 1;
+    /* Search input takes available space */
+    min-width: 200px;
+}
+
+/* Fix for dark mode dropdowns */
+.filter-select option {
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    padding: 10px;
+}
+
+/* Badge Styles */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25em 0.75em;
+    border-radius: 9999px;
+    /* Pill shape */
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+}
+
+.badge-success {
+    background: rgba(72, 187, 120, 0.15);
+    color: #48bb78;
+    border: 1px solid rgba(72, 187, 120, 0.2);
+}
+
+.badge-warning {
+    background: rgba(237, 137, 54, 0.15);
+    color: #ed8936;
+    border: 1px solid rgba(237, 137, 54, 0.2);
+}
+
+/* Utility Colors for text */
+.text-success {
+    color: #48bb78 !important;
+    font-weight: 600;
+}
+
+.text-danger {
+    color: #f56565 !important;
+    font-weight: 600;
+}

@@ -312,6 +312,7 @@ def complete_task_instance(db: Session, instance_id: int, actual_user_id: int = 
         base_points_value=base_points,
         multiplier_used=multiplier,
         awarded_points=awarded_points,
+        description=f"Completed task: {task.name}",
         reference_instance_id=instance.id,
         timestamp=datetime.utcnow()
     )
@@ -397,6 +398,7 @@ def redeem_reward(db: Session, user_id: int, reward_id: int) -> dict:
         base_points_value=reward.cost_points,
         multiplier_used=1.0,  # No multiplier for redemptions
         awarded_points=-reward.cost_points,  # Negative to show deduction
+        description=f"Redeemed reward: {reward.name}",
         reference_instance_id=None,  # No task instance reference
         timestamp=datetime.utcnow()
     )
@@ -443,17 +445,17 @@ def redeem_reward_split(db: Session, reward_id: int, contributions: list[dict]) 
     for contrib in contributions:
         if contrib["points"] == 0:
             continue  # Skip users with 0 contribution
-        
+
         user = db.query(models.User).filter(models.User.id == contrib["user_id"]).first()
         if not user:
             return {"success": False, "error": f"User {contrib['user_id']} not found"}
-        
+
         if user.current_points < contrib["points"]:
             return {
                 "success": False,
                 "error": f"{user.nickname} has only {user.current_points} pts, needs {contrib['points']}"
             }
-        
+
         users_data.append({"user": user, "points": contrib["points"]})
 
     # All validations passed - deduct points and create transactions
@@ -461,10 +463,10 @@ def redeem_reward_split(db: Session, reward_id: int, contributions: list[dict]) 
     for data in users_data:
         user = data["user"]
         points = data["points"]
-        
+
         # Deduct points
         user.current_points -= points
-        
+
         # Create transaction
         transaction = models.Transaction(
             user_id=user.id,
@@ -472,19 +474,20 @@ def redeem_reward_split(db: Session, reward_id: int, contributions: list[dict]) 
             base_points_value=points,
             multiplier_used=1.0,
             awarded_points=-points,
+            description=f"Redeemed reward: {reward.name} (Split)",
             reference_instance_id=None,
             timestamp=datetime.utcnow()
         )
         db.add(transaction)
         db.flush()  # Get transaction ID
-        
+
         transactions.append({
             "user_id": user.id,
             "user_name": user.nickname,
             "points": points,
             "transaction_id": transaction.id
         })
-        
+
         # Clear goal if this was user's goal
         if user.current_goal_reward_id == reward_id:
             user.current_goal_reward_id = None
@@ -497,6 +500,46 @@ def redeem_reward_split(db: Session, reward_id: int, contributions: list[dict]) 
         "total_points": total_points,
         "transactions": transactions
     }
+
+
+# --- Transaction CRUD ---
+
+
+def get_user_transactions(db: Session, user_id: int, skip: int = 0, limit: int = 100,
+                          type: str = None, search: str = None, start_date: datetime = None, end_date: datetime = None):
+    """Get transaction history for a specific user with filters."""
+    query = db.query(models.Transaction).filter(models.Transaction.user_id == user_id)
+
+    if type:
+        query = query.filter(models.Transaction.type == type)
+    if search:
+        query = query.filter(models.Transaction.description.ilike(f"%{search}%"))
+    if start_date:
+        query = query.filter(models.Transaction.timestamp >= start_date)
+    if end_date:
+        query = query.filter(models.Transaction.timestamp <= end_date)
+
+    return query.order_by(models.Transaction.timestamp.desc()).offset(skip).limit(limit).all()
+
+
+def get_all_transactions(db: Session, skip: int = 0, limit: int = 100,
+                         user_id: int = None, type: str = None, search: str = None,
+                         start_date: datetime = None, end_date: datetime = None):
+    """Get global transaction history with filters."""
+    query = db.query(models.Transaction)
+
+    if user_id:
+        query = query.filter(models.Transaction.user_id == user_id)
+    if type:
+        query = query.filter(models.Transaction.type == type)
+    if search:
+        query = query.filter(models.Transaction.description.ilike(f"%{search}%"))
+    if start_date:
+        query = query.filter(models.Transaction.timestamp >= start_date)
+    if end_date:
+        query = query.filter(models.Transaction.timestamp <= end_date)
+
+    return query.order_by(models.Transaction.timestamp.desc()).offset(skip).limit(limit).all()
 
 
 # --- Settings & Language ---
