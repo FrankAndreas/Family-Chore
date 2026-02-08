@@ -76,14 +76,28 @@ const ImportTasksModal: React.FC<ImportTasksModalProps> = ({
         }
     };
 
+    const [showSchema, setShowSchema] = useState(false);
+
     const handleClose = () => {
         setJsonInput('');
         setParsedTasks([]);
         setParseError(null);
         setImportResult(null);
         setSkipDuplicates(false);
+        setShowSchema(false);
         onClose();
     };
+
+    const taskSchema = `{
+  "name": "string",
+  "description": "string",
+  "base_points": "number",
+  "assigned_role": "string (optional, e.g. 'Partner', 'Child')",
+  "schedule_type": "string (e.g. 'daily')",
+  "default_due_time": "string (HH:MM)",
+  "recurrence_min_days": "number (optional)",
+  "recurrence_max_days": "number (optional)"
+}`;
 
     const sampleJson = `{
   "tasks": [
@@ -97,6 +111,11 @@ const ImportTasksModal: React.FC<ImportTasksModalProps> = ({
     }
   ]
 }`;
+
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text);
+        // Could add a toast notification here if we had a toast system
+    };
 
     return (
         <Modal isOpen={isOpen} onClose={handleClose} title="Import Tasks" size="large">
@@ -127,7 +146,45 @@ const ImportTasksModal: React.FC<ImportTasksModalProps> = ({
                     >
                         📝 Load Example
                     </button>
+                    <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={() => setShowSchema(!showSchema)}
+                    >
+                        {showSchema ? '🔽 Hide Schema' : 'ℹ️ Show Schema'}
+                    </button>
                 </div>
+
+                {showSchema && (
+                    <div className="schema-container">
+                        <div className="schema-block">
+                            <div className="schema-header">
+                                <h5>Task Object Schema</h5>
+                                <button
+                                    className="btn-text"
+                                    onClick={() => copyToClipboard(taskSchema)}
+                                    title="Copy Schema"
+                                >
+                                    📋
+                                </button>
+                            </div>
+                            <pre>{taskSchema}</pre>
+                        </div>
+                        <div className="schema-block">
+                            <div className="schema-header">
+                                <h5>Example JSON</h5>
+                                <button
+                                    className="btn-text"
+                                    onClick={() => copyToClipboard(sampleJson)}
+                                    title="Copy Example"
+                                >
+                                    📋
+                                </button>
+                            </div>
+                            <pre>{sampleJson}</pre>
+                        </div>
+                    </div>
+                )}
 
                 <textarea
                     className="import-textarea"
@@ -301,6 +358,54 @@ const ImportTasksModal: React.FC<ImportTasksModalProps> = ({
                     justify-content: flex-end;
                     gap: 0.75rem;
                     margin-top: 0.5rem;
+                }
+                .schema-container {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 1rem;
+                    background: var(--bg-secondary, #f5f5f5);
+                    padding: 1rem;
+                    border-radius: 8px;
+                    margin-bottom: 0.5rem;
+                }
+                .schema-block {
+                    display: flex;
+                    flex-direction: column;
+                }
+                .schema-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 0.5rem;
+                }
+                .schema-header h5 {
+                    margin: 0;
+                    color: var(--text-primary, #333);
+                }
+                .schema-block pre {
+                    background: #1e293b;
+                    color: #f8fafc;
+                    padding: 0.75rem;
+                    border-radius: 6px;
+                    border: 1px solid var(--border-color, #334155);
+                    overflow-x: auto;
+                    font-size: 0.75rem;
+                    margin: 0;
+                    height: 200px;
+                }
+                .btn-text {
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                    font-size: 1.25rem;
+                    padding: 0.25rem;
+                    opacity: 0.8;
+                    transition: opacity 0.2s;
+                    color: inherit;
+                }
+                .btn-text:hover {
+                    opacity: 1;
+                    transform: scale(1.1);
                 }
             `}</style>
         </Modal>
