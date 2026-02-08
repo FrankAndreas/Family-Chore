@@ -22,6 +22,23 @@ This file captures accumulated knowledge from development sessions. The Libraria
 
 ---
 
+## 📅 2026-02-07: Task Import/Export & DOC_SYNC
+
+### What We Learned
+- **Role Names > IDs for AI**: Using human-readable role names (e.g., "Child") in export/import JSON makes it easy for ChatGPT/Claude to generate valid task lists.
+- **DOC_SYNC Constraint**: Adding a global constraint in `rules.json` ensures documentation updates aren't forgotten after features ship.
+- **Browser Testing**: The `browser_subagent` tool is effective for verifying UI features end-to-end.
+
+### Patterns Discovered
+- **Import/Export Design**: Export with metadata (version, timestamp) + Import with `skip_duplicates` flag handles versioning and duplicate detection cleanly.
+- **Modal Workflow**: Preview → Validate → Confirm pattern works well for bulk operations.
+
+### Gotchas
+- The backend port is `8000` (not `8001` as previously noted in some sessions).
+- When adding new features, check `docs/guides/user-guide.md` — the new DOC_SYNC constraint will remind you.
+
+---
+
 ## Template for Future Entries
 
 ```markdown
