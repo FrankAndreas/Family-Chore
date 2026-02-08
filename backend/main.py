@@ -494,6 +494,68 @@ def set_user_goal(user_id: int, reward_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
+
+@app.post("/rewards/{reward_id}/redeem", response_model=schemas.RedemptionResponse)
+async def redeem_reward(reward_id: int, user_id: int, db: Session = Depends(get_db)):
+    """
+    Redeem a reward for a user.
+    Deducts points, creates a REDEEM transaction, and optionally clears goal.
+    """
+    logger.info(f"Redeeming reward {reward_id} for user {user_id}")
+    result = crud.redeem_reward(db, user_id=user_id, reward_id=reward_id)
+
+    if not result["success"]:
+        logger.warning(f"Redemption failed: {result['error']}")
+        raise HTTPException(status_code=400, detail=result["error"])
+
+    logger.info(f"Redemption successful: {result['reward_name']} for {result['points_spent']} points")
+
+    # Broadcast SSE event for real-time updates
+    await broadcaster.broadcast("reward_redeemed", {
+        "user_id": user_id,
+        "reward_id": reward_id,
+        "reward_name": result["reward_name"],
+        "points_spent": result["points_spent"],
+        "remaining_points": result["remaining_points"]
+    })
+
+    return result
+
+
+@app.post("/rewards/{reward_id}/redeem-split", response_model=schemas.SplitRedemptionResponse)
+async def redeem_reward_split(
+    reward_id: int,
+    request: schemas.SplitRedemptionRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Redeem a reward by pooling points from multiple users.
+    Each contributing user gets their own transaction record.
+    """
+    logger.info(f"Split redemption for reward {reward_id} with {len(request.contributions)} contributors")
+    
+    # Convert contributions to list of dicts
+    contributions = [{"user_id": c.user_id, "points": c.points} for c in request.contributions]
+    
+    result = crud.redeem_reward_split(db, reward_id=reward_id, contributions=contributions)
+
+    if not result["success"]:
+        logger.warning(f"Split redemption failed: {result['error']}")
+        raise HTTPException(status_code=400, detail=result["error"])
+
+    logger.info(f"Split redemption successful: {result['reward_name']} for {result['total_points']} points")
+
+    # Broadcast SSE event for real-time updates
+    await broadcaster.broadcast("reward_redeemed", {
+        "reward_id": reward_id,
+        "reward_name": result["reward_name"],
+        "total_points": result["total_points"],
+        "contributors": result["transactions"],
+        "is_split": True
+    })
+
+    return result
+
 # --- Settings Endpoints ---
 
 

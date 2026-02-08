@@ -98,9 +98,16 @@ Go to **"Rewards"**.
 4. This reward will now appear on your Dashboard with a progress bar showing how close you are!
 
 ### 4. Redeeming Rewards
-When you have enough points (Progress bar says **"READY TO REDEEM!"**):
-1. Show your parent.
-2. Spend your points (Note: Redemption flow involves "spending" the points, currently tracked manually or via future update).
+Go to the **Dashboard** and switch to the **"Redeem"** tab.
+1. Browse rewards you can afford.
+2. Click **"Redeem"** on a reward you want.
+3. Confirm the redemption to instantly deduct points and notify your parents!
+
+##### 🎁 Split Redemption
+You can pool points with siblings or parents to buy a big reward together!
+1. Click **"Redeem"** on a reward.
+2. In the popup, use the **Split Evenly** button or adjust each person's contribution manually.
+3. Once the total matches the cost, click **"Redeem"** to share the cost!
 
 ---
 

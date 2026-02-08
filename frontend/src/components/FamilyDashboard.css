@@ -113,3 +113,221 @@
   font-size: 1.5rem;
   margin: 0 auto 0.5rem auto;
 }
+
+/* Tab Navigation */
+.dashboard-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+}
+
+.tab-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tab-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.tab-btn.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+/* Toast Notification */
+.dashboard-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  z-index: 2000;
+  animation: slideIn 0.3s ease-out;
+  box-shadow: 0 4px 20px rgba(17, 153, 142, 0.4);
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Rewards Grid */
+.rewards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.reward-card {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 120px;
+}
+
+.reward-card h4 {
+  font-size: 1.2rem;
+  margin: 0 0 0.5rem 0;
+}
+
+.reward-desc {
+  font-size: 0.9rem;
+  opacity: 0.7;
+  margin: 0 0 0.75rem 0;
+}
+
+.reward-cost {
+  font-weight: bold;
+  color: #ffd700;
+  font-size: 1.1rem;
+}
+
+.btn-redeem {
+  margin-top: 1rem;
+}
+
+.user-points-badge {
+  font-size: 0.9rem;
+  background: rgba(255, 215, 0, 0.2);
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  margin-left: 0.75rem;
+  color: #ffd700;
+}
+
+/* Success button (for redeem) */
+.btn-success {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn-success:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(17, 153, 142, 0.4);
+}
+
+.btn-success:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Split Redemption Modal */
+.split-modal {
+  max-width: 450px;
+}
+
+.split-modal .reward-title {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.preset-buttons {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.btn-small {
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+}
+
+.contribution-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.contribution-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.contrib-user {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.contrib-available {
+  font-size: 0.8rem;
+  opacity: 0.6;
+}
+
+.contrib-input {
+  width: 80px;
+  padding: 0.5rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 1rem;
+  text-align: center;
+}
+
+.contrib-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.total-display {
+  padding: 1rem;
+  border-radius: 12px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+}
+
+.total-display.exact {
+  background: rgba(17, 153, 142, 0.2);
+  color: #38ef7d;
+}
+
+.total-display.under {
+  background: rgba(255, 215, 0, 0.2);
+  color: #ffd700;
+}
+
+.total-display.over {
+  background: rgba(255, 99, 99, 0.2);
+  color: #ff6b6b;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.modal-actions .btn {
+  flex: 1;
+}

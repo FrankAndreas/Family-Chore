@@ -1,48 +1,56 @@
 # State & Global Memory
 
 **Librarian**: Agent-Librarian (Model: gemini-3-flash)
-**Last Updated**: 2026-02-08 07:27
+**Last Updated**: 2026-02-08 07:49
 
 ## 🧠 Global Context
-The project is a **Family Chore Gamification System** (Universal-GSD-Core). We are in the **Feature Expansion** phase — adding bulk task management capabilities.
+The project is a **Family Chore Gamification System** (Universal-GSD-Core). We are in the **Feature Expansion** phase — completing the Reward Hub redemption flow.
 
-## 🔄 Recent Changes (2026-02-07 Session)
+## 🔄 Recent Changes (2026-02-08 Session)
 
-### Task Import/Export Feature (NEW)
-- **Backend Endpoints**:
-  - `GET /tasks/export` — Returns all tasks as JSON with human-readable role names
-  - `POST /tasks/import` — Validates, resolves role names, handles duplicates, creates tasks
+### Reward Hub Redemption Flow (NEW)
+- **Backend**:
+  - `POST /rewards/{reward_id}/redeem` — Validates points, deducts cost, creates REDEEM transaction
+  - `redeem_reward()` function in `crud.py` with full validation logic
+  - `RedemptionResponse` schema in `schemas.py`
+  - SSE broadcast `reward_redeemed` for real-time updates
 - **Frontend**:
-  - Export button in TaskManagement → downloads JSON file
-  - Import button → opens modal with paste/upload, preview, skip duplicates option
-- **Files Changed**: `backend/main.py`, `backend/schemas.py`, `frontend/src/api.ts`, `frontend/src/components/ImportTasksModal.tsx`, `frontend/src/pages/admin/TaskManagement.tsx`
-- **User Guide**: Updated `docs/guides/user-guide.md` with Import/Export section
+  - "Redeem Now" button on affordable reward cards
+  - Confirmation modal with blur backdrop and slide-up animation
+  - Success/error toast messages
+  - Full i18n support (English + German)
+- **Files Changed**: `backend/crud.py`, `backend/schemas.py`, `backend/main.py`, `frontend/src/api.ts`, `frontend/src/pages/user/RewardHub.tsx`, `frontend/src/pages/user/RewardHub.css`, `frontend/src/locales/en.json`, `frontend/src/locales/de.json`
+- **Verification**: 42 BDD tests passing, TypeScript + ESLint clean, UI tested in browser
 
-### Workflow Improvements (NEW)
-- **DOC_SYNC Constraint**: Added to `.antigravity/rules.json` — ensures user-guide.md is updated after any user-facing feature
-- **Agent Handoff**: Added handoff flow to rules.json guiding agents to suggest next steps
+---
+
+## 🔄 Previous Session (2026-02-07)
+
+### Task Import/Export Feature
+- `GET /tasks/export` + `POST /tasks/import` endpoints
+- Export/Import buttons in TaskManagement with modal UI
+- User Guide updated with Import/Export section
+
+### Workflow Improvements
+- DOC_SYNC constraint added to rules.json
+- Agent Handoff flow documented
 
 ## 📍 System State
-- **Backend**: Port 8000. Scheduler active. 12 tasks in database.
-- **Frontend**: Port 5173. Import/Export UI functional.
-- **Database**: Functional with `last_daily_reset` tracking.
+- **Backend**: Port 8000. Scheduler active.
+- **Frontend**: Port 5173. Reward redemption UI functional.
+- **Database**: Functional. Transaction logging includes REDEEM type.
 
 ## 🚧 Active Tasks
-1. **Reward Hub UI**: Needs visual implementation.
-2. **Compliance Reports**: Needs UI graphs.
+1. **Compliance Reports**: Needs UI graphs.
+2. **Redemption History View** (optional): Could add transaction history tab.
 
 ## ⚠️ Known Issues / Watchlist
-- None currently. All tests passing.
-
-## 📝 Recent Commits
-- `9f98000` chore: add DOC_SYNC constraint to ensure user-guide updates
-- `ae88bfb` docs: add Import/Export tasks section to user guide
-- `abbcf25` feat(tasks): add import/export functionality for bulk task management
+- None currently. All 42 tests passing.
 
 ---
 
 ## 🔜 Next Session Prompt
 > **Start a new conversation and say:**  
-> "Review STATE.md — what's the next priority? Reward Hub UI or Compliance Reports?"
+> "Review STATE.md — Compliance Reports is next. Start with UI graphs for task completion stats."
 
 *This field is updated by the Librarian at the end of each session to guide the next agent.*

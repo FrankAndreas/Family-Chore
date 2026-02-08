@@ -153,6 +153,8 @@
         "toasts": {
             "create_success": "Belohnung erfolgreich erstellt! 🎉",
             "goal_success": "Ziel erfolgreich gesetzt! 🎯",
+            "redeem_success": "🎉 \"{{name}}\" erfolgreich eingelöst!",
+            "redeem_error": "Belohnung konnte nicht eingelöst werden. Bitte erneut versuchen.",
             "load_error": "Fehler beim Laden der Belohnungen",
             "create_error": "Fehler beim Erstellen der Belohnung",
             "goal_error": "Fehler beim Setzen des Ziels"
@@ -161,7 +163,11 @@
             "1": "Bronze",
             "2": "Silber",
             "3": "Gold"
-        }
+        },
+        "redeem_button": "Jetzt einlösen",
+        "confirm_redeem_title": "Einlösen bestätigen",
+        "confirm_redeem_message": "\"{{name}}\" für {{points}} Punkte einlösen?",
+        "confirm_redeem_button": "Ja, einlösen!"
     },
     "users": {
         "title": "Benutzerverwaltung",

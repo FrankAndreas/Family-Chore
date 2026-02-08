@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { useTranslation, Trans } from 'react-i18next';
-import { getRewards, createReward, setUserGoal } from '../../api';
+import { getRewards, createReward, setUserGoal, redeemReward } from '../../api';
 import type { Reward, User } from '../../types';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import Toast from '../../components/Toast';
@@ -28,6 +28,10 @@ const RewardHub: React.FC = () => {
         cost_points: 0,
         tier_level: 1,
     });
+
+    // Redemption modal state
+    const [redeemConfirm, setRedeemConfirm] = useState<{ reward: Reward; show: boolean } | null>(null);
+    const [redeeming, setRedeeming] = useState(false);
 
     useEffect(() => {
         fetchRewards();
@@ -72,6 +76,32 @@ const RewardHub: React.FC = () => {
             error(t('rewards.toasts.goal_error'));
             console.error('Failed to set goal', err);
         }
+    };
+
+    const handleRedeemClick = (reward: Reward) => {
+        setRedeemConfirm({ reward, show: true });
+    };
+
+    const handleRedeemConfirm = async () => {
+        if (!redeemConfirm) return;
+
+        setRedeeming(true);
+        try {
+            await redeemReward(redeemConfirm.reward.id, currentUser.id);
+            success(t('rewards.toasts.redeem_success', { name: redeemConfirm.reward.name }));
+            setRedeemConfirm(null);
+            // Refresh page to update points (SSE should handle this, but forcing refresh)
+            window.location.reload();
+        } catch (err) {
+            error(t('rewards.toasts.redeem_error'));
+            console.error('Failed to redeem reward', err);
+        } finally {
+            setRedeeming(false);
+        }
+    };
+
+    const handleRedeemCancel = () => {
+        setRedeemConfirm(null);
     };
 
     const getProgressPercentage = (cost: number): number => {
@@ -300,12 +330,50 @@ const RewardHub: React.FC = () => {
                             )}
 
                             {affordable && (
+                                <button
+                                    className="btn btn-success btn-block mt-sm"
+                                    onClick={() => handleRedeemClick(reward)}
+                                >
+                                    🎉 {t('rewards.redeem_button')}
+                                </button>
+                            )}
+
+                            {affordable && (
                                 <div className="affordable-badge">{t('rewards.card.can_afford_badge')}</div>
                             )}
                         </div>
                     );
                 })}
             </div>
+
+            {/* Redemption Confirmation Modal */}
+            {redeemConfirm && redeemConfirm.show && (
+                <div className="modal-overlay" onClick={handleRedeemCancel}>
+                    <div className="modal-content glass-panel" onClick={e => e.stopPropagation()}>
+                        <h2>{t('rewards.confirm_redeem_title')}</h2>
+                        <p>{t('rewards.confirm_redeem_message', {
+                            name: redeemConfirm.reward.name,
+                            points: redeemConfirm.reward.cost_points
+                        })}</p>
+                        <div className="modal-actions">
+                            <button
+                                className="btn btn-secondary"
+                                onClick={handleRedeemCancel}
+                                disabled={redeeming}
+                            >
+                                {t('common.cancel')}
+                            </button>
+                            <button
+                                className="btn btn-success"
+                                onClick={handleRedeemConfirm}
+                                disabled={redeeming}
+                            >
+                                {redeeming ? t('common.loading') : t('rewards.confirm_redeem_button')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

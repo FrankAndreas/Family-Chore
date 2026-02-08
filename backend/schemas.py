@@ -207,6 +207,36 @@ class Reward(RewardBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+class RedemptionResponse(BaseModel):
+    """Response from reward redemption endpoint."""
+    success: bool
+    transaction_id: Optional[int] = None
+    reward_name: Optional[str] = None
+    points_spent: Optional[int] = None
+    remaining_points: Optional[int] = None
+    error: Optional[str] = None
+
+
+class SplitContribution(BaseModel):
+    """A single user's contribution to a split redemption."""
+    user_id: int
+    points: int = Field(..., ge=0, description="Points this user contributes (0 or more)")
+
+
+class SplitRedemptionRequest(BaseModel):
+    """Request to redeem a reward with contributions from multiple users."""
+    contributions: list[SplitContribution] = Field(..., min_length=1)
+
+
+class SplitRedemptionResponse(BaseModel):
+    """Response from split redemption endpoint."""
+    success: bool
+    reward_name: Optional[str] = None
+    total_points: Optional[int] = None
+    transactions: Optional[list[dict]] = None  # List of {user_id, user_name, points, transaction_id}
+    error: Optional[str] = None
+
+
 # --- Task Import/Export Schemas ---
 
 

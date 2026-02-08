@@ -117,4 +117,35 @@ export const createReward = (rewardData: {
 export const setUserGoal = (user_id: number, reward_id: number) =>
     api.post(`/users/${user_id}/goal?reward_id=${reward_id}`);
 
+export interface RedemptionResponse {
+    success: boolean;
+    transaction_id?: number;
+    reward_name?: string;
+    points_spent?: number;
+    remaining_points?: number;
+    error?: string;
+}
+
+export const redeemReward = (reward_id: number, user_id: number) =>
+    api.post<RedemptionResponse>(`/rewards/${reward_id}/redeem`, null, {
+        params: { user_id }
+    });
+
+export interface SplitContribution {
+    user_id: number;
+    points: number;
+}
+
+export interface SplitRedemptionResponse {
+    success: boolean;
+    reward_name?: string;
+    total_points?: number;
+    transactions?: { user_id: number; user_name: string; points: number; transaction_id: number }[];
+    error?: string;
+}
+
+export const redeemRewardSplit = (reward_id: number, contributions: SplitContribution[]) =>
+    api.post<SplitRedemptionResponse>(`/rewards/${reward_id}/redeem-split`, { contributions });
+
 export default api;
+
