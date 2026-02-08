@@ -27,6 +27,18 @@
 **Use for:** Drafting specs, requirement gathering, and updating docs/master-spec.md.
 **Prompt prefix:** "As Product_Owner..." or use `/spec`
 
+### 🔬 Researcher
+**Recommended Tier:** Mid (Flash/Pro-low)  
+**Use for:** Analyzing open-source and closed-source docs to find prior art.
+**Prompt prefix:** "As Researcher..."
+**Behavior:** Plans search strategy, asks for confirmation, then executes. Say "Skip research" for simple features.
+
+### 🔍 Code_Reviewer
+**Recommended Tier:** High (Pro/Claude) - **different model than Executor**  
+**Use for:** Reviewing uncommitted code like a PR reviewer.
+**Prompt prefix:** "As Code_Reviewer..."
+**Behavior:** Uses `git diff` to analyze changes and provide feedback.
+
 ---
 
 ## 💡 Quota Intelligence Protocol
@@ -45,13 +57,19 @@ For any significant feature:
 0. **SPEC** (Product_Owner - High Tier)
    "As Product_Owner, draft a spec for [feature]"
 
-1. **PLAN** (Architect - High Tier)
+1. **RESEARCH** (Researcher - Mid Tier) *(optional)*
+   "As Researcher, research how others implement [feature]"
+
+2. **PLAN** (Architect - High Tier)
    "Plan the [feature] - what files, endpoints, and components are needed?"
 
-2. **EXECUTE** (Executor - Mid/Low Tier)
+3. **EXECUTE** (Executor - Mid/Low Tier)
    "Implement the plan" or "Implement [specific part]"
 
-3. **VERIFY** (QA_Nerd - Low Tier)
+4. **REVIEW** (Code_Reviewer - High Tier, different model)
+   "As Code_Reviewer, review the uncommitted changes."
+
+5. **VERIFY** (QA_Nerd - Low Tier)
    "Verify [feature] works in browser" or "/pre-commit"
 
 ---
@@ -62,9 +80,11 @@ At the end of each session, I will suggest the next agent based on this flow:
 
 | Current Role | Next Role | Suggested Prompt |
 |--------------|-----------|------------------|
-| Product_Owner | Architect | "As Architect, plan the implementation for this spec." |
+| Product_Owner | Researcher | "As Researcher, research how others implement this." |
+| Researcher | Architect | "As Architect, plan the implementation." |
 | Architect | Executor | "As Executor, implement the plan." |
-| Executor | QA_Nerd | "As QA_Nerd, verify the implementation." |
+| Executor | Code_Reviewer | "As Code_Reviewer, review the changes." |
+| Code_Reviewer | QA_Nerd | "As QA_Nerd, verify the implementation." |
 | QA_Nerd | Librarian | "As Librarian, update STATE.md and LEARNINGS.md." |
 | Librarian | Fresh Session | Start new conversation: "What's my next step?" |
 
