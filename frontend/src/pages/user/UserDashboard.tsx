@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { getUserDailyTasks, completeTask, getTasks, getUserTransactions } from '../../api';
 import type { TaskInstance, Task, User, Transaction, TransactionFilters } from '../../types';
