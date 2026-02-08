@@ -108,3 +108,4 @@ I will read `STATE.md` and suggest the appropriate action.
 3. **SPEC_FIRST** - Ask for clarification on ambiguous requirements.
 4. **QUOTA_INTELLIGENCE** - Always verify model-task fit to save credits.
 5. **FRESH_CONTEXT** - After major milestones, suggest committing and restarting for a clean session.
+6. **MIGRATION_REQUIRED** - Schema changes must include a migration and version bump.

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { getPendingTasks, getUsers, getRewards, completeTask, redeemRewardSplit, getAllTransactions } from '../api';
 import type { TaskInstance, User, Reward, Transaction } from '../types';
 import './FamilyDashboard.css';
@@ -182,6 +182,62 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
     const [connected, setConnected] = useState(false);
     const eventSourceRef = useRef<EventSource | null>(null);
 
+    const loadData = useCallback(async () => {
+        try {
+            const [tasksRes, usersRes, rewardsRes] = await Promise.all([
+                getPendingTasks(),
+                getUsers(),
+                getRewards()
+            ]);
+            setTasks(tasksRes.data);
+            setUsers(usersRes.data);
+            setRewards(rewardsRes.data);
+            setLastUpdate(new Date());
+        } catch (error) {
+            console.error("Failed to load family dashboard data", error);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    const refreshTasks = useCallback(async () => {
+        try {
+            const tasksRes = await getPendingTasks();
+            setTasks(tasksRes.data);
+            setLastUpdate(new Date());
+        } catch (error) {
+            console.error("Failed to refresh tasks", error);
+        }
+    }, []);
+
+    const refreshData = useCallback(async () => {
+        try {
+            const [usersRes, rewardsRes] = await Promise.all([getUsers(), getRewards()]);
+            setUsers(usersRes.data);
+            setRewards(rewardsRes.data);
+            setLastUpdate(new Date());
+        } catch (error) {
+            console.error("Failed to refresh data", error);
+        }
+    }, []);
+
+    const [filters, setFilters] = useState({});
+
+    const refreshTransactions = useCallback(async (newFilters = {}) => {
+        const updatedFilters = { ...filters, ...newFilters };
+        setFilters(updatedFilters);
+        try {
+            const transactionsRes = await getAllTransactions({
+                skip: 0,
+                limit: 50,
+                ...updatedFilters
+            });
+            setTransactions(transactionsRes.data);
+        } catch (error) {
+            console.error("Failed to refresh transactions", error);
+        }
+    }, [filters]);
+
     useEffect(() => {
         loadData();
 
@@ -222,70 +278,13 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
                 eventSourceRef.current.close();
             }
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [activeTab, loadData, refreshData, refreshTasks, refreshTransactions]);
 
     useEffect(() => {
         if (activeTab === 'history') {
             refreshTransactions();
         }
-    }, [activeTab]);
-
-    const loadData = async () => {
-        try {
-            const [tasksRes, usersRes, rewardsRes] = await Promise.all([
-                getPendingTasks(),
-                getUsers(),
-                getRewards()
-            ]);
-            setTasks(tasksRes.data);
-            setUsers(usersRes.data);
-            setRewards(rewardsRes.data);
-            setLastUpdate(new Date());
-        } catch (error) {
-            console.error("Failed to load family dashboard data", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const refreshTasks = async () => {
-        try {
-            const tasksRes = await getPendingTasks();
-            setTasks(tasksRes.data);
-            setLastUpdate(new Date());
-        } catch (error) {
-            console.error("Failed to refresh tasks", error);
-        }
-    };
-
-    const [filters, setFilters] = useState({});
-
-    const refreshTransactions = async (newFilters = {}) => {
-        const updatedFilters = { ...filters, ...newFilters };
-        setFilters(updatedFilters);
-        try {
-            const transactionsRes = await getAllTransactions({
-                skip: 0,
-                limit: 50,
-                ...updatedFilters
-            });
-            setTransactions(transactionsRes.data);
-        } catch (error) {
-            console.error("Failed to refresh transactions", error);
-        }
-    };
-
-    const refreshData = async () => {
-        try {
-            const [usersRes, rewardsRes] = await Promise.all([getUsers(), getRewards()]);
-            setUsers(usersRes.data);
-            setRewards(rewardsRes.data);
-            setLastUpdate(new Date());
-        } catch (error) {
-            console.error("Failed to refresh data", error);
-        }
-    };
+    }, [activeTab, refreshTransactions]);
 
     const handleCompleteClick = (task: TaskInstance) => {
         setSelectedTask(task);

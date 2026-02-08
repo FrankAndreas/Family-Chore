@@ -37,6 +37,8 @@ const TaskManagement: React.FC = () => {
     }, []);
 
     const fetchData = async () => {
+        setLoading(true);
+        setError('');
         try {
             const [tasksRes, rolesRes] = await Promise.all([getTasks(), getRoles()]);
             setTasks(tasksRes.data);
@@ -44,9 +46,15 @@ const TaskManagement: React.FC = () => {
             if (rolesRes.data.length > 0 && assignedRoleId === 0) {
                 setAssignedRoleId(rolesRes.data[0].id);
             }
-        } catch (err) {
+        } catch (err: unknown) {
             console.error('Failed to fetch data', err);
-            showError('Failed to load tasks and roles');
+            let errorMsg = 'Failed to load tasks and roles. Please verify database connection and schema.';
+            if (err && typeof err === 'object' && 'response' in err) {
+                const response = (err as { response: { data?: { detail?: string } } }).response;
+                errorMsg = response?.data?.detail || errorMsg;
+            }
+            setError(errorMsg);
+            showError(errorMsg);
         } finally {
             setLoading(false);
         }
@@ -341,9 +349,18 @@ const TaskManagement: React.FC = () => {
                 </div>
             )}
 
-            {tasks.length === 0 && (
+            {tasks.length === 0 && !error && (
                 <div className="empty-state">
                     <p>No tasks yet. Create one to get started!</p>
+                </div>
+            )}
+
+            {error && (
+                <div className="empty-state" style={{ borderColor: '#ef4444' }}>
+                    <p style={{ color: '#ef4444' }}>⚠️ {error}</p>
+                    <button className="btn btn-secondary btn-sm mt-m" onClick={fetchData}>
+                        Retry Loading
+                    </button>
                 </div>
             )}
 

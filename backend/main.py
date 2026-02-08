@@ -13,6 +13,7 @@ from apscheduler.triggers.cron import CronTrigger
 
 from . import models, schemas, crud
 from .database import SessionLocal, engine
+from .migrations.manager import MigrationManager
 
 # Configure logging
 logging.basicConfig(
@@ -70,7 +71,10 @@ def scheduled_daily_reset():
 
 @app.on_event("startup")
 def on_startup():
-    # Ensure tables exist
+    # 1. Run migrations first to ensure schema is up-to-date
+    MigrationManager.run_migrations()
+
+    # 2. Ensure tables exist (will create new tables if any)
     models.Base.metadata.create_all(bind=engine)
     # Seed initial data
     try:

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getUsers, getTasks, triggerDailyReset, getAllTransactions } from '../../api';
 import type { User, Task, Transaction } from '../../types';
@@ -12,13 +12,9 @@ const AdminDashboard: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [resetting, setResetting] = useState(false);
 
-    useEffect(() => {
-        fetchData();
-    }, []);
-
     const [filters, setFilters] = useState({});
 
-    const fetchData = async (newFilters = {}) => {
+    const fetchData = useCallback(async (newFilters = {}) => {
         const updatedFilters = { ...filters, ...newFilters };
         setFilters(updatedFilters);
         try {
@@ -35,7 +31,11 @@ const AdminDashboard: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [filters]);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
 
     const handleDailyReset = async () => {
         setResetting(true);

@@ -8,17 +8,15 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We a
 
 ## 🔄 Recent Changes (2026-02-08 Session 2)
 
-### Transaction History & Styling (NEW)
+### DB Versioning & Deployment Fix (v1.3)
 - **Backend**:
-  - `description` field added to `Transaction` model (snapshot of task/reward name)
-  - Filtering API: User, Type (Earn/Redeem), Search, Date Range
-  - Fixed `datetime` import crash in `main.py`
+  - `MigrationManager` added: Auto-versions DB on startup (v1.3)
+  - Consolidated migration script: Idempotent column additions for tasks, transactions, and users
+  - Enforced migrations via new `rules.json` constraint (`MIGRATION_REQUIRED`)
 - **Frontend**:
-  - **Premium Styling**: New `.table-container`, glassmorphism inputs, and badges
-  - **Dark Mode**: Fixed unreadable dropdown options
-  - **Connectivity**: Fixed "Reconnecting" issue (SSE port 8001 -> 8000)
-  - **Filtering**: Added UI for User, Type, and Search in all dashboards
-- **Docs**: Updated `user-guide.md` with History & Filtering section
+  - **Error Handling**: Improved `TaskManagement` to show clear DB error UI with "Retry" button
+  - **Linting**: Fixed `any` type issues and `useCallback` dependency warnings
+- **Stability**: Confirmed schema consistency for Synology deployments
 
 ### Deployment & Stability
 - Confirmed Backend runs on port **8000**
@@ -28,7 +26,7 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We a
 ## 📍 System State
 - **Backend**: Port 8000 (CORRECTED from 8001). Stable.
 - **Frontend**: Port 5173. Connected.
-- **Database**: Schema v1.2 (transactions table updated).
+- **Database**: Schema v1.3 (Auto-versioning enabled).
 
 ## 🚧 Active Tasks
 1. **Compliance Reports**: Needs UI graphs.
