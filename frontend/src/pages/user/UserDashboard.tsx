@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { getUserDailyTasks, completeTask, getTasks, getUserTransactions } from '../../api';
-import type { TaskInstance, Task, User, Transaction } from '../../types';
+import type { TaskInstance, Task, User, Transaction, TransactionFilters } from '../../types';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import Toast from '../../components/Toast';
 import { useToast } from '../../hooks/useToast';
@@ -25,19 +25,10 @@ const UserDashboard: React.FC = () => {
     const [completingId, setCompletingId] = useState<number | null>(null);
     const { toasts, removeToast, success, error: showError } = useToast();
 
-    useEffect(() => {
-        if (currentUser) {
-            fetchData();
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentUser, activeTab]);
+    const [filters, setFilters] = useState<TransactionFilters>({});
 
-    const [filters, setFilters] = useState({});
-
-    const fetchData = async (newFilters = {}) => {
+    const fetchData = useCallback(async () => {
         setLoading(true);
-        const updatedFilters = { ...filters, ...newFilters };
-        setFilters(updatedFilters);
 
         try {
             if (activeTab === 'tasks') {
@@ -57,7 +48,7 @@ const UserDashboard: React.FC = () => {
                 }));
                 setTasks(instancesWithDetails);
             } else if (activeTab === 'history') {
-                const transactionsRes = await getUserTransactions(currentUser.id, { limit: 50, ...updatedFilters });
+                const transactionsRes = await getUserTransactions(currentUser.id, { limit: 50, ...filters });
                 setTransactions(transactionsRes.data);
             }
         } catch (err) {
@@ -66,7 +57,13 @@ const UserDashboard: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [currentUser.id, activeTab, filters, showError]);
+
+    useEffect(() => {
+        if (currentUser) {
+            fetchData();
+        }
+    }, [fetchData, currentUser]);
 
     const handleComplete = async (instanceId: number) => {
         setCompletingId(instanceId);
@@ -180,8 +177,9 @@ const UserDashboard: React.FC = () => {
                             {/* Filters */}
                             <div className="filters-bar">
                                 <select
-                                    onChange={(e) => fetchData({ type: e.target.value || undefined })}
+                                    onChange={(e) => setFilters((prev: TransactionFilters) => ({ ...prev, type: e.target.value as 'EARN' | 'REDEEM' | undefined || undefined }))}
                                     className="filter-select"
+                                    value={filters.type || ''}
                                 >
                                     <option value="">All Activity</option>
                                     <option value="EARN">Earned</option>
@@ -191,8 +189,9 @@ const UserDashboard: React.FC = () => {
                                 <input
                                     type="text"
                                     placeholder="Search description..."
-                                    onChange={(e) => fetchData({ search: e.target.value || undefined })}
+                                    onChange={(e) => setFilters((prev: TransactionFilters) => ({ ...prev, search: e.target.value || undefined }))}
                                     className="filter-input"
+                                    value={filters.search || ''}
                                 />
                             </div>
 

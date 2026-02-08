@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getUsers, getTasks, triggerDailyReset, getAllTransactions } from '../../api';
-import type { User, Task, Transaction } from '../../types';
+import type { User, Task, Transaction, TransactionFilters } from '../../types';
 import './Dashboard.css';
 
 const AdminDashboard: React.FC = () => {
@@ -12,16 +12,14 @@ const AdminDashboard: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [resetting, setResetting] = useState(false);
 
-    const [filters, setFilters] = useState({});
+    const [filters, setFilters] = useState<TransactionFilters>({});
 
-    const fetchData = useCallback(async (newFilters = {}) => {
-        const updatedFilters = { ...filters, ...newFilters };
-        setFilters(updatedFilters);
+    const fetchData = useCallback(async () => {
         try {
             const [usersRes, tasksRes, transactionsRes] = await Promise.all([
                 getUsers(),
                 getTasks(),
-                getAllTransactions({ limit: 50, ...updatedFilters })
+                getAllTransactions({ limit: 50, ...filters })
             ]);
             setUsers(usersRes.data);
             setTasks(tasksRes.data);
@@ -159,16 +157,18 @@ const AdminDashboard: React.FC = () => {
                 {/* Filters */}
                 <div className="filters-bar">
                     <select
-                        onChange={(e) => fetchData({ user_id: e.target.value ? Number(e.target.value) : undefined })}
+                        onChange={(e) => setFilters((prev: TransactionFilters) => ({ ...prev, user_id: e.target.value ? Number(e.target.value) : undefined }))}
                         className="filter-select"
+                        value={filters.user_id || ''}
                     >
                         <option value="">All Users</option>
                         {users.map(u => <option key={u.id} value={u.id}>{u.nickname}</option>)}
                     </select>
 
                     <select
-                        onChange={(e) => fetchData({ type: e.target.value || undefined })}
+                        onChange={(e) => setFilters((prev: TransactionFilters) => ({ ...prev, type: e.target.value || undefined }))}
                         className="filter-select"
+                        value={filters.type || ''}
                     >
                         <option value="">All Activity</option>
                         <option value="EARN">Earned</option>
@@ -178,8 +178,9 @@ const AdminDashboard: React.FC = () => {
                     <input
                         type="text"
                         placeholder="Search description..."
-                        onChange={(e) => fetchData({ search: e.target.value || undefined })}
+                        onChange={(e) => setFilters((prev: TransactionFilters) => ({ ...prev, search: e.target.value || undefined }))}
                         className="filter-input"
+                        value={filters.search || ''}
                     />
                 </div>
 

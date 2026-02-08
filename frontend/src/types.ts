@@ -57,3 +57,11 @@ export interface Transaction {
     reference_instance_id: number | null;
     timestamp: string;
 }
+
+export interface TransactionFilters {
+    user_id?: number;
+    type?: string;
+    search?: string;
+    limit?: number;
+    offset?: number;
+}
