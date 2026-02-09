@@ -53,8 +53,13 @@ ChoreSpec is a family-oriented chore gamification system. It transforms househol
 ### 2.4 Reward Hub
 - **Catalog**: Global list of available rewards with point costs and tier levels.
 - **Goal Setting**: Users can select one active "Goal".
-- **Progress Tracking**: UI visualizes progress toward the goal (Points Earned vs. Cost).
-- **Redemption**: (Logic implemented in backend models, UI in progress).
+- **Progress Tracking**: UI visualizes progress toward the goal (Points Earned vs. Cost) with pulse animations for affordable items.
+- **Tiered Unlocks (V1.1)**:
+  - Rewards are grouped into **Bronze** (Default), **Silver** (500 LP), and **Gold** (1500 LP) tiers.
+  - Tiers unlock based on `lifetime_points`. Spending points does not demote a user.
+  - Locked rewards are visible but desaturated and unclickable to drive aspiration.
+- **Celebration**: Visual confetti effect upon unlocking a new tier.
+- **Admin Override**: Admins see all rewards as unlocked for management purposes.
 
 ---
 

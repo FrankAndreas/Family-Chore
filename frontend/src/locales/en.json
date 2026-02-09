@@ -150,24 +150,11 @@
             "message": "No rewards available yet.",
             "admin_hint": "Create one to get started!"
         },
-        "toasts": {
-            "create_success": "Reward created successfully! 🎉",
-            "goal_success": "Goal set successfully! 🎯",
-            "redeem_success": "🎉 Redeemed \"{{name}}\" successfully!",
-            "redeem_error": "Failed to redeem reward. Please try again.",
-            "load_error": "Failed to load rewards",
-            "create_error": "Failed to create reward",
-            "goal_error": "Failed to set goal"
-        },
-        "tier_names": {
-            "1": "Bronze",
-            "2": "Silver",
-            "3": "Gold"
-        },
-        "redeem_button": "Redeem Now",
-        "confirm_redeem_title": "Confirm Redemption",
-        "confirm_redeem_message": "Redeem \"{{name}}\" for {{points}} points?",
-        "confirm_redeem_button": "Yes, Redeem!"
+        "confirm_redeem_button": "Yes, Redeem!",
+        "tier_progress": {
+            "title": "{{tier}} Progress",
+            "max_level": "Max Level Reached! 🏆"
+        }
     },
     "users": {
         "title": "User Management",

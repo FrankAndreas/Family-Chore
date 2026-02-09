@@ -3,6 +3,8 @@ import { useOutletContext } from 'react-router-dom';
 import { useTranslation, Trans } from 'react-i18next';
 import { getRewards, createReward, setUserGoal, redeemReward } from '../../api';
 import type { Reward, User } from '../../types';
+import { TIER_THRESHOLDS } from '../../constants';
+import { triggerConfetti } from '../../utils/confetti';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import Toast from '../../components/Toast';
 import { useToast } from '../../hooks/useToast';
@@ -126,6 +128,52 @@ const RewardHub: React.FC = () => {
         );
     };
 
+    const getTierProgress = () => {
+        const lp = currentUser.lifetime_points;
+        if (lp < TIER_THRESHOLDS.SILVER) {
+            return {
+                current: 'Bronze',
+                next: 'Silver',
+                target: TIER_THRESHOLDS.SILVER,
+                percent: Math.min(100, (lp / TIER_THRESHOLDS.SILVER) * 100)
+            };
+        } else if (lp < TIER_THRESHOLDS.GOLD) {
+            return {
+                current: 'Silver',
+                next: 'Gold',
+                target: TIER_THRESHOLDS.GOLD,
+                percent: Math.min(100, ((lp - TIER_THRESHOLDS.SILVER) / (TIER_THRESHOLDS.GOLD - TIER_THRESHOLDS.SILVER)) * 100)
+            };
+        } else {
+            return {
+                current: 'Gold',
+                next: 'Max',
+                target: lp,
+                percent: 100
+            };
+        }
+    };
+
+    const tierStats = getTierProgress();
+    const isAdmin = currentUser.role.name === 'Admin';
+
+    // Celebration Logic: trigger if points increase across a threshold
+    const prevPoints = React.useRef(currentUser.lifetime_points);
+
+    useEffect(() => {
+        const prev = prevPoints.current;
+        const curr = currentUser.lifetime_points;
+
+        if (curr > prev) {
+            if ((prev < TIER_THRESHOLDS.SILVER && curr >= TIER_THRESHOLDS.SILVER) ||
+                (prev < TIER_THRESHOLDS.GOLD && curr >= TIER_THRESHOLDS.GOLD)) {
+                triggerConfetti();
+                success(t('rewards.toasts.tier_unlocked', { tier: tierStats.current }));
+            }
+        }
+        prevPoints.current = curr;
+    }, [currentUser.lifetime_points, tierStats.current, t, success]);
+
     if (loading) {
         return <LoadingSpinner fullPage message={t('rewards.loading')} />;
     }
@@ -141,6 +189,7 @@ const RewardHub: React.FC = () => {
     const userGoal = currentUser.current_goal_reward_id
         ? rewards.find(r => r.id === currentUser.current_goal_reward_id)
         : null;
+
 
     return (
         <div className="page-container reward-hub fade-in">
@@ -173,6 +222,29 @@ const RewardHub: React.FC = () => {
                     </button>
                 )}
             </header>
+
+            {/* Tier Progress Bar */}
+            <div className="tier-progress-container glass-panel">
+                <div className="tier-header">
+                    <h2>
+                        <span style={{ fontSize: '24px', cursor: 'pointer' }} onClick={triggerConfetti}>
+                            {tierStats.current === 'Gold' ? '🥇' : tierStats.current === 'Silver' ? '🥈' : '🥉'}
+                        </span>
+                        {t('rewards.tier_progress.title', { tier: tierStats.current })}
+                    </h2>
+                    <span className="tier-info">
+                        {tierStats.current === 'Gold'
+                            ? t('rewards.tier_progress.max_level')
+                            : `${currentUser.lifetime_points} / ${tierStats.target} LP`}
+                    </span>
+                </div>
+                <div className="tier-progress-bar">
+                    <div
+                        className="tier-progress-fill"
+                        style={{ width: `${tierStats.percent}%` }}
+                    ></div>
+                </div>
+            </div>
 
             {/* Current Goal Display */}
             {userGoal && (
@@ -291,11 +363,24 @@ const RewardHub: React.FC = () => {
                     const affordable = canAfford(reward.cost_points);
                     const isCurrentGoal = userGoal?.id === reward.id;
 
+                    // Locked logic
+                    const requiredPoints = reward.tier_level === 3 ? TIER_THRESHOLDS.GOLD
+                        : reward.tier_level === 2 ? TIER_THRESHOLDS.SILVER
+                            : TIER_THRESHOLDS.BRONZE;
+
+                    const isLocked = !isAdmin && currentUser.lifetime_points < requiredPoints;
+
                     return (
                         <div
                             key={reward.id}
-                            className={`reward-card glass-panel ${affordable ? 'affordable' : ''} ${isCurrentGoal ? 'current-goal' : ''}`}
+                            className={`reward-card glass-panel ${affordable ? 'affordable' : ''} ${isCurrentGoal ? 'current-goal' : ''} ${isLocked ? 'locked' : ''}`}
                         >
+                            {isLocked && (
+                                <div className="locked-overlay">
+                                    🔒 {t('rewards.card.locked_label')}
+                                </div>
+                            )}
+
                             {isCurrentGoal && <div className="goal-indicator">{t('rewards.card.goal_indicator')}</div>}
 
                             <div className="reward-header">

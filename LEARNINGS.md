@@ -104,6 +104,20 @@ This file captures accumulated knowledge from development sessions. The Libraria
 
 ---
 
+## 📅 2026-02-09: Quota Intelligence & Spec Persistence
+
+### What We Learned
+- **Quota Intelligence Failure**: Agents must self-report when their tier (Low/Flash) is insufficient for high-reasoning tasks like drafting specifications. Failure to check `.agent/rules/00-global-constraints.md` leads to suboptimal architectural planning.
+- **Context Volatility**: Internal context is lost on session restart. Recording lesson-learned entries in `LEARNINGS.md` is the primary mechanism for preserving institutional memory across restarts.
+
+### Patterns Discovered
+- **Tier-Aware Planning**: Always check model tier against `00-global-constraints.md` before starting any `PLANNING` phase tasks.
+
+### Gotchas
+- The `spec.md` workflow explicitly recommends Gemini Pro/Claude for drafting; failing to follow this is a breach of project-defined "Quota Intelligence Protocol".
+
+---
+
 ## Template for Future Entries
 
 ```markdown
