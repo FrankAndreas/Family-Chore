@@ -1,0 +1,58 @@
+{
+    "project_name": "Universal-GSD-Core",
+    "version": "2.0",
+    "roles": {
+        "product_owner": {
+            "model": "claude-3-5-sonnet",
+            "fallbacks": [
+                "gemini-3-pro",
+                "gemini-3-flash"
+            ],
+            "description": "Requirement gathering, updating docs/master-spec.md, and verifying feature alignment.",
+            "temperature": 0.7
+        },
+        "researcher": {
+            "model": "gemini-3-pro",
+            "fallbacks": [
+                "gemini-3-flash"
+            ],
+            "description": "Analyzes documentation and prior art. Plans search strategy.",
+            "temperature": 0.4
+        },
+        "architect": {
+            "model": "claude-3-5-sonnet",
+            "fallbacks": [
+                "gemini-3-pro",
+                "gemini-3-flash"
+            ],
+            "description": "Logic flow, API design, and PLAN.md ownership.",
+            "temperature": 0.2
+        },
+        "executor": {
+            "model": "gemini-3-pro",
+            "fallbacks": [
+                "gemini-3-flash"
+            ],
+            "description": "Standard code implementation and modular refactoring.",
+            "temperature": 0.1
+        },
+        "code_reviewer": {
+            "model": "claude-3-5-sonnet",
+            "fallbacks": [
+                "gemini-3-pro"
+            ],
+            "description": "Strict code review using git diff. Must offer critical feedback.",
+            "temperature": 0.1
+        },
+        "qa_nerd": {
+            "model": "gemini-3-flash",
+            "description": "Test automation, bug hunting, and browser verification.",
+            "temperature": 0.1
+        },
+        "librarian": {
+            "model": "gemini-3-flash",
+            "description": "Context pruning, updating STATE.md and LEARNINGS.md.",
+            "temperature": 0.1
+        }
+    }
+}
