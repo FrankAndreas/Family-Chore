@@ -124,10 +124,27 @@ def on_startup():
     except Exception as e:
         logger.error(f"Failed to generate daily instances on startup: {e}")
 
+    # Fetch system timezone (default to Europe/Berlin)
+    timezone_str = "Europe/Berlin"
+    try:
+        db = SessionLocal()
+        setting = crud.get_system_setting(db, "default_timezone")
+        if setting:
+            timezone_str = setting.value
+        else:
+            # Create default if not exists
+            crud.set_system_setting(db, "default_timezone", timezone_str, "System-wide timezone for scheduler")
+        db.close()
+    except Exception as e:
+        logger.error(f"Failed to fetch timezone setting: {e}")
+
+    logger.info(f"Configuring scheduler with timezone: {timezone_str}")
+    scheduler.configure(timezone=timezone_str)
+
     # Start the midnight scheduler
     scheduler.add_job(
         scheduled_daily_reset,
-        trigger=CronTrigger(hour=0, minute=0),  # Run at midnight
+        trigger=CronTrigger(hour=0, minute=0, timezone=timezone_str),  # Run at midnight local time
         id="daily_reset_job",
         replace_existing=True
     )
@@ -135,7 +152,7 @@ def on_startup():
     # Schedule Daily Backup (02:00 AM)
     scheduler.add_job(
         run_backup_job,
-        trigger=CronTrigger(hour=2, minute=0),
+        trigger=CronTrigger(hour=2, minute=0, timezone=timezone_str),
         id="daily_backup_job",
         replace_existing=True
     )
@@ -146,8 +163,17 @@ def on_startup():
 
 @app.on_event("shutdown")
 def on_shutdown():
-    scheduler.shutdown()
-    logger.info("Scheduler shut down")
+    logger.info("Initiating application shutdown...")
+    try:
+        if scheduler.running:
+            logger.info("Shutting down scheduler (waiting for active jobs)...")
+            scheduler.shutdown(wait=True)
+            logger.info("Scheduler shut down successfully.")
+        else:
+            logger.info("Scheduler was not running.")
+    except Exception as e:
+        logger.error(f"Error during scheduler shutdown: {e}")
+    logger.info("Application shutdown complete.")
 
 
 # Add CORS middleware
@@ -419,6 +445,21 @@ async def import_tasks(import_data: schemas.TasksImport, db: Session = Depends(g
 
     # Build role name to ID lookup
     roles = {r.name.lower(): r.id for r in crud.get_roles(db)}
+
+    # Add localized aliases (German -> English System Roles)
+    role_aliases = {
+        "kind": "child",
+        "teenager": "teenager",  # Same
+        "mitwirkender": "contributor",
+        "administrator": "admin",
+        "elternteil": "admin",  # Map Parent/Elternteil to Admin or specific role if exists? Seed data has Admin.
+        "partner": "contributor",  # Default assumption
+    }
+
+    # Merge aliases into lookup
+    for alias, target in role_aliases.items():
+        if target in roles:
+            roles[alias] = roles[target]
 
     # Get existing task names for duplicate detection
     existing_names = {t.name.lower() for t in crud.get_tasks(db)}

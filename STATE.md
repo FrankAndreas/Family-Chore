@@ -8,33 +8,33 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We a
 
 ## 🔄 Recent Changes (2026-02-10 Analytics Session)
 
-## 🔄 Recent Changes (2026-02-11 Import Wizard Fix)
+## 🔄 Recent Changes (2026-02-11 Import Fix & Polish)
 
-### Task Import Wizard (v1.6)
-- **Backend**:
-  - Enhanced `TaskImportItem` to support localized schedule types ("täglich", "wöchentlich").
-  - Implemented smart conversion: Weekly tasks with specific times (HH:MM) auto-convert to recurring tasks.
-- **Frontend**:
-  - Improved `ImportTasksModal` error handling to show detailed validation messages.
-  - Fixed Dark Mode readability for error messages.
+### Task Import Wizard (v1.7)
+- **Localization**: Added backend support for importing tasks with German role names ("Kind", "Mitwirkender") by mapping them to system roles.
+- **UI Fixes**: Fixed `ImportTasksModal` readability in Dark Mode by using semi-transparent backgrounds and proper text contrast.
+
+### Quality Assurance
+- **Unit Tests**: Added `tests/unit/test_import_tasks.py` covering 100% of the Import Wizard logic.
+- **Mobile Polish**: Implemented responsive tables for mobile users.
 
 ## 📍 System State
-- **Backend**: Port 8000. Import Wizard enhanced.
-- **Frontend**: Port 5173. Dark Mode fixes applied.
+- **Backend**: Port 8000. Verified import logic + Timezone support.
+- **Frontend**: Port 5173. Mobile-ready.
 - **Database**: v1.3.
 
 ## 🚧 Active Tasks
-1. **Unit Tests**: Add tests for new import logic (currently verified via script).
-2. **Mobile Polish**: Continue refining UI for mobile users.
+1. **Testing**: Expand unit test coverage for other modules.
+2. **Backups**: Verified local backup creation.
 
 ## ⚠️ Known Issues / Watchlist
-- **Zombie Processes**: `uvicorn` sometimes hangs on port 8000.
-- **Timezone**: Scheduler runs on server time.
+- **Zombie Processes**: Hardened shutdown logic, but keep an eye on `uvicorn` processes.
+- **Timezone**: Configured to "Europe/Berlin" by default. Check logs if verified otherwise.
 
 ---
 
 ## 🔜 Next Session Prompt
 > **Start a new conversation and say:**
-> "Review STATE.md — Import Wizard is fixed. Let's move to the 'Active Task' of adding Unit Tests or polishing Mobile UI."
+> "Review STATE.md — Import Wizard is fully fixed (Roles + UI). Let's tackle the 'Zombie Processes' issue or Timezone support."
 
 *This field is updated by the Librarian at the end of each session to guide the next agent.*

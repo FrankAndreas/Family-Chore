@@ -292,7 +292,7 @@ const ImportTasksModal: React.FC<ImportTasksModalProps> = ({
                     gap: 1rem;
                 }
                 .import-description {
-                    color: var(--text-secondary, #666);
+                    color: var(--text-secondary, #aaa);
                     margin: 0;
                 }
                 .import-actions {
@@ -304,36 +304,43 @@ const ImportTasksModal: React.FC<ImportTasksModalProps> = ({
                     font-family: monospace;
                     font-size: 0.875rem;
                     padding: 0.75rem;
-                    border: 1px solid var(--border-color, #ddd);
+                    border: 1px solid var(--border-color, #444);
                     border-radius: 8px;
                     resize: vertical;
-                    background: var(--input-bg, #f9f9f9);
+                    background: rgba(0, 0, 0, 0.2);
+                    color: var(--text-primary, #fff);
                 }
                 .import-error {
-                    color: var(--color-error, #dc2626);
+                    color: #ef4444;
                     padding: 0.75rem;
-                    background: var(--bg-error, #fee2e2);
-                    border: 1px solid var(--color-error, #dc2626);
+                    background: rgba(239, 68, 68, 0.1);
+                    border: 1px solid rgba(239, 68, 68, 0.2);
                     border-radius: 8px;
-                    white-space: pre-wrap; /* Preserve newlines for validation errors */
+                    white-space: pre-wrap;
                 }
                 .import-preview {
                     padding: 1rem;
-                    background: var(--bg-secondary, #f5f5f5);
+                    background: rgba(255, 255, 255, 0.05);
                     border-radius: 8px;
+                    border: 1px solid var(--border-color, #444);
                 }
                 .import-preview h4 {
                     margin: 0 0 0.5rem 0;
+                    color: var(--text-primary, #fff);
                 }
                 .task-preview-list {
                     margin: 0;
                     padding-left: 1.5rem;
+                    color: var(--text-secondary, #ccc);
                 }
                 .task-preview-list li {
                     margin-bottom: 0.25rem;
                 }
+                .task-preview-list strong {
+                    color: var(--text-primary, #fff);
+                }
                 .more-tasks {
-                    color: var(--text-secondary, #666);
+                    color: var(--text-muted, #888);
                     font-style: italic;
                 }
                 .skip-duplicates-label {
@@ -342,16 +349,21 @@ const ImportTasksModal: React.FC<ImportTasksModalProps> = ({
                     gap: 0.5rem;
                     margin-top: 0.75rem;
                     cursor: pointer;
+                    color: var(--text-secondary, #ccc);
                 }
                 .import-result {
                     padding: 1rem;
                     border-radius: 8px;
                 }
                 .import-result.success {
-                    background: #d1fae5;
+                    background: rgba(16, 185, 129, 0.1);
+                    border: 1px solid rgba(16, 185, 129, 0.2);
+                    color: #d1fae5;
                 }
                 .import-result.partial {
-                    background: #fef3c7;
+                    background: rgba(245, 158, 11, 0.1);
+                    border: 1px solid rgba(245, 158, 11, 0.2);
+                    color: #fef3c7;
                 }
                 .import-result h4 {
                     margin: 0 0 0.5rem 0;
@@ -370,7 +382,7 @@ const ImportTasksModal: React.FC<ImportTasksModalProps> = ({
                     overflow-y: auto;
                 }
                 .error-list li {
-                    color: var(--color-error, #dc2626);
+                    color: #ef4444;
                 }
                 .modal-actions {
                     display: flex;
@@ -382,10 +394,11 @@ const ImportTasksModal: React.FC<ImportTasksModalProps> = ({
                     display: grid;
                     grid-template-columns: 1fr 1fr;
                     gap: 1rem;
-                    background: var(--bg-secondary, #f5f5f5);
+                    background: rgba(0, 0, 0, 0.2);
                     padding: 1rem;
                     border-radius: 8px;
                     margin-bottom: 0.5rem;
+                    border: 1px solid var(--border-color, #444);
                 }
                 .schema-block {
                     display: flex;
@@ -399,11 +412,11 @@ const ImportTasksModal: React.FC<ImportTasksModalProps> = ({
                 }
                 .schema-header h5 {
                     margin: 0;
-                    color: var(--text-primary, #333);
+                    color: var(--text-primary, #fff);
                 }
                 .schema-block pre {
-                    background: #1e293b;
-                    color: #f8fafc;
+                    background: rgba(0, 0, 0, 0.3);
+                    color: #e2e8f0;
                     padding: 0.75rem;
                     border-radius: 6px;
                     border: 1px solid var(--border-color, #334155);

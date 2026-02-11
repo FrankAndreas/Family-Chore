@@ -290,11 +290,15 @@ class TaskImportItem(BaseModel):
 
         if self.schedule_type == "daily":
             try:
-                hour, minute = map(int, self.default_due_time.split(':'))
-                if not (0 <= hour < 24 and 0 <= minute < 60):
-                    raise ValueError('Hour must be 0-23 and minute must be 0-59')
+                parts = self.default_due_time.split(':')
+                if len(parts) != 2:
+                    raise ValueError
+                hour, minute = map(int, parts)
             except (ValueError, AttributeError):
                 raise ValueError('For daily tasks, default_due_time must be in HH:MM format')
+
+            if not (0 <= hour < 24 and 0 <= minute < 60):
+                raise ValueError('Hour must be 0-23 and minute must be 0-59')
         elif self.schedule_type == "weekly":
             # Check if it's a valid day name
             valid_days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]

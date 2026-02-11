@@ -179,4 +179,32 @@ This file captures accumulated knowledge from development sessions. The Libraria
 ### Gotchas
 - **Dark Mode CSS**: Error message containers with static background colors often become unreadable in dark mode. Using CSS variables (e.g., `var(--bg-error)`) or semi-transparent backgrounds ensures compatibility.
 - **Test Dependencies**: When writing reproduction scripts, verify that the test runner (like `pytest`) is actually available in the environment before depending on it, or write standard Python scripts for portability.
+- **Role Localization**: When importing data in a different language (e.g., German "Kind"), the backend MUST map these to system identifiers (e.g., "Child") or risk validation failures. Fixed by adding `role_aliases` in import logic.
 
+
+## 📅 2026-02-11: Unit Tests & Mobile Polish
+
+### What We Learned
+- **Mobile Tables**: Standard HTML tables break mobile layouts. Wrapping them in a container with `overflow-x: auto` is mandatory for responsive design.
+- **Pytest Module Resolution**: Running tests from the project root requires `PYTHONPATH=.` (or installing the package in editable mode) so that `backend.x` imports resolve correctly.
+
+### Patterns Discovered
+- **Validation Granularity**: When validating complex strings (like time formats), separate the *format check* (ValueError) from the *logic check* (range error) to give users helpful error messages instead of generic "invalid" errors.
+- **CSS Utility Classes**: Creating a reusable `.table-container` class in `index.css` is cleaner than applying inline styles to every table component.
+
+### Gotchas
+- **Broad Exception Handling**: In `schemas.py`, a `try...except ValueError` block around `int()` conversion accidentally caught explicit `raise ValueError(...)` calls from subsequent logic, masking specific error messages. Always keep the try block scope as narrow as possible.
+
+---
+
+## 📅 2026-02-11: Timezone Support & Zombie Processes
+
+### What We Learned
+- **Scheduler Defaults**: `APScheduler` defaults to the system timezone (often UTC in containers). Explicitly configuring `scheduler.configure(timezone=...)` is required for localized cron triggers (e.g., midnight resets).
+- **Shutdown Resilience**: `uvicorn` shutdown signals can be flaky with reloaders. Wrapping `scheduler.shutdown()` in a strict `try...except` block with logging ensures that one failed component doesn't hang the entire process, creating zombies.
+
+### Patterns Discovered
+- **Mock Verification**: When verifying environment-dependent logic (like timezones or database settings), mocking the dependency (e.g., `crud.get_system_setting`) in a dedicated script (`tests/verify_timezone.py`) allows proving the logic works without setting up a full database.
+
+### Gotchas
+- **Import Side Effects**: Importing `backend.main` often triggers `FastAPI()` initialization and database connections immediately. When writing test scripts, mock these side-effects *before* import using `sys.modules[...] = MagicMock()`.

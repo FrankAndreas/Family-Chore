@@ -200,7 +200,7 @@ const UserDashboard: React.FC = () => {
                                     <p>No transactions found matching your filters.</p>
                                 </div>
                             ) : (
-                                <div className="transaction-list table-container">
+                                <div className="table-container">
                                     <table className="data-table">
                                         <thead>
                                             <tr>
