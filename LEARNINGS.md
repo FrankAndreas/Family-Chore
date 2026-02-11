@@ -165,3 +165,18 @@ This file captures accumulated knowledge from development sessions. The Libraria
 - **Relationship Fields**: `TaskInstance` relates to `User` via `user_id` (foreign key) and `user` (relationship). Attempting to access `completed_by_user_id` (a conceptual name) caused crashes. Always verify `models.py` definitions before waiting for a runtime error.
 
 ```
+
+## 📅 2026-02-11: Import Wizard Fix (Localization & UX)
+
+### What We Learned
+- **Localized Inputs**: Users often input data in their native language (e.g., "täglich" instead of "daily"). Normalizing these inputs at the Pydantic validator level is a robust way to handle this without changing the core schema.
+- **Implicit Intent**: Users may define "weekly" tasks with a specific time (e.g., "18:00"). While strict schemas might reject this, interpreting it as a "Recurring" task with a 7-day interval is a more user-friendly approach that preserves their intent.
+- **Error Visibility**: Generic "Import failed" messages are frustrating. Exposing the underlying Pydantic/FastAPI validation errors (e.g., `loc` and `msg`) helps users self-correct their input especially when importing complex JSON.
+
+### Patterns Discovered
+- **Smart Schema Conversion**: Modifying the `schedule_type` on the fly within a validator (`@model_validator`) allows adapting user input to internal models seamlessly.
+
+### Gotchas
+- **Dark Mode CSS**: Error message containers with static background colors often become unreadable in dark mode. Using CSS variables (e.g., `var(--bg-error)`) or semi-transparent backgrounds ensures compatibility.
+- **Test Dependencies**: When writing reproduction scripts, verify that the test runner (like `pytest`) is actually available in the environment before depending on it, or write standard Python scripts for portability.
+

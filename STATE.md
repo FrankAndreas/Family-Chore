@@ -8,41 +8,33 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We a
 
 ## 🔄 Recent Changes (2026-02-10 Analytics Session)
 
-## 🔄 Recent Changes (2026-02-10 Analytics & Backups)
+## 🔄 Recent Changes (2026-02-11 Import Wizard Fix)
 
-### Automated Backups (v1.5)
+### Task Import Wizard (v1.6)
 - **Backend**:
-  - Implemented `BackupManager` to copy SQLite DB to `backups/`.
-  - Scheduled daily backups at 02:00 AM via `apscheduler`.
-  - Added retention policy (keep last 7 days).
-  - Added manual trigger endpoint `POST /backups/run`.
-- **Documentation**: Updated User Guide with backup info.
-
-### Analytics Dashboard Implementation (v1.4)
-- **Backend**:
-  - Created `/analytics/weekly` and `/analytics/distribution` endpoints.
-  - Fixed `User` model attribute (`nickname` vs `username`) and `TaskInstance` relationship (`user_id`).
+  - Enhanced `TaskImportItem` to support localized schedule types ("täglich", "wöchentlich").
+  - Implemented smart conversion: Weekly tasks with specific times (HH:MM) auto-convert to recurring tasks.
 - **Frontend**:
-  - Implemented `AnalyticsDashboard.tsx` with Recharts.
-  - Verified UI with browser agent.
+  - Improved `ImportTasksModal` error handling to show detailed validation messages.
+  - Fixed Dark Mode readability for error messages.
 
 ## 📍 System State
-- **Backend**: Port 8000. Analytics & Backups active.
-- **Frontend**: Port 5173. Connected.
-- **Database**: v1.3. Backups enabled (daily @ 02:00).
+- **Backend**: Port 8000. Import Wizard enhanced.
+- **Frontend**: Port 5173. Dark Mode fixes applied.
+- **Database**: v1.3.
 
 ## 🚧 Active Tasks
-1. **Task Import/Export**: Polish UI for mobile (Next).
-2. **Unit Tests**: Increase backend coverage.
+1. **Unit Tests**: Add tests for new import logic (currently verified via script).
+2. **Mobile Polish**: Continue refining UI for mobile users.
 
 ## ⚠️ Known Issues / Watchlist
 - **Zombie Processes**: `uvicorn` sometimes hangs on port 8000.
-- **Timezone**: Scheduler runs on server time. Verify timezone in `main.py` if deployed globally.
+- **Timezone**: Scheduler runs on server time.
 
 ---
 
 ## 🔜 Next Session Prompt
 > **Start a new conversation and say:**
-> "Review STATE.md — Backups are secure. Let's move to the 'Active Task' of polishing 'Task Import/Export' for mobile users."
+> "Review STATE.md — Import Wizard is fixed. Let's move to the 'Active Task' of adding Unit Tests or polishing Mobile UI."
 
 *This field is updated by the Librarian at the end of each session to guide the next agent.*

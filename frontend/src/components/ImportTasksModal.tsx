@@ -69,8 +69,25 @@ const ImportTasksModal: React.FC<ImportTasksModalProps> = ({
             if (response.data.success && response.data.created.length > 0) {
                 onSuccess();
             }
-        } catch (e) {
-            setParseError(e instanceof Error ? e.message : 'Import failed');
+        } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+            // Extract detailed error from FastAPI 422 response
+            let errorMessage = 'Import failed';
+
+            if (e.response && e.response.data && e.response.data.detail) {
+                const detail = e.response.data.detail;
+                if (Array.isArray(detail)) {
+                    // FastAPI validation error array
+                    errorMessage = detail.map((err: any) => // eslint-disable-line @typescript-eslint/no-explicit-any
+                        `${err.loc.join('.')} - ${err.msg}`
+                    ).join('\n');
+                } else {
+                    errorMessage = detail.toString();
+                }
+            } else if (e instanceof Error) {
+                errorMessage = e.message;
+            }
+
+            setParseError(errorMessage);
         } finally {
             setIsImporting(false);
         }
@@ -295,8 +312,10 @@ const ImportTasksModal: React.FC<ImportTasksModalProps> = ({
                 .import-error {
                     color: var(--color-error, #dc2626);
                     padding: 0.75rem;
-                    background: #fee2e2;
+                    background: var(--bg-error, #fee2e2);
+                    border: 1px solid var(--color-error, #dc2626);
                     border-radius: 8px;
+                    white-space: pre-wrap; /* Preserve newlines for validation errors */
                 }
                 .import-preview {
                     padding: 1rem;

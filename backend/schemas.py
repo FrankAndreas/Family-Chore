@@ -282,6 +282,12 @@ class TaskImportItem(BaseModel):
     @model_validator(mode='after')
     def validate_schedule_and_time(self):
         """Validate default_due_time and recurrence fields based on schedule_type."""
+        # Normalize localized schedule types
+        if self.schedule_type.lower() == "täglich":
+            self.schedule_type = "daily"
+        elif self.schedule_type.lower() == "wöchentlich":
+            self.schedule_type = "weekly"
+
         if self.schedule_type == "daily":
             try:
                 hour, minute = map(int, self.default_due_time.split(':'))
@@ -290,9 +296,31 @@ class TaskImportItem(BaseModel):
             except (ValueError, AttributeError):
                 raise ValueError('For daily tasks, default_due_time must be in HH:MM format')
         elif self.schedule_type == "weekly":
+            # Check if it's a valid day name
             valid_days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-            if self.default_due_time not in valid_days:
-                raise ValueError('For weekly tasks, default_due_time must be a day name')
+            if self.default_due_time in valid_days:
+                return self
+
+            # Check if it looks like a time (HH:MM) - if so, convert to recurring (weekly = 7 days)
+            try:
+                hour, minute = map(int, self.default_due_time.split(':'))
+                if 0 <= hour < 24 and 0 <= minute < 60:
+                    # It's a valid time, but schedule is weekly.
+                    # Convert to recurring task with 7 days interval
+                    self.schedule_type = "recurring"
+                    self.recurrence_min_days = 7
+                    self.recurrence_max_days = 7
+                    # default_due_time remains HH:MM which is valid for recurring tasks?
+                    # Actually, recurring tasks usually don't have a specific due time in the same way,
+                    # but let's check TaskBase. It has default_due_time.
+                    # Wait, for recurring tasks, 'default_due_time' interpretation depends on implementation.
+                    # If we look at TaskBase, it says: "any value for recurring".
+                    # So keeping HH:MM is fine.
+                    return self
+            except (ValueError, AttributeError):
+                pass
+
+            raise ValueError('For weekly tasks, default_due_time must be a day name (e.g. Monday)')
         elif self.schedule_type == "recurring":
             if self.recurrence_min_days is None or self.recurrence_max_days is None:
                 raise ValueError('For recurring tasks, both recurrence_min_days and recurrence_max_days required')
