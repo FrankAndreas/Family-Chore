@@ -61,6 +61,16 @@ ChoreSpec is a family-oriented chore gamification system. It transforms househol
 - **Celebration**: Visual confetti effect upon unlocking a new tier.
 - **Admin Override**: Admins see all rewards as unlocked for management purposes.
 
+### 2.5 Analytics & Compliance
+- **Goal**: Provide transparency into household chore contributions and reward distribution.
+- **Weekly Activity Chart**:
+  - Visualizes "Tasks Completed" per user over the last 7 days.
+  - grouped by Date and User.
+- **Fairness Distribution**:
+  - Pie chart showing the percentage share of Total Points Earned by each user.
+  - Helps identify if one user is carrying the load.
+- **Access**: Available to all users to promote healthy competition and accountability.
+
 ---
 
 ## 3. Technical Implementation
@@ -75,10 +85,12 @@ ChoreSpec is a family-oriented chore gamification system. It transforms househol
 ### 3.2 Frontend (React + Vite + TypeScript)
 - **Design System**: Premium "Glassmorphism" design with vanilla CSS.
 - **State Management**: React Context/Hooks with Axios/Fetch for REST API.
+- **Charting**: Using `recharts` for responsive, animated graphs.
 - **Features**:
   - **Admin Context**: Full management of Users, Roles, and Task Templates.
   - **User Context**: Personalized dashboard, active goal tracking, and task completion flow.
   - **Family Dashboard**: Dedicated "God Mode" view for shared task oversight.
+  - **Analytics Dashboard**: Visual reports for compliance and stats.
 
 ---
 
@@ -94,6 +106,10 @@ ChoreSpec is a family-oriented chore gamification system. It transforms househol
 - `GET /tasks/daily/{user_id}`: Personalized task list.
 - `GET /tasks/pending`: Global view of all uncompleted chores.
 - `POST /tasks/{id}/complete`: The core "payday" endpoint.
+
+### Analytics
+- `GET /analytics/weekly`: Last 7 days task completion stats.
+- `GET /analytics/distribution`: Lifetime points share per user.
 
 ### System
 - `POST /daily-reset/`: Manual trigger for task generation.

@@ -13,6 +13,11 @@ trigger: always_on
   - ❌ Tests Failed: [Count]
   - ⚠️ Edge Cases: [Notes]
 
+**Strict Protocol:**
+1. **Empty State Check:** Never accept "page load" as success. Verify data presence (e.g., "table has 5 rows", "chart has colored bars").
+2. **Real-World Check:** Automated browsers are not enough. If a feature involves networking (CORS, API), explicitly ask the user to verify or usage `curl` to mimic their environment.
+
+
 **Handoff:**
 - If verification passes, hand off to **Librarian**.
 - If verification fails, hand off to **Executor** with specific error logs.

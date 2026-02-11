@@ -213,5 +213,12 @@
         "friday": "Friday",
         "saturday": "Saturday",
         "sunday": "Sunday"
+    },
+    "analytics": {
+        "title": "Analytics Dashboard",
+        "subtitle": "Track family progress and fairness",
+        "weekly_activity": "Weekly Activity",
+        "fairness_distribution": "Fairness Distribution",
+        "points": "Points"
     }
 }

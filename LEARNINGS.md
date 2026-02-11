@@ -132,4 +132,36 @@ This file captures accumulated knowledge from development sessions. The Libraria
 
 ### Gotchas
 - [Gotcha 1]
+
+---
+
+## 📅 2026-02-10: Analytics & Backend Debugging
+
+### What We Learned
+- **Zombie Processes**: When `uvicorn` fails to shut down cleanly, it holds onto port 8000, causing `Address already in use` errors that mask the *actual* startup error (like an ImportError) in subsequent runs. Always check/kill processes (`fuser -k 8000/tcp`) if startup fails mysteriously.
+- **Attribute Consistency**: The `User` model uses `nickname`, not `username`. This is a common trip-up when copying standard Auth logic.
+- **Empty State Blindness**: Automated agents often verify "page load" but miss "empty data". ALWAYS verify that expected data elements (e.g., specific numbers, list items) are present in the DOM, not just the container components.
+- **Agent vs. User Environment**: Just because it works in the agent's headless browser doesn't mean it works for the user (e.g., CORS issues on localhost). When possible, ask the user to verify critically or use `curl` from the user's terminal to mimic their environment.
+
+---
+
+## 📅 2026-02-10: Automated Backups
+
+### What We Learned
+- **APScheduler in FastAPI**: Integrating `AsyncIOScheduler` on `startup` event works well, but requires handling the event loop carefully. Using `apscheduler.start()` after adding jobs ensures they are registered.
+- **File System Verification**: verifying file *creation* is easy, but verifying *deletion* (retention policy) requires simulating time. Touching a file's timestamp (`touch -t`) is a reliable way to test expiration logic without waiting days.
+
+### Patterns Discovered
+- **Sync/Async Wrappers**: When calling synchronous file operations (like `shutil.copy`) from an async FastAPI app, wrapping them in a standard `def` function (not `async def`) allows FastAPI to run them in a thread pool, preventing blocking of the main event loop.
+
+### Gotchas
+- **Large Edit Failures**: The agent tool `replace_file_content` fails if the target chunk is too large or has minor whitespace differences. Breaking large edits into smaller, logical blocks (e.g., Imports, Init, Startup) is much more reliable.
+
+
+### Patterns Discovered
+- **Dependency Injection**: The `get_db` dependency must be carefully managed to avoid circular imports. Defining it in `database.py` (and handling the localized import in `main.py`) is cleaner than circular refs between `main` and `database`.
+
+### Gotchas
+- **Relationship Fields**: `TaskInstance` relates to `User` via `user_id` (foreign key) and `user` (relationship). Attempting to access `completed_by_user_id` (a conceptual name) caused crashes. Always verify `models.py` definitions before waiting for a runtime error.
+
 ```

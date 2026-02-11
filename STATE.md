@@ -6,39 +6,43 @@
 ## 🧠 Global Context
 The project is a **Family Chore Gamification System** (Universal-GSD-Core). We are in the **Polishing & Verification** phase — refining UI/UX and ensuring system stability.
 
-## 🔄 Recent Changes (2026-02-08 Session 2)
+## 🔄 Recent Changes (2026-02-10 Analytics Session)
 
-### DB Versioning & Deployment Fix (v1.3)
+## 🔄 Recent Changes (2026-02-10 Analytics & Backups)
+
+### Automated Backups (v1.5)
 - **Backend**:
-  - `MigrationManager` added: Auto-versions DB on startup (v1.3)
-  - Consolidated migration script: Idempotent column additions for tasks, transactions, and users
-  - Enforced migrations via new `rules.json` constraint (`MIGRATION_REQUIRED`)
-- **Frontend**:
-  - **Error Handling**: Improved `TaskManagement` to show clear DB error UI with "Retry" button
-  - **Linting**: Fixed `any` type issues and `useCallback` dependency warnings
-- **Stability**: Confirmed schema consistency for Synology deployments
+  - Implemented `BackupManager` to copy SQLite DB to `backups/`.
+  - Scheduled daily backups at 02:00 AM via `apscheduler`.
+  - Added retention policy (keep last 7 days).
+  - Added manual trigger endpoint `POST /backups/run`.
+- **Documentation**: Updated User Guide with backup info.
 
-### Deployment & Stability
-- Confirmed Backend runs on port **8000**
-- Frontend SSE connection updated to match
-- Validated with `npm run build` and generic backend restart
+### Analytics Dashboard Implementation (v1.4)
+- **Backend**:
+  - Created `/analytics/weekly` and `/analytics/distribution` endpoints.
+  - Fixed `User` model attribute (`nickname` vs `username`) and `TaskInstance` relationship (`user_id`).
+- **Frontend**:
+  - Implemented `AnalyticsDashboard.tsx` with Recharts.
+  - Verified UI with browser agent.
 
 ## 📍 System State
-- **Backend**: Port 8000 (CORRECTED from 8001). Stable.
+- **Backend**: Port 8000. Analytics & Backups active.
 - **Frontend**: Port 5173. Connected.
-- **Database**: Schema v1.3 (Auto-versioning enabled).
+- **Database**: v1.3. Backups enabled (daily @ 02:00).
 
 ## 🚧 Active Tasks
-1. **Compliance Reports**: Needs UI graphs.
-2. **Automated Backups**: Implementation needed.
+1. **Task Import/Export**: Polish UI for mobile (Next).
+2. **Unit Tests**: Increase backend coverage.
 
 ## ⚠️ Known Issues / Watchlist
-- Double-check `datetime` imports in new files.
+- **Zombie Processes**: `uvicorn` sometimes hangs on port 8000.
+- **Timezone**: Scheduler runs on server time. Verify timezone in `main.py` if deployed globally.
 
 ---
 
 ## 🔜 Next Session Prompt
 > **Start a new conversation and say:**
-> "Review STATE.md — Workflow indicates 'Compliance Reports' is next. Let's design the UI graphs for task completion stats."
+> "Review STATE.md — Backups are secure. Let's move to the 'Active Task' of polishing 'Task Import/Export' for mobile users."
 
 *This field is updated by the Librarian at the end of each session to guide the next agent.*

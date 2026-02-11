@@ -172,7 +172,8 @@ const RewardHub: React.FC = () => {
             }
         }
         prevPoints.current = curr;
-    }, [currentUser.lifetime_points, tierStats.current, t, success]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentUser.lifetime_points, t, success]);
 
     if (loading) {
         return <LoadingSpinner fullPage message={t('rewards.loading')} />;

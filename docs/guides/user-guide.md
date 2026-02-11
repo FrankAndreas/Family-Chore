@@ -114,11 +114,27 @@ Go to the **Dashboard** and switch to the **"Redeem"** tab.
 2. Click **"Redeem"** on a reward you want.
 3. Confirm the redemption to instantly deduct points and notify your parents!
 
+### 6. Analytics Dashboard
+**Track Family Progress**
+The new Analytics Dashboard provides transparency into family contributions and fairness.
+- **Weekly Activity**: See who completed tasks each day over the last week.
+- **Fairness Distribution**: A pie chart showing the percentage of total points earned by each family member.
+- **Access**: Available to all users to promote healthy competition!
+
+### 7. Monitoring Activity
+
 ##### 🎁 Split Redemption
 You can pool points with siblings or parents to buy a big reward together!
 1. Click **"Redeem"** on a reward.
 2. In the popup, use the **Split Evenly** button or adjust each person's contribution manually.
 3. Once the total matches the cost, click **"Redeem"** to share the cost!
+
+### 8. Automated Backups
+**Data Protection**
+- The system automatically backs up the database every night at **02:00 AM**.
+- Backups are stored in the `backups/` folder.
+- The last **7 daily backups** are kept. Older backups are automatically deleted to save space.
+- **Manual Trigger**: You can trigger a manual backup via API if needed (see API Docs).
 
 ---
 

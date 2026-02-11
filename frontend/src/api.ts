@@ -163,10 +163,25 @@ export interface TransactionHeader {
 export const getUserTransactions = (user_id: number, filters: TransactionHeader = {}) =>
     api.get(`/users/${user_id}/transactions`, { params: { skip: 0, limit: 100, ...filters } });
 
+
 export const getAllTransactions = (filters: TransactionHeader = {}) =>
     api.get('/transactions', { params: { skip: 0, limit: 100, ...filters } });
 
+// Analytics APIs
+export interface WeeklyStats {
+    date: string;
+    [user: string]: number | string; // Date + dynamic user keys
+}
 
+export interface DistributionStat {
+    name: string;
+    value: number;
+    role: string;
+}
+
+export const getWeeklyStats = () => api.get<WeeklyStats[]>('/analytics/weekly');
+
+export const getPointsDistribution = () => api.get<DistributionStat[]>('/analytics/distribution');
 
 export default api;
 

@@ -8,6 +8,7 @@ import TaskManagement from './pages/admin/TaskManagement';
 import RoleManagement from './pages/admin/RoleManagement';
 import UserDashboard from './pages/user/UserDashboard';
 import RewardHub from './pages/user/RewardHub';
+import AnalyticsDashboard from './pages/admin/AnalyticsDashboard';
 import SettingsPage from './pages/SettingsPage';
 import type { User } from './types';
 import './App.css';
@@ -52,6 +53,7 @@ function App() {
           {/* User Routes */}
           <Route path="dashboard" element={<UserDashboard />} />
           <Route path="rewards" element={<RewardHub />} />
+          <Route path="analytics" element={<AnalyticsDashboard />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
 

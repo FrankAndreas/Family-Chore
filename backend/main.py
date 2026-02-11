@@ -12,10 +12,13 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 from . import models, schemas, crud
-from .database import SessionLocal, engine
+from .database import engine, get_db, SessionLocal
+from .routers import analytics
 from .migrations.manager import MigrationManager
+from .backup import BackupManager
 
-# Configure logging
+
+# Initialize Tables
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -69,6 +72,32 @@ def scheduled_daily_reset():
         logger.error(f"Midnight scheduler failed: {e}")
 
 
+backup_manager = BackupManager()
+
+
+def run_backup_job():
+    """Wrapper to run backup from scheduler"""
+    logger.info("Running scheduled backup...")
+    try:
+        backup_path = backup_manager.create_backup()
+        logger.info(f"Backup created: {backup_path}")
+        deleted = backup_manager.cleanup_old_backups(retention_days=7)
+        if deleted:
+            logger.info(f"Cleaned up {len(deleted)} old backups.")
+    except Exception as e:
+        logger.error(f"Backup job failed: {e}")
+
+
+@app.post("/backups/run")
+def trigger_manual_backup():
+    """Manually trigger a backup in the background."""
+    # Run synchronously for simplicity in this MVP, or use BackgroundTasks
+    # Using background task pattern:
+
+    run_backup_job()  # For now run sync to return status immediately for verification
+    return {"status": "Backup completed"}
+
+
 @app.on_event("startup")
 def on_startup():
     # 1. Run migrations first to ensure schema is up-to-date
@@ -102,8 +131,17 @@ def on_startup():
         id="daily_reset_job",
         replace_existing=True
     )
+
+    # Schedule Daily Backup (02:00 AM)
+    scheduler.add_job(
+        run_backup_job,
+        trigger=CronTrigger(hour=2, minute=0),
+        id="daily_backup_job",
+        replace_existing=True
+    )
+
     scheduler.start()
-    logger.info("Midnight scheduler started - daily reset will run at 00:00")
+    logger.info("Midnight scheduler started - daily reset will run at 00:00, backups at 02:00")
 
 
 @app.on_event("shutdown")
@@ -124,6 +162,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(analytics.router)
 
 
 # --- SSE Endpoint ---
@@ -161,17 +201,10 @@ async def sse_events():
 # Dependency
 
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
 @app.get("/")
 def read_root():
     return {"message": "Welcome to ChoreSpec API"}
+
 
 # --- User Endpoints ---
 
@@ -202,6 +235,7 @@ def login(user_credentials: schemas.UserLogin, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Incorrect PIN")
     logger.info(f"Login successful for user: {user_credentials.nickname} (ID: {user.id})")
     return user
+
 
 # --- Role Endpoints ---
 
@@ -297,6 +331,7 @@ def delete_role(role_id: int, reassign_to_role_id: int = None, db: Session = Dep
         "message": f"Role deleted successfully. "
         f"{len(users_with_role)} users reassigned, {len(tasks_with_role)} tasks updated."
     }
+
 
 # --- Task Endpoints ---
 
@@ -477,6 +512,7 @@ async def complete_task(instance_id: int, actual_user_id: int = None, db: Sessio
     await broadcaster.broadcast("task_completed", {"instance_id": instance_id, "user_id": instance.user_id})
 
     return instance
+
 
 # --- Reward Endpoints ---
 

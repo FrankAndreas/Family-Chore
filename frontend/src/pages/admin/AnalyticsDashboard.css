@@ -1,0 +1,83 @@
+.analytics-dashboard {
+    padding-bottom: 2rem;
+}
+
+.analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.chart-card {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    min-height: 400px;
+}
+
+.chart-card h2 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    font-size: 1.25rem;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.chart-container {
+    flex: 1;
+    width: 100%;
+    min-height: 300px;
+    position: relative;
+}
+
+/* Recharts Customization overrides to match theme */
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+    stroke: rgba(255, 255, 255, 0.1);
+}
+
+.recharts-text {
+    fill: var(--text-secondary);
+    font-size: 12px;
+}
+
+.recharts-legend-item-text {
+    color: var(--text-primary) !important;
+}
+
+.recharts-tooltip-cursor {
+    fill: rgba(255, 255, 255, 0.05);
+}
+
+.custom-tooltip {
+    background: rgba(20, 20, 30, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.custom-tooltip p.label {
+    margin: 0 0 5px 0;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.custom-tooltip p.intro {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+@media (max-width: 768px) {
+    .analytics-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .chart-card {
+        min-height: 350px;
+    }
+}

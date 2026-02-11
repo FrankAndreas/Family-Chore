@@ -60,6 +60,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ currentUser, onLogout
                             >
                                 ⚙️ {t('navigation.roles')}
                             </button>
+                            <button
+                                className={`nav-item ${isActive('/analytics') ? 'active' : ''}`}
+                                onClick={() => navigate('/analytics')}
+                            >
+                                📈 {t('analytics.title')}
+                            </button>
                         </>
                     )}
 
