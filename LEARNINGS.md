@@ -208,3 +208,16 @@ This file captures accumulated knowledge from development sessions. The Libraria
 
 ### Gotchas
 - **Import Side Effects**: Importing `backend.main` often triggers `FastAPI()` initialization and database connections immediately. When writing test scripts, mock these side-effects *before* import using `sys.modules[...] = MagicMock()`.
+
+## 📅 2026-02-12: Zombie Processes & Analytics Tests
+
+### What We Learned
+- **Scheduler Shutdown**: `scheduler.shutdown(wait=True)` is the default but causes `uvicorn` to hang if long-running jobs are active. Switching to `wait=False` ensures immediate shutdown, which is critical for development reload cycles and container restart policies.
+- **Test Integrity**: When creating dummy data in tests, always check the `models.py` definitions for `nullable=False` fields (like `description` and `default_due_time`). Missing these causes `sqlite3.IntegrityError` which can be confusing if you only look at the error message "NOT NULL constraint failed".
+
+### Patterns Discovered
+- **Reproduction Scripts**: Writing a throwaway script (`tests/reproduce_hang.py`) to simulate the exact failure condition (e.g., a hanging job) is faster than trying to reproduce it via the full application.
+- **Coverage-Driven Dev**: Identifying low-coverage modules (like `analytics.py`) and targeting them with specific unit tests is a high-ROI activity for stability.
+
+### Gotchas
+- **Date vs DateTime**: `TaskInstance` uses `due_time` (datetime) not `due_at`. Consistency in naming conventions across models is important.
