@@ -167,7 +167,7 @@ def on_shutdown():
     try:
         if scheduler.running:
             logger.info("Shutting down scheduler (waiting for active jobs)...")
-            scheduler.shutdown(wait=True)
+            scheduler.shutdown(wait=False)
             logger.info("Scheduler shut down successfully.")
         else:
             logger.info("Scheduler was not running.")
