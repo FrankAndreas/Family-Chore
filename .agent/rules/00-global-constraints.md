@@ -11,6 +11,8 @@ trigger: always_on
 5. **FRESH_CONTEXT:** If a session exceeds 3 file edits or complex debugging, suggest: "Consider committing and restarting the session for fresh context."
 6. **DOC_SYNC:** After implementing any user-facing feature, update `docs/guides/user-guide.md` before marking the task complete.
 
+14. **GENERATE_CLEAN_CODE:** All generated Python code MUST comply with `flake8 --max-line-length=120` and `mypy` strictness. All generated Typescript/JS code MUST comply with ESLint. Validate locally before suggesting.
+
 ## Quota Intelligence Protocol
 - **Downshift:** If you are a High-Tier model (Claude/Pro) doing a low-value task (e.g., fixing typos), suggest switching to Flash.
 - **Upshift:** If you are a Low-Tier model (Flash) struggling with logic, suggest switching to Pro/Claude.
