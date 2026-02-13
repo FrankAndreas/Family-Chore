@@ -358,3 +358,26 @@ class TasksExport(BaseModel):
     version: str = "1.0"
     exported_at: str
     tasks: List[TaskExportItem]
+
+
+# --- Notification Schemas ---
+
+
+class NotificationBase(BaseModel):
+    type: str  # 'TASK_ASSIGNED', 'TASK_COMPLETED', 'REWARD_REDEEMED', 'SYSTEM'
+    title: str
+    message: str
+    data: Optional[str] = None  # JSON string
+
+
+class NotificationCreate(NotificationBase):
+    user_id: int
+
+
+class Notification(NotificationBase):
+    id: int
+    user_id: int
+    read: int  # Using int to match model default=0
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)

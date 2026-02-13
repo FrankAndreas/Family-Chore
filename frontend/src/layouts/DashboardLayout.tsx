@@ -3,6 +3,7 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { User } from '../types';
 import './DashboardLayout.css';
+import { NotificationCenter } from '../components/NotificationCenter';
 
 interface DashboardLayoutProps {
     currentUser: User;
@@ -15,6 +16,36 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ currentUser, onLogout
     const { t } = useTranslation();
     const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
+    // Sidebar Resizing Logic
+    const [sidebarWidth, setSidebarWidth] = React.useState(280);
+    const [isResizing, setIsResizing] = React.useState(false);
+
+    const startResizing = React.useCallback(() => {
+        setIsResizing(true);
+    }, []);
+
+    const stopResizing = React.useCallback(() => {
+        setIsResizing(false);
+    }, []);
+
+    const resize = React.useCallback((mouseMoveEvent: MouseEvent) => {
+        if (isResizing) {
+            const newWidth = mouseMoveEvent.clientX;
+            if (newWidth > 200 && newWidth < 480) { // Min/Max constraints
+                setSidebarWidth(newWidth);
+            }
+        }
+    }, [isResizing]);
+
+    React.useEffect(() => {
+        window.addEventListener('mousemove', resize);
+        window.addEventListener('mouseup', stopResizing);
+        return () => {
+            window.removeEventListener('mousemove', resize);
+            window.removeEventListener('mouseup', stopResizing);
+        };
+    }, [resize, stopResizing]);
+
     const isAdmin = currentUser.role.name === 'Admin';
 
     const isActive = (path: string) => location.pathname === path;
@@ -26,7 +57,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ currentUser, onLogout
 
     return (
         <div className="dashboard-container">
-            <aside className={`sidebar glass-panel ${mobileMenuOpen ? 'mobile-open' : ''}`}>
+            <aside
+                className={`sidebar glass-panel ${mobileMenuOpen ? 'mobile-open' : ''}`}
+                style={{ width: mobileMenuOpen ? '100%' : `${sidebarWidth}px` }}
+            >
                 <div className="sidebar-header">
                     <div className="header-top">
                         <h1 className="app-title">ChoreSpec</h1>
@@ -44,9 +78,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ currentUser, onLogout
                             <span className="user-name">{currentUser.nickname}</span>
                             <span className="user-role">{currentUser.role.name}</span>
                         </div>
+                        <NotificationCenter />
                     </div>
                 </div>
-
                 <nav className={`sidebar-nav ${mobileMenuOpen ? 'show' : ''}`}>
                     {isAdmin && (
                         <>
@@ -124,12 +158,18 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ currentUser, onLogout
                         {t('navigation.logout')}
                     </button>
                 </div>
-            </aside>
+
+                {/* Resizer Handle */}
+                <div
+                    className="sidebar-resizer"
+                    onMouseDown={startResizing}
+                />
+            </aside >
 
             <main className="main-content">
                 <Outlet context={{ currentUser }} />
             </main>
-        </div>
+        </div >
     );
 };
 

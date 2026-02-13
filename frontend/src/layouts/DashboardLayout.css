@@ -219,7 +219,8 @@
         position: fixed;
         top: 0;
         left: 0;
-        background: rgba(15, 15, 35, 0.95); /* darker background for legibility */
+        background: rgba(15, 15, 35, 0.95);
+        /* darker background for legibility */
     }
 
     .sidebar-header {
@@ -243,7 +244,8 @@
     }
 
     .user-profile {
-        display: none; /* Hide in header, maybe show in nav? */
+        display: none;
+        /* Hide in header, maybe show in nav? */
     }
 
     .sidebar-nav {
@@ -266,15 +268,32 @@
     .mobile-footer {
         display: block;
     }
-    
+
     .nav-item {
         font-size: 1.1rem;
         padding: var(--spacing-md) 0;
-        border-bottom: 1px solid rgba(255,255,255,0.05);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .app-title {
         margin-bottom: 0;
         font-size: var(--font-size-xl);
     }
+}
+
+.sidebar-resizer {
+    width: 5px;
+    background: transparent;
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    cursor: col-resize;
+    z-index: 20;
+    transition: background 0.2s;
+}
+
+.sidebar-resizer:hover,
+.sidebar-resizer:active {
+    background: rgba(102, 126, 234, 0.5);
 }

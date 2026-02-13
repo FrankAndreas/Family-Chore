@@ -183,5 +183,15 @@ export const getWeeklyStats = () => api.get<WeeklyStats[]>('/analytics/weekly');
 
 export const getPointsDistribution = () => api.get<DistributionStat[]>('/analytics/distribution');
 
+// Notification APIs
+export const getUserNotifications = (user_id: number, unreadOnly = false) =>
+    api.get<import('./types').Notification[]>(`/notifications/${user_id}`, { params: { unread_only: unreadOnly } });
+
+export const markNotificationRead = (notification_id: number, user_id: number) =>
+    api.post<import('./types').Notification>(`/notifications/${notification_id}/read`, null, { params: { user_id } });
+
+export const markAllNotificationsRead = (user_id: number) =>
+    api.post<boolean>('/notifications/read-all', null, { params: { user_id } });
+
 export default api;
 

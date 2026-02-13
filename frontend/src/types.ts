@@ -38,6 +38,17 @@ export interface TaskInstance {
     user?: User;
 }
 
+export interface Notification {
+    id: number;
+    user_id: number;
+    type: string; // 'TASK_ASSIGNED', 'TASK_COMPLETED', 'REWARD_REDEEMED', 'SYSTEM'
+    title: string;
+    message: string;
+    read: number; // 0 or 1
+    created_at: string;
+    data?: string;
+}
+
 export interface Reward {
     id: number;
     name: string;

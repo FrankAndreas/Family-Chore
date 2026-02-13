@@ -607,3 +607,43 @@ def perform_daily_reset_if_needed(db: Session) -> int:
     count = generate_daily_instances(db)
     set_last_reset_date(db, date.today())
     return int(count)
+
+
+# --- Notification CRUD ---
+
+
+def create_notification(db: Session, notification: schemas.NotificationCreate):
+    db_notification = models.Notification(**notification.dict())
+    db.add(db_notification)
+    db.commit()
+    db.refresh(db_notification)
+    return db_notification
+
+
+def get_user_notifications(db: Session, user_id: int, skip: int = 0, limit: int = 50, unread_only: bool = False):
+    query = db.query(models.Notification).filter(models.Notification.user_id == user_id)
+    if unread_only:
+        query = query.filter(models.Notification.read == 0)
+    return query.order_by(models.Notification.created_at.desc()).offset(skip).limit(limit).all()
+
+
+def mark_notification_read(db: Session, notification_id: int, user_id: int):  # user_id for security check
+    notification = db.query(models.Notification).filter(
+        models.Notification.id == notification_id,
+        models.Notification.user_id == user_id
+    ).first()
+    if notification:
+        notification.read = 1
+        db.commit()
+        db.refresh(notification)
+    return notification
+
+
+def mark_all_notifications_read(db: Session, user_id: int):
+    # Update all unread notifications for this user
+    db.query(models.Notification).filter(
+        models.Notification.user_id == user_id,
+        models.Notification.read == 0
+    ).update({"read": 1})
+    db.commit()
+    return True

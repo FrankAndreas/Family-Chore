@@ -51,6 +51,7 @@ class User(Base):
     current_goal = relationship("Reward", foreign_keys=[current_goal_reward_id])
     task_instances = relationship("TaskInstance", back_populates="user")
     transactions = relationship("Transaction", back_populates="user")
+    notifications = relationship("Notification", back_populates="user")
 
 
 # 1.5 Rewards (Reward Hub Catalog)
@@ -133,3 +134,23 @@ class Transaction(Base):
     # Relationships
     user = relationship("User", back_populates="transactions")
     reference_instance = relationship("TaskInstance", back_populates="transaction")
+
+
+# 3.0 Notifications (System & User Alerts)
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+    type = Column(String, nullable=False)  # 'TASK_ASSIGNED', 'TASK_COMPLETED', 'REWARD_REDEEMED', 'SYSTEM'
+    title = Column(String, nullable=False)
+    message = Column(String, nullable=False)
+
+    read = Column(Integer, default=0)
+
+    created_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    data = Column(Text, nullable=True)  # JSON string for extra data (e.g. {"task_id": 123})
+
+    # Relationships
+    user = relationship("User", back_populates="notifications")

@@ -13,7 +13,7 @@ from apscheduler.triggers.cron import CronTrigger
 
 from . import models, schemas, crud
 from .database import engine, get_db, SessionLocal
-from .routers import analytics
+from .routers import analytics, notifications
 from .migrations.manager import MigrationManager
 from .backup import BackupManager
 
@@ -190,6 +190,7 @@ app.add_middleware(
 )
 
 app.include_router(analytics.router)
+app.include_router(notifications.router)
 
 
 # --- SSE Endpoint ---
@@ -549,8 +550,18 @@ async def complete_task(instance_id: int, actual_user_id: int = None, db: Sessio
         raise HTTPException(status_code=404, detail="Task instance not found")
     logger.info(f"Task completed successfully: instance {instance_id} by user {instance.user_id}")
 
+    # Notify User
+    crud.create_notification(db, schemas.NotificationCreate(
+        user_id=instance.user_id,
+        type="TASK_COMPLETED",
+        title="Task Completed!",
+        message=f"You earned {instance.transaction.awarded_points} points for '{instance.task.name}'."
+    ))
+
     # Broadcast SSE event for real-time updates
     await broadcaster.broadcast("task_completed", {"instance_id": instance_id, "user_id": instance.user_id})
+    # Broadcast notification event so frontend refreshes list
+    await broadcaster.broadcast("notification", {"user_id": instance.user_id})
 
     return instance
 
@@ -592,6 +603,14 @@ async def redeem_reward(reward_id: int, user_id: int, db: Session = Depends(get_
 
     logger.info(f"Redemption successful: {result['reward_name']} for {result['points_spent']} points")
 
+    # Notify User
+    crud.create_notification(db, schemas.NotificationCreate(
+        user_id=user_id,
+        type="REWARD_REDEEMED",
+        title="Reward Redeemed!",
+        message=f"You redeemed '{result['reward_name']}' for {result['points_spent']} points."
+    ))
+
     # Broadcast SSE event for real-time updates
     await broadcaster.broadcast("reward_redeemed", {
         "user_id": user_id,
@@ -600,6 +619,7 @@ async def redeem_reward(reward_id: int, user_id: int, db: Session = Depends(get_
         "points_spent": result["points_spent"],
         "remaining_points": result["remaining_points"]
     })
+    await broadcaster.broadcast("notification", {"user_id": user_id})
 
     return result
 
@@ -635,6 +655,16 @@ async def redeem_reward_split(
         "contributors": result["transactions"],
         "is_split": True
     })
+
+    # Notify all contributors
+    for tx in result["transactions"]:
+        crud.create_notification(db, schemas.NotificationCreate(
+            user_id=tx["user_id"],
+            type="REWARD_REDEEMED",
+            title="Group Reward Redeemed!",
+            message=f"You contributed {tx['points']} points to '{result['reward_name']}'."
+        ))
+        await broadcaster.broadcast("notification", {"user_id": tx["user_id"]})
 
     return result
 

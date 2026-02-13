@@ -249,3 +249,18 @@ This file captures accumulated knowledge from development sessions. The Libraria
 ### Gotchas
 - **Toast Z-Index**: Ensure `ToastContainer` has a high z-index (e.g., `z-50`) to appear above modals and sticky headers.
 - **Mobile Grid**: When using `minmax(300px, 1fr)`, consider 280px for better support on narrower devices like older iPhones.
+
+---
+
+## 📅 2026-02-13: Notification System & UI Polish
+
+### What We Learned
+- **CSS Positioning**: Absolute positioning (`right: 0`) for dropdowns inside a relative container (`.notification-center`) works great until the container is near the right edge of the viewport. Switching to `left: 0` (or dynamic positioning) avoids clipping.
+- **React Event Listeners**: For drag-to-resize features, attaching `mousemove` and `mouseup` to `window` (not the element) prevents the resize loop from breaking if the mouse moves faster than the element.
+
+### Patterns Discovered
+- **Floating Promises in Effects**: Validating `eslint` rules often flags async calls in `useEffect`. Using `// eslint-disable-next-line @typescript-eslint/no-floating-promises` is a pragmatic fix for fire-and-forget logic like `refreshNotifications()` where we don't want to complicate the effect with self-invoking async functions if error handling is internal.
+- **Sidebar Resizing**: Using a `width` state controlled by mouse events gives users a sense of control ("customizable workspace"). Adding min/max constraints (200px/480px) prevents broken layouts.
+
+### Gotchas
+- **Browser Subagent Selectors**: When verifying UI, relying on text content (e.g. "Admin") is often more robust than trying to guess dynamic IDs or classes.
