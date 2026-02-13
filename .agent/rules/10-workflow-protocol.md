@@ -6,24 +6,32 @@ trigger: always_on
 
 Every feature must follow this lifecycle. Do not skip steps without user override.
 
+## 0. PRE-FLIGHT (Self-Check)
+- **Goal:** Ensure clean environment.
+- **Action:**
+  - Check for zombie processes (`fuser -k 8000/tcp`).
+  - Verify `docs/guides/user-guide.md` is up to date with previous features.
+
 ## 1. SPEC (Product_Owner)
 - **Goal:** Define acceptance criteria and BDD scenarios.
 - **Output:** Update `docs/master-spec.md`.
 
 ## 2. PLAN (Architect)
-- **Goal:** Validate technical approach.
-- **Requirement:** Create or update `PLAN.md` before any code is written.
+- **Goal:** Validate technical approach and API Contract.
+- **Requirement:** 
+  - Create `PLAN.md`.
+  - **Define Pydantic Schemas & API Responses FIRST.** (Prevents Frontend blocking).
 
 ## 3. EXECUTE (Executor)
-- **Goal:** Implement the plan.
-- **Constraint:** Follow the patterns defined in `PLAN.md`.
+- **Goal:** Implement the plan AND corresponding unit tests.
+- **Constraint:** Code is incomplete without tests. Follow patterns in `PLAN.md`.
 
 ## 4. REVIEW (Code_Reviewer)
-- **Action:** Analyze uncommitted changes (`git diff`).
-- **Goal:** Catch bugs before they reach the repo.
+- **Action:** Analyze uncommitted changes (`git diff`). Verify test coverage.
+- **Goal:** Catch bugs and ensure no technical debt is added.
 
 ## 5. VERIFY (QA_Nerd)
-- **Goal:** Browser verification or terminal test pass.
+- **Goal:** Run full regression suite + manual edge case verification.
 - **Output:** `QA_Report` artifact.
 
 ## 6. SYNC (Librarian)

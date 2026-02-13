@@ -69,14 +69,25 @@ Go to **"Rewards"** (or "Belohnungen").
    - **Tier**: Bronze/Silver/Gold (affects badge color).
 3. Click **"Create Reward"**.
 
+### 5. Analytics & Fairness
+The **Analytics Dashboard** provides transparency into family contributions:
+- **Weekly Activity**: See who completed tasks each day.
+- **Fairness Distribution**: A pie chart showing the percentage of total points earned by each family member.
+
 ### 6. Monitoring Activity
 The **Dashboard** features a **Global Activity Log** where you can see all family actions.
 - **History**: View a list of all earned points and redeemed rewards.
 - **Filtering**:
-  - **User**: Select a specific family member to see only their activity.
-  - **Type**: Filter by "Earned" (completed tasks) or "Redeemed" (rewards).
-  - **Search**: Type to find specific tasks or rewards by name.
-- **Details**: The table shows exactly what task was done or what reward was claimed.
+  - **User**: Select a specific family member.
+  - **Type**: Filter by "Earned" or "Redeemed".
+  - **Search**: Find specific tasks or rewards.
+
+### 7. Automated Backups
+**Data Protection**
+- The system automatically backs up the database every night at **02:00 AM**.
+- Backups are stored in the `backups/` folder.
+- The last **7 daily backups** are kept. Older backups are automatically deleted.
+- **Manual Trigger**: You can trigger a manual backup via API.
 
 ---
 
@@ -98,43 +109,30 @@ Go to **"Dashboard"** or **"Tasks"**.
 ### 3. Checking Your History
 Go to the **"History"** tab on your Dashboard.
 - See a list of everything you've done.
-- **Filter**: You can search for specific chores to see when you last did them.
-- **Track**: See how many points you earned for each task.
+- **Filter**: Search for specific chores.
+- **Track**: See points earned for each task.
 
 ### 4. Setting a Goal
 Go to **"Rewards"**.
-1. Browse the rewards your parents created.
+1. Browse the rewards.
 2. Find one you really want.
 3. Click **"Set as Goal"**.
-4. This reward will now appear on your Dashboard with a progress bar showing how close you are!
+4. This reward will now appear on your Dashboard with a progress bar!
 
 ### 5. Redeeming Rewards
 Go to the **Dashboard** and switch to the **"Redeem"** tab.
 1. Browse rewards you can afford.
 2. Click **"Redeem"** on a reward you want.
-3. Confirm the redemption to instantly deduct points and notify your parents!
+3. Confirm the redemption to instantly deduct points!
 
-### 6. Analytics Dashboard
-**Track Family Progress**
-The new Analytics Dashboard provides transparency into family contributions and fairness.
-- **Weekly Activity**: See who completed tasks each day over the last week.
-- **Fairness Distribution**: A pie chart showing the percentage of total points earned by each family member.
-- **Access**: Available to all users to promote healthy competition!
-
-### 7. Monitoring Activity
-
-##### 🎁 Split Redemption
+### 6. Split Redemption (Teamwork!)
 You can pool points with siblings or parents to buy a big reward together!
 1. Click **"Redeem"** on a reward.
-2. In the popup, use the **Split Evenly** button or adjust each person's contribution manually.
+2. In the popup, use the **Split Evenly** button or adjust custom amounts.
 3. Once the total matches the cost, click **"Redeem"** to share the cost!
 
-### 8. Automated Backups
-**Data Protection**
-- The system automatically backs up the database every night at **02:00 AM**.
-- Backups are stored in the `backups/` folder.
-- The last **7 daily backups** are kept. Older backups are automatically deleted to save space.
-- **Manual Trigger**: You can trigger a manual backup via API if needed (see API Docs).
+### 7. Analytics
+Check the **Analytics** page to see how you compare to the rest of the family in the **Fairness Distribution** chart!
 
 ---
 

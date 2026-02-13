@@ -219,5 +219,16 @@ This file captures accumulated knowledge from development sessions. The Libraria
 - **Reproduction Scripts**: Writing a throwaway script (`tests/reproduce_hang.py`) to simulate the exact failure condition (e.g., a hanging job) is faster than trying to reproduce it via the full application.
 - **Coverage-Driven Dev**: Identifying low-coverage modules (like `analytics.py`) and targeting them with specific unit tests is a high-ROI activity for stability.
 
+## 📅 2026-02-12: Test Coverage & Documentation Sync
+
+### What We Learned
+- **Retroactive Testing Debt**: Building features without immediate tests leads to massive "Catch-Up" sessions that halt progress. The new `workflow-protocol.md` mandate (Exec = Code + Tests) is critical.
+- **Router Testing Logic**: Testing API endpoints requires more than just `client.get`. You need `seeded_db` fixtures to ensure relations (like `role_id`) exist, otherwise foreign key constraints fail immediately.
+- **Empty Response Handling**: API endpoints often return `None` as `null` in JSON, but sometimes as empty strings depending on the Pydantic serialization. Asserting `val in [None, ""]` is safer than `val is None`.
+
+### Patterns Discovered
+- **Contract-First**: Writing the Schema `class` before the React Component prevents the "Frontend Blocking" state where UI devs wait for API specs.
+- **Doc-Sync Routine**: Checking `user-guide.md` during the "Pre-Flight" or "Review" phase prevents documentation drift. It's easier to update docs while the feature is fresh in memory.
+
 ### Gotchas
-- **Date vs DateTime**: `TaskInstance` uses `due_time` (datetime) not `due_at`. Consistency in naming conventions across models is important.
+- **Pydantic Required Fields**: Adding a field like `description` to a Pydantic model (`TaskBase`) makes it required in all `POST/PUT` requests. This breaks existing tests that send partial data. Always use `Optional[str] = None` for backward compatibility or update all test payloads.

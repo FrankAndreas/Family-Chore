@@ -8,30 +8,32 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We a
 
 ## 🔄 Recent Changes (2026-02-10 Analytics Session)
 
-## 🔄 Recent Changes (2026-02-12 Zombie Fix & Analytics)
+## 🔄 Recent Changes (2026-02-12 Test & Doc Alignment)
 
-### Stability & Testing
-- **Zombie Processes**: Fixed `uvicorn` hang on shutdown by adjusting `APScheduler` shutdown logic (`wait=False`).
-- **Analytics Coverage**: Added `tests/unit/test_analytics.py`, achieving 98% coverage for the Analytics module.
-- **Verification**: Browser verification confirmed Analytics Dashboard functionality (Weekly Activity + Fairness charts).
+### Quality Assurance (Massive Push)
+- **Backend Coverage**: Achieved 79% overall, with **98%** in `crud.py` and **100%** in `models.py`.
+- **Router Tests**: Implemented comprehensive test suite for `users`, `tasks`, `rewards`, `transactions`, and `system` endpoints.
+- **Workflow V2**: Updated `workflow-protocol.md` to mandate **Test-Included Execution** and **Schema-First Planning**.
+
+### Documentation
+- **Consistency**: Synced `user-guide.md` with active features (Reward Splitting, Analytics, Backups).
+- **Structure**: Fixed numbering and section logic in Admin vs User guides.
 
 ## 📍 System State
-- **Backend**: Port 8000. Clean shutdown verified.
-- **Frontend**: Port 5173. Analytics verified.
-- **Tests**: 61/61 passed.
+- **Backend**: Port 8000. Coverage >79%. Schemas validated.
+- **Frontend**: Port 5173. Import/Export & Analytics functional.
+- **Tests**: 90/90 passed (backend unit tests).
 
 ## 🚧 Active Tasks
-1. **Testing**: Expand unit test coverage for other modules (User/Task routers).
-2. **Backups**: Verified local backup creation.
+1. **Notifications**: Implement Notification System (Next major feature).
+2. **Frontend Polish**: Verify mobile responsiveness for new features.
 
 ## ⚠️ Known Issues / Watchlist
-- **Timezone**: Configured to "Europe/Berlin".
-- **Database**: v1.3.
+- **Migration Edge Cases**: `SQLAlchemy` auto-migrations are limited; use `alembic` for complex schema changes.
+- **Timezone**: "Europe/Berlin" set in config but relies on system time in some Docker contexts.
 
 ---
 
 ## 🔜 Next Session Prompt
 > **Start a new conversation and say:**
-> "Review STATE.md — Zombie processes are fixed and Analytics tests are in place. Let's obtain 100% test coverage or start the 'Notification System' feature."
-
-*This field is updated by the Librarian at the end of each session to guide the next agent.*
+> "Review STATE.md — Backend is stable (79% coverage) and Docs are synced. Let's proceed with the **Notification System** or **Frontend Polish**."
