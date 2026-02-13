@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getUsers, getTasks, triggerDailyReset, getAllTransactions } from '../../api';
 import type { User, Task, Transaction, TransactionFilters } from '../../types';
+import LoadingSpinner from '../../components/LoadingSpinner';
 import './Dashboard.css';
 
 const AdminDashboard: React.FC = () => {
@@ -56,7 +57,7 @@ const AdminDashboard: React.FC = () => {
         return users.find(u => u.id === userId)?.nickname || `User #${userId}`;
     };
 
-    if (loading) return <div className="loading">Loading dashboard...</div>;
+    if (loading) return <LoadingSpinner fullPage message="Loading dashboard..." />;
 
     // Calculate stats
     const totalUsers = users.length;

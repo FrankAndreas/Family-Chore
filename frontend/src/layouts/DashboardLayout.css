@@ -173,6 +173,31 @@
     border-radius: 4px;
 }
 
+/* Mobile Toggle */
+.mobile-menu-toggle {
+    display: none;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: var(--spacing-xs);
+}
+
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.mobile-footer {
+    display: none;
+    margin-top: auto;
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--border-color);
+}
+
 @media (max-width: 768px) {
     .dashboard-container {
         flex-direction: column;
@@ -181,22 +206,71 @@
     .sidebar {
         width: 100%;
         height: auto;
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-        padding: var(--spacing-sm);
+        min-height: 70px;
+        flex-direction: column;
+        padding: 0;
+        position: relative;
+        z-index: 100;
+        transition: all var(--transition-base);
     }
 
-    .sidebar-nav,
-    .sidebar-footer,
-    .user-info {
-        display: none;
+    .sidebar.mobile-open {
+        height: 100vh;
+        position: fixed;
+        top: 0;
+        left: 0;
+        background: rgba(15, 15, 35, 0.95); /* darker background for legibility */
     }
 
     .sidebar-header {
         border-bottom: none;
-        padding: var(--spacing-xs);
-        margin-bottom: 0;
+        padding: var(--spacing-sm) var(--spacing-md);
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+    }
+
+    .header-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+    }
+
+    .mobile-menu-toggle {
+        display: block;
+    }
+
+    .user-profile {
+        display: none; /* Hide in header, maybe show in nav? */
+    }
+
+    .sidebar-nav {
+        display: none;
+        width: 100%;
+        padding: var(--spacing-lg);
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    .sidebar-nav.show {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .desktop-footer {
+        display: none;
+    }
+
+    .mobile-footer {
+        display: block;
+    }
+    
+    .nav-item {
+        font-size: 1.1rem;
+        padding: var(--spacing-md) 0;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
     }
 
     .app-title {

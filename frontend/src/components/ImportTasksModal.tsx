@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import Modal from './Modal';
 import type { TaskImportItem, ImportResult } from '../api';
 import { importTasks } from '../api';
+import { useToast } from '../context/ToastContext';
 import './Modal.css';
 
 interface ImportTasksModalProps {
@@ -22,6 +23,7 @@ const ImportTasksModal: React.FC<ImportTasksModalProps> = ({
     const [isImporting, setIsImporting] = useState(false);
     const [importResult, setImportResult] = useState<ImportResult | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const { showToast } = useToast();
 
     const handleJsonChange = (text: string) => {
         setJsonInput(text);
@@ -67,7 +69,12 @@ const ImportTasksModal: React.FC<ImportTasksModalProps> = ({
             });
             setImportResult(response.data);
             if (response.data.success && response.data.created.length > 0) {
+                showToast(`Successfully imported ${response.data.created.length} tasks!`, 'success');
                 onSuccess();
+            } else if (response.data.success && response.data.created.length === 0) {
+                showToast('No new tasks were imported (duplicates skipped).', 'info');
+            } else {
+                showToast('Import completed with some issues.', 'warning');
             }
         } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
             // Extract detailed error from FastAPI 422 response
@@ -88,6 +95,7 @@ const ImportTasksModal: React.FC<ImportTasksModalProps> = ({
             }
 
             setParseError(errorMessage);
+            showToast('Failed to import tasks', 'error');
         } finally {
             setIsImporting(false);
         }
@@ -131,7 +139,7 @@ const ImportTasksModal: React.FC<ImportTasksModalProps> = ({
 
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
-        // Could add a toast notification here if we had a toast system
+        showToast('Copied to clipboard!', 'success');
     };
 
     return (

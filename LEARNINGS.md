@@ -232,3 +232,20 @@ This file captures accumulated knowledge from development sessions. The Libraria
 
 ### Gotchas
 - **Pydantic Required Fields**: Adding a field like `description` to a Pydantic model (`TaskBase`) makes it required in all `POST/PUT` requests. This breaks existing tests that send partial data. Always use `Optional[str] = None` for backward compatibility or update all test payloads.
+
+---
+
+## 📅 2026-02-13: Frontend Polish & Mobile Verification
+
+### What We Learned
+- **Mobile Navigation**: A full-screen overlay menu (triggered by a hamburger icon) provides a much better experience on mobile than trying to squash a sidebar.
+- **Visual Verification**: The `browser_subagent` is essential for verifying responsive layouts (e.g., iPhone X view) which are difficult to capture with standard integration tests.
+- **Linting vs. Runtime**: TypeScript `no-unused-vars` and `react-hooks/exhaustive-deps` are the most common "technical debt" introduced during rapid prototyping. Fixing them *before* the "Verify" phase prevents late-stage regressions.
+
+### Patterns Discovered
+- **Global Feedback**: Implementing a generic `ToastContext` early saves significant time compared to ad-hoc `alert()` replacements later.
+- **Error Boundaries**: Wrapping the entire `Routes` block in an `ErrorBoundary` is a safety net that should be standard in the project scaffold.
+
+### Gotchas
+- **Toast Z-Index**: Ensure `ToastContainer` has a high z-index (e.g., `z-50`) to appear above modals and sticky headers.
+- **Mobile Grid**: When using `minmax(300px, 1fr)`, consider 280px for better support on narrower devices like older iPhones.

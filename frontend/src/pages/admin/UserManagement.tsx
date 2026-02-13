@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getUsers, createUser, getRoles } from '../../api';
 import type { User, Role } from '../../types';
+import LoadingSpinner from '../../components/LoadingSpinner';
 import './Dashboard.css';
 
 const UserManagement: React.FC = () => {
@@ -55,7 +56,7 @@ const UserManagement: React.FC = () => {
         }
     };
 
-    if (loading) return <div className="loading">Loading...</div>;
+    if (loading) return <LoadingSpinner fullPage />;
 
     return (
         <div className="page-container fade-in">

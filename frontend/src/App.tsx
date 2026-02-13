@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { ToastProvider } from './context/ToastContext';
+import ErrorBoundary from './components/ErrorBoundary';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './components/Login';
 import DashboardLayout from './layouts/DashboardLayout';
@@ -27,40 +29,48 @@ function App() {
 
   // If not logged in, show login page
   if (!currentUser) {
-    return <Login onLogin={handleLogin} />;
+    return (
+      <ToastProvider>
+        <Login onLogin={handleLogin} />
+      </ToastProvider>
+    );
   }
 
   // If logged in, show dashboard with routes
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route
-          path="/"
-          element={<DashboardLayout currentUser={currentUser} onLogout={handleLogout} />}
-        >
-          {/* Redirect root to appropriate dashboard */}
-          <Route
-            index
-            element={<Navigate to={currentUser.role.name === 'Admin' ? '/admin' : '/dashboard'} replace />}
-          />
+    <ToastProvider>
+      <ErrorBoundary>
+        <BrowserRouter>
+          <Routes>
+            <Route
+              path="/"
+              element={<DashboardLayout currentUser={currentUser} onLogout={handleLogout} />}
+            >
+              {/* Redirect root to appropriate dashboard */}
+              <Route
+                index
+                element={<Navigate to={currentUser.role.name === 'Admin' ? '/admin' : '/dashboard'} replace />}
+              />
 
-          {/* Admin Routes */}
-          <Route path="admin" element={<AdminDashboard />} />
-          <Route path="admin/users" element={<UserManagement />} />
-          <Route path="admin/tasks" element={<TaskManagement />} />
-          <Route path="admin/roles" element={<RoleManagement />} />
+              {/* Admin Routes */}
+              <Route path="admin" element={<AdminDashboard />} />
+              <Route path="admin/users" element={<UserManagement />} />
+              <Route path="admin/tasks" element={<TaskManagement />} />
+              <Route path="admin/roles" element={<RoleManagement />} />
 
-          {/* User Routes */}
-          <Route path="dashboard" element={<UserDashboard />} />
-          <Route path="rewards" element={<RewardHub />} />
-          <Route path="analytics" element={<AnalyticsDashboard />} />
-          <Route path="settings" element={<SettingsPage />} />
-        </Route>
+              {/* User Routes */}
+              <Route path="dashboard" element={<UserDashboard />} />
+              <Route path="rewards" element={<RewardHub />} />
+              <Route path="analytics" element={<AnalyticsDashboard />} />
+              <Route path="settings" element={<SettingsPage />} />
+            </Route>
 
-        {/* Catch all - redirect to home */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+            {/* Catch all - redirect to home */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </ErrorBoundary>
+    </ToastProvider>
   );
 }
 

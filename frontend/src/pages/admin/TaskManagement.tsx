@@ -2,11 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { getTasks, createTask, updateTask, deleteTask, getRoles, exportTasks } from '../../api';
 import type { Task, Role } from '../../types';
 import LoadingSpinner from '../../components/LoadingSpinner';
-import Toast from '../../components/Toast';
 import Modal from '../../components/Modal';
 import TaskForm from '../../components/TaskForm';
 import ImportTasksModal from '../../components/ImportTasksModal';
-import { useToast } from '../../hooks/useToast';
+import { useToast } from '../../context/ToastContext';
 import './Dashboard.css';
 
 const TaskManagement: React.FC = () => {
@@ -18,7 +17,7 @@ const TaskManagement: React.FC = () => {
     const [showImportModal, setShowImportModal] = useState(false);
     const [editingTask, setEditingTask] = useState<Task | null>(null);
     const [submitting, setSubmitting] = useState(false);
-    const { toasts, removeToast, success, error: showError } = useToast();
+    const { showToast } = useToast();
 
     // Form state
     const [name, setName] = useState('');
@@ -54,7 +53,7 @@ const TaskManagement: React.FC = () => {
                 errorMsg = response?.data?.detail || errorMsg;
             }
             setError(errorMsg);
-            showError(errorMsg);
+            showToast(errorMsg, 'error');
         } finally {
             setLoading(false);
         }
@@ -115,7 +114,7 @@ const TaskManagement: React.FC = () => {
         setName(copyName);
         setShowAddForm(true);
         setShowEditModal(false);
-        success('Task copied to form. Edit and save as new task.');
+        showToast('Task copied to form. Edit and save as new task.', 'success');
     };
 
     const handleDeleteTask = async (task: Task) => {
@@ -125,11 +124,11 @@ const TaskManagement: React.FC = () => {
 
         try {
             await deleteTask(task.id);
-            success(`Task "${task.name}" deleted successfully`);
+            showToast(`Task "${task.name}" deleted successfully`, 'success');
             fetchData();
         } catch (err) {
             console.error('Failed to delete task', err);
-            showError('Failed to delete task');
+            showToast('Failed to delete task', 'error');
         }
     };
 
@@ -144,10 +143,10 @@ const TaskManagement: React.FC = () => {
             a.download = `tasks-export-${new Date().toISOString().split('T')[0]}.json`;
             a.click();
             URL.revokeObjectURL(url);
-            success(`Exported ${response.data.tasks.length} tasks`);
+            showToast(`Exported ${response.data.tasks.length} tasks`, 'success');
         } catch (err) {
             console.error('Failed to export tasks', err);
-            showError('Failed to export tasks');
+            showToast('Failed to export tasks', 'error');
         }
     };
 
@@ -167,7 +166,7 @@ const TaskManagement: React.FC = () => {
                 recurrence_min_days: scheduleType === 'recurring' ? recurrenceMinDays : null,
                 recurrence_max_days: scheduleType === 'recurring' ? recurrenceMaxDays : null
             });
-            success('Task created successfully! 🎉');
+            showToast('Task created successfully! 🎉', 'success');
             setShowAddForm(false);
             resetForm();
             fetchData();
@@ -175,7 +174,7 @@ const TaskManagement: React.FC = () => {
         } catch (err: any) {
             const errorMsg = err.response?.data?.detail || 'Failed to create task';
             setError(errorMsg);
-            showError(errorMsg);
+            showToast(errorMsg, 'error');
         } finally {
             setSubmitting(false);
         }
@@ -199,7 +198,7 @@ const TaskManagement: React.FC = () => {
                 recurrence_min_days: scheduleType === 'recurring' ? recurrenceMinDays : null,
                 recurrence_max_days: scheduleType === 'recurring' ? recurrenceMaxDays : null
             });
-            success('Task updated successfully! ✅');
+            showToast('Task updated successfully! ✅', 'success');
             setShowEditModal(false);
             setEditingTask(null);
             resetForm();
@@ -208,7 +207,7 @@ const TaskManagement: React.FC = () => {
         } catch (err: any) {
             const errorMsg = err.response?.data?.detail || 'Failed to update task';
             setError(errorMsg);
-            showError(errorMsg);
+            showToast(errorMsg, 'error');
         } finally {
             setSubmitting(false);
         }
@@ -228,19 +227,6 @@ const TaskManagement: React.FC = () => {
 
     return (
         <div className="page-container fade-in">
-            {/* Toast notifications */}
-            <div className="toast-container">
-                {toasts.map(toast => (
-                    <Toast
-                        key={toast.id}
-                        message={toast.message}
-                        type={toast.type}
-                        duration={toast.duration}
-                        onClose={() => removeToast(toast.id)}
-                    />
-                ))}
-            </div>
-
             {/* Edit Task Modal */}
             <Modal
                 isOpen={showEditModal}
@@ -280,7 +266,7 @@ const TaskManagement: React.FC = () => {
                 onClose={() => setShowImportModal(false)}
                 onSuccess={() => {
                     fetchData();
-                    success('Tasks imported successfully!');
+                    showToast('Tasks imported successfully!', 'success');
                 }}
             />
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getRoles, updateRole, createRole, deleteRole, getRoleUsers } from '../../api';
 import type { Role } from '../../types';
+import LoadingSpinner from '../../components/LoadingSpinner';
 import './Dashboard.css';
 
 interface RoleUser {
@@ -229,7 +230,7 @@ const RoleManagement: React.FC = () => {
         }
     };
 
-    if (loading) return <div className="loading">Loading...</div>;
+    if (loading) return <LoadingSpinner fullPage />;
 
     return (
         <div className="page-container fade-in">
