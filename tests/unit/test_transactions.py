@@ -2,7 +2,7 @@
 """
 Unit tests for Transaction operations.
 """
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from backend import crud, models
 
 
@@ -34,7 +34,7 @@ class TestTransactionHistory:
             base_points_value=10,
             multiplier_used=1.0,
             awarded_points=10,
-            timestamp=datetime.utcnow() - timedelta(hours=2),
+            timestamp=datetime.now(timezone.utc) - timedelta(hours=2),
             description="Task A"
         )
         # 2. Redeem transaction
@@ -44,7 +44,7 @@ class TestTransactionHistory:
             base_points_value=20,
             multiplier_used=1.0,
             awarded_points=-5,
-            timestamp=datetime.utcnow() - timedelta(hours=1),
+            timestamp=datetime.now(timezone.utc) - timedelta(hours=1),
             description="Reward B"
         )
 
@@ -84,7 +84,7 @@ class TestTransactionHistory:
             base_points_value=10,
             multiplier_used=1.0,
             awarded_points=10,
-            timestamp=datetime.utcnow() - timedelta(minutes=10),
+            timestamp=datetime.now(timezone.utc) - timedelta(minutes=10),
             description="Task 1"
         )
         t2 = models.Transaction(
@@ -93,7 +93,7 @@ class TestTransactionHistory:
             base_points_value=20,
             multiplier_used=1.0,
             awarded_points=20,
-            timestamp=datetime.utcnow() - timedelta(minutes=5),
+            timestamp=datetime.now(timezone.utc) - timedelta(minutes=5),
             description="Task 2"
         )
 
@@ -128,7 +128,7 @@ class TestTransactionHistory:
                 base_points_value=10,
                 multiplier_used=1.0,
                 awarded_points=10,
-                timestamp=datetime.utcnow() - timedelta(minutes=i),
+                timestamp=datetime.now(timezone.utc) - timedelta(minutes=i),
                 description=f"Task {i}"
             )
             seeded_db.add(t)
@@ -157,12 +157,12 @@ class TestTransactionHistory:
         # 1. Earn Task A (Yesterday)
         t1 = models.Transaction(
             user_id=user.id, type="EARN", base_points_value=10, multiplier_used=1.0,
-            awarded_points=10, timestamp=datetime.utcnow() - timedelta(days=1), description="Clean Room"
+            awarded_points=10, timestamp=datetime.now(timezone.utc) - timedelta(days=1), description="Clean Room"
         )
         # 2. Redeem Reward B (Today)
         t2 = models.Transaction(
             user_id=user.id, type="REDEEM", base_points_value=50, multiplier_used=1.0,
-            awarded_points=-50, timestamp=datetime.utcnow(), description="Ice Cream"
+            awarded_points=-50, timestamp=datetime.now(timezone.utc), description="Ice Cream"
         )
 
         seeded_db.add_all([t1, t2])

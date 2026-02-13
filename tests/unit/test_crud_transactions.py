@@ -26,7 +26,7 @@ def test_get_user_transactions(db_session, seeded_db):
     assert len(txs) == 2
 
     # Filter by type
-    txs_earn = crud.get_user_transactions(db_session, user.id, transaction_type="EARN")
+    txs_earn = crud.get_user_transactions(db_session, user.id, type="EARN")
     assert len(txs_earn) == 1
     assert txs_earn[0].type == "EARN"
 
@@ -68,15 +68,15 @@ def test_get_all_transactions(db_session, seeded_db):
     # Filter by search
     # Add one with specific title if possible? Transaction doesn't have title/desc in model?
     # Checking model...
-    # Model has `associated_task_name` and `associated_reward_name`
+    # Model has description
 
     t3 = models.Transaction(
         user_id=u1.id, type="EARN", base_points_value=10, multiplier_used=1,
-        awarded_points=10, timestamp=datetime.now(), associated_task_name="UniqueTaskName"
+        awarded_points=10, timestamp=datetime.now(), description="UniqueTaskName"
     )
     db_session.add(t3)
     db_session.commit()
 
     txs_search = crud.get_all_transactions(db_session, search="Unique")
     assert len(txs_search) == 1
-    assert txs_search[0].associated_task_name == "UniqueTaskName"
+    assert txs_search[0].description == "UniqueTaskName"
