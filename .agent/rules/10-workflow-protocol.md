@@ -25,9 +25,15 @@ Every feature must follow this lifecycle. Do not skip steps without user overrid
 ## 3. EXECUTE (Executor)
 - **Goal:** Implement the plan AND corresponding unit tests.
 - **Constraint:** Code is incomplete without tests. Follow patterns in `PLAN.md`.
+- **Mandatory Quality Checks (Run BEFORE asking for review):**
+  - Backend: `flake8 backend tests --max-line-length=120`
+  - Backend: `mypy backend/`
+  - Frontend: `npm run lint` & `npx tsc --noEmit`
 
 ## 4. REVIEW (Code_Reviewer)
-- **Action:** Analyze uncommitted changes (`git diff`). Verify test coverage.
+- **Action:** Analyze uncommitted changes (`git diff`). 
+- **Goal:** Catch bugs and ensure no technical debt is added.
+- **Verification:** Confirm linters pass. STRICTLY ENFORCE PEP8 (whitespace, imports).
 - **Goal:** Catch bugs and ensure no technical debt is added.
 
 ## 5. VERIFY (QA_Nerd)
