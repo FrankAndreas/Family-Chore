@@ -264,3 +264,17 @@ This file captures accumulated knowledge from development sessions. The Libraria
 
 ### Gotchas
 - **Browser Subagent Selectors**: When verifying UI, relying on text content (e.g. "Admin") is often more robust than trying to guess dynamic IDs or classes.
+
+---
+
+## 📅 2026-02-19: Agent Handoffs Standardization
+
+### What We Learned
+- **Context Preservation**: When handing off tasks between agents (roles), "position bias" can cause context loss. The handoff must include the minimum viable context needed for the next agent: a short status summary and exact paths to updated artifacts.
+- **Agent Orchestration**: Handoffs in this system are procedural conventions (prompting shifts), not the spawning of isolated sub-agents (except for specific tools like `browser_subagent`). This relies heavily on the `Librarian` to record state before the context window fills up.
+
+### Patterns Discovered
+- **Structured Handoff Block**: A standardized 4-part handoff block (Status Summary, Artifacts, Next Role, Handoff Prompt) reduces cognitive load for the user and ensures the incoming agent has exactly what it needs to start.
+
+### Gotchas
+- **Sub-agent vs. Role**: It's easy to assume "Agent" means an entirely new LLM instance. Clarifying that these are role-playing prompts within a single conversational context is crucial for understanding how memory (and amnesia) works in this project.

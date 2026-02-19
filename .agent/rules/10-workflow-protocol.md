@@ -43,3 +43,14 @@ Every feature must follow this lifecycle. Do not skip steps without user overrid
 ## 6. SYNC (Librarian)
 - **Trigger:** End of session or after 3 commits.
 - **Action:** Summarize changes into `STATE.md` and `LEARNINGS.md`.
+
+---
+
+## Agent Handoffs Protocol
+Every phase transition requires an explicit handoff to the next Role. The outgoing agent MUST provide the user with the following standard handoff block:
+
+- **Handoff:** 
+  - **Status Summary:** A concise 1-2 sentence summary of what was just completed.
+  - **Artifacts:** Exact paths/links to the files updated in this step (e.g., `docs/master-spec.md`, `PLAN.md`).
+  - **Next Role:** The specific agent role required next.
+  - **Handoff Prompt:** The exact exact copy-pasteable prompt the user can use to invoke the next role (e.g., `> "As Architect, please review the new specs in docs/master-spec.md and update PLAN.md."`)

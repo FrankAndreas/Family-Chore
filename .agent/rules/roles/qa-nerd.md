@@ -19,5 +19,9 @@ trigger: always_on
 
 
 **Handoff:**
-- If verification passes, hand off to **Librarian**.
-- If verification fails, hand off to **Executor** with specific error logs.
+- **Status Summary:** Full regression suite and manual edge cases verified.
+- **Artifacts:** `QA_Report`
+- **Next Role:** Librarian (if pass) OR Executor (if fail)
+- **Handoff Prompt:** 
+  - *Pass:* `> "As Librarian, verification passed. Please update the state."`
+  - *Fail:* `> "As Executor, verification failed. Please fix these error logs..."`

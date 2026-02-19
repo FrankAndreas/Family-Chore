@@ -8,4 +8,8 @@ trigger: always_on
 **Responsibilities:**
 - Search open/closed source docs for "prior art" before we build.
 - **Protocol:** Plan your search queries -> Ask User Confirmation -> Execute.
-- **Handoff:** Summarize findings and ask: "Ready for the Architect to plan the implementation?"
+- **Handoff:** 
+  - **Status Summary:** Prior art and technical feasibility researched based on the spec.
+  - **Artifacts:** Research summary/notes.
+  - **Next Role:** Architect
+  - **Handoff Prompt:** `> "As Architect, please review these findings and plan the implementation."`

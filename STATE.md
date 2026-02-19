@@ -6,12 +6,9 @@
 ## 🧠 Global Context
 The project is a **Family Chore Gamification System** (Universal-GSD-Core). We are in the **Polishing & Verification** phase — refining UI/UX and ensuring system stability.
 
-## 🔄 Recent Changes (2026-02-10 Analytics Session)
-
-## 🔄 Recent Changes (2026-02-13 Notification System)
-- **Real-time Notifications**: Implemented SSE-based notification system with persistence (SQLite).
-- **UI Polish**: Added resizable sidebar and fixed dropdown positioning logic.
-- **Verification**: Verified end-to-end with browser subagent and backend unit tests.
+## 🔄 Recent Changes (2026-02-19 Agent Handoffs)
+- **Workflow Standardization**: Created a standardized Agent Handoff protocol across all `roles/*.md` to explicitly format expectations.
+- **Context Preservation**: Added `Status Summary` and `Artifacts` links to handoff prompts to mitigate position bias between role shifts.
 
 ## 📍 System State
 - **Backend**: Port 8000. Coverage >80% (Notifications added).
@@ -19,8 +16,8 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We a
 - **Tests**: All backend tests passed. Browser verification success.
 
 ## 🚧 Active Tasks
-1. **Agent Handoffs**: Implement intelligent session handoff mechanism (Next).
-2. **Gamification Polish**: Review point/reward scaling.
+1. **Gamification Polish**: Review point/reward scaling (Next).
+2. **Task Import/Export UI**: Finalize modal design based on `import_wizard` logic.
 
 ## ⚠️ Known Issues / Watchlist
 - **Migration Edge Cases**: `SQLAlchemy` auto-migrations are limited; use `alembic` for complex schema changes.
@@ -30,4 +27,4 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We a
 
 ## 🔜 Next Session Prompt
 > **Start a new conversation and say:**
-> "Review STATE.md — Notification System is complete. Let's proceed with **Agent Handoffs**."
+> "Review STATE.md — Agent Handoffs are complete. Let's proceed with **Gamification Polish**."
