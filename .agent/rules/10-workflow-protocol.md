@@ -42,7 +42,7 @@ Every feature must follow this lifecycle. Do not skip steps without user overrid
 
 ## 6. SYNC (Librarian)
 - **Trigger:** End of session or after 3 commits.
-- **Action:** Summarize changes into `STATE.md` and `LEARNINGS.md`.
+- **Action:** Summarize changes into `STATE.md` and `LEARNINGS.md`, then commit them.
 
 ---
 

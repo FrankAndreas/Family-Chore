@@ -5,7 +5,7 @@ from backend.migrations.consolidated_migration import run_consolidated_migration
 
 logger = logging.getLogger(__name__)
 
-CURRENT_TARGET_VERSION = "1.3"
+CURRENT_TARGET_VERSION = "1.4"
 
 
 class MigrationManager:

@@ -40,14 +40,21 @@ def run_consolidated_migration(conn):
             logger.error(f"Error adding transactions.description: {e}")
 
     # 3. Users Table Updates
-    try:
-        conn.execute(text("ALTER TABLE users ADD COLUMN preferred_language TEXT"))
-        logger.info("✓ Added column users.preferred_language")
-    except Exception as e:
-        if "duplicate column name" in str(e).lower():
-            logger.debug("ℹ column users.preferred_language already exists")
-        else:
-            logger.error(f"Error adding users.preferred_language: {e}")
+    user_columns = [
+        ("preferred_language", "TEXT"),
+        ("current_streak", "INTEGER DEFAULT 0 NOT NULL"),
+        ("last_task_date", "DATE")
+    ]
+
+    for col_name, col_type in user_columns:
+        try:
+            conn.execute(text(f"ALTER TABLE users ADD COLUMN {col_name} {col_type}"))
+            logger.info(f"✓ Added column users.{col_name}")
+        except Exception as e:
+            if "duplicate column name" in str(e).lower():
+                logger.debug(f"ℹ column users.{col_name} already exists")
+            else:
+                logger.error(f"Error adding users.{col_name}: {e}")
 
     conn.commit()
     logger.info("Consolidated migration completed successfully.")

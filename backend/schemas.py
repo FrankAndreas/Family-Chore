@@ -1,6 +1,6 @@
 from typing import Optional, List
 from pydantic import BaseModel, Field, field_validator, model_validator, ConfigDict
-from datetime import datetime
+from datetime import datetime, date
 
 # --- System Settings Schemas ---
 
@@ -73,6 +73,8 @@ class User(UserBase):
     lifetime_points: int
     current_goal_reward_id: Optional[int] = None
     preferred_language: Optional[str] = None
+    current_streak: int = 0
+    last_task_date: Optional[date] = None
     role: Role
 
     model_config = ConfigDict(from_attributes=True)

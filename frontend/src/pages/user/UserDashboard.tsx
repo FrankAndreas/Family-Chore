@@ -106,6 +106,18 @@ const UserDashboard: React.FC = () => {
             <header className="page-header">
                 <h1 className="page-title">My Dashboard</h1>
                 <p className="page-subtitle">Welcome, <span className="highlight-text">{currentUser.nickname}</span>! You have {currentUser.current_points} points.</p>
+                <div className="gamification-badges" style={{ display: 'flex', gap: '10px', marginTop: '10px', justifyContent: 'center' }}>
+                    {currentUser.current_streak > 0 && (
+                        <span className="badge badge-warning" style={{ fontSize: '1.1em', padding: '5px 10px' }}>
+                            🔥 {currentUser.current_streak} Day Streak!
+                        </span>
+                    )}
+                    {currentUser.last_task_date !== new Date().toISOString().split('T')[0] && (
+                        <span className="badge badge-success" style={{ fontSize: '1.1em', padding: '5px 10px' }}>
+                            🎁 +5 Daily Bonus Available!
+                        </span>
+                    )}
+                </div>
             </header>
 
             <div className="tabs">

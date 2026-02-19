@@ -1,5 +1,5 @@
 import datetime
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Text
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Date, Text
 from sqlalchemy.orm import relationship
 from .database import Base
 
@@ -45,6 +45,10 @@ class User(Base):
 
     # Language preference (null = use system default)
     preferred_language = Column(String, nullable=True)  # e.g., "de", "en", or null
+
+    # Gamification Polish
+    current_streak = Column(Integer, nullable=False, default=0)
+    last_task_date = Column(Date, nullable=True)
 
     # Relationships
     role = relationship("Role", back_populates="users")

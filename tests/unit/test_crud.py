@@ -52,8 +52,8 @@ class TestPointCalculation:
         # Assert
         assert completed.status == "COMPLETED"
         seeded_db.refresh(user)
-        assert user.current_points == 15  # 10 * 1.5
-        assert user.lifetime_points == 15
+        assert user.current_points == 20  # (10 * 1.5) + 5 daily bonus
+        assert user.lifetime_points == 20
 
     def test_complete_task_creates_transaction(self, seeded_db):
         """Test that completing a task creates a transaction record."""
@@ -103,7 +103,7 @@ class TestPointCalculation:
         assert transaction.type == "EARN"
         assert transaction.base_points_value == 20
         assert transaction.multiplier_used == 1.5  # Child default
-        assert transaction.awarded_points == 30  # 20 * 1.5
+        assert transaction.awarded_points == 35  # (20 * 1.5) + 5 daily bonus
 
     def test_complete_task_idempotent(self, seeded_db):
         """Test that completing an already completed task doesn't award points twice."""
@@ -147,8 +147,8 @@ class TestPointCalculation:
 
         # Assert - points only awarded once
         seeded_db.refresh(user)
-        assert user.current_points == 10
-        assert user.lifetime_points == 10
+        assert user.current_points == 15  # (10 * 1.0) + 5 daily bonus
+        assert user.lifetime_points == 15
 
 
 class TestDailyReset:

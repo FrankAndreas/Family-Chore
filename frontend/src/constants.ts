@@ -1,7 +1,7 @@
 export const TIER_THRESHOLDS = {
     BRONZE: 0,
-    SILVER: 500,
-    GOLD: 1500,
+    SILVER: 300,
+    GOLD: 1000,
 };
 
 export const TIER_COLORS = {

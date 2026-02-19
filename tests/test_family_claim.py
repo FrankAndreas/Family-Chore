@@ -89,7 +89,7 @@ def test_family_dashboard_claim_logic(db):
     assert tx is not None
     assert tx.user_id == user_t.id
     assert tx.multiplier_used == 1.5
-    assert tx.awarded_points == 15
+    assert tx.awarded_points == 20
 
     # Verify Original Task Definition Unchanged
     # The task definition should still be assigned to Role Parent

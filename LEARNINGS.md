@@ -278,3 +278,17 @@ This file captures accumulated knowledge from development sessions. The Libraria
 
 ### Gotchas
 - **Sub-agent vs. Role**: It's easy to assume "Agent" means an entirely new LLM instance. Clarifying that these are role-playing prompts within a single conversational context is crucial for understanding how memory (and amnesia) works in this project.
+
+---
+
+## 📅 2026-02-19: Gamification Polish & Test Assertions
+
+### What We Learned
+- **BDD Point Scaling**: When applying global additive features (like a daily +5 bonus), BDD tests that assert exact mathematical points based solely on `base_points * multiplier` will fail. The baseline equation changes globally. Test coverage must account for daily streaks and manual overrides.
+- **Frontend Streak Display**: Decoupling `current_streak` calculations from the raw transaction multiplier provides simpler UI presentation. We added a 🔥 streak badge and 🎁 daily bonus badge without cluttering the transactions table.
+
+### Patterns Discovered
+- **Additive Over Multiplicative**: Applying streak bonuses as additive values (base multiplier + 0.1 per day up to +0.5) is easier to track and cap than compounding percentages, avoiding exponential point inflation.
+
+### Gotchas
+- **Database Migrations and Dates**: Creating a simple `DATE` field in SQLite by adding a column via automated scripts requires checking strings if date matching fails, though SQLAlchemy handles `datetime.date` mapping gracefully if configured correctly.

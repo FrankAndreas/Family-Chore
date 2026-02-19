@@ -33,5 +33,5 @@ Feature: Role Multiplier Configuration
         When I update the "Teenager" role multiplier to 1.5
         And I create a daily task instance for "Emma"
         And "Emma" completes the task
-        Then "Emma" should receive 15 points
+        Then "Emma" should receive 20 points
         And the transaction should show multiplier 1.5

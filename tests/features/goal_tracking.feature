@@ -36,8 +36,8 @@ Feature: Personal Goal Tracking
         And the "Teenager" role has multiplier 1.5
         When I trigger the daily reset
         And "Teen" completes their task
-        Then "Teen" should have 40 current points
-        And the goal should show 10 points needed
+        Then "Teen" should have 45 current points
+        And the goal should show 5 points needed
 
     Scenario: AC 5.5 - Status changes to "READY TO REDEEM" when goal reached
         Given "Teen" has 45 current points
@@ -46,7 +46,7 @@ Feature: Personal Goal Tracking
         And the "Teenager" role has multiplier 1.0
         When I trigger the daily reset
         And "Teen" completes their task
-        Then "Teen" should have 55 current points
+        Then "Teen" should have 60 current points
         And the goal status should be "READY TO REDEEM"
 
     Scenario: Progress calculation with zero points

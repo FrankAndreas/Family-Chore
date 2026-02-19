@@ -12,6 +12,8 @@ export interface User {
     current_points: number;
     lifetime_points: number;
     current_goal_reward_id: number | null;
+    current_streak: number;
+    last_task_date: string | null;
 }
 
 export interface Task {

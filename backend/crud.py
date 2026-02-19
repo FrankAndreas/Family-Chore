@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from . import models, schemas
 
 # --- User CRUD ---
@@ -296,23 +296,43 @@ def complete_task_instance(db: Session, instance_id: int, actual_user_id: int = 
     user = instance.user
     role = user.role
 
-    # 2. Calculate Points
-    multiplier = role.multiplier_value
-    base_points = task.base_points
-    awarded_points = int(base_points * multiplier)
+    # 2. Gamification Polish: Streaks & Daily Bonus
+    today_date = datetime.now().date()
+    is_first_task_today = user.last_task_date != today_date
+    daily_bonus = 5 if is_first_task_today else 0
 
-    # 3. Update Instance
+    if is_first_task_today:
+        if user.last_task_date == today_date - timedelta(days=1):
+            user.current_streak += 1
+        else:
+            user.current_streak = 1
+        user.last_task_date = today_date
+
+    streak_bonus = min(0.5, max(0, user.current_streak - 1) * 0.1)
+    effective_multiplier = role.multiplier_value + streak_bonus
+
+    # 3. Calculate Points with Streak & Bonus
+    base_points = task.base_points
+    awarded_points = int(base_points * effective_multiplier) + daily_bonus
+
+    # 4. Update Instance
     instance.status = "COMPLETED"
     instance.completed_at = datetime.utcnow()
 
-    # 4. Create Transaction
+    # 5. Create Transaction
+    desc = f"Completed task: {task.name}"
+    if daily_bonus > 0:
+        desc += f" (+{daily_bonus} Daily Bonus)"
+    if streak_bonus > 0.0:
+        desc += f" [Streak: {user.current_streak} days]"
+
     transaction = models.Transaction(
         user_id=user.id,
         type="EARN",
         base_points_value=base_points,
-        multiplier_used=multiplier,
+        multiplier_used=effective_multiplier,
         awarded_points=awarded_points,
-        description=f"Completed task: {task.name}",
+        description=desc,
         reference_instance_id=instance.id,
         timestamp=datetime.utcnow()
     )

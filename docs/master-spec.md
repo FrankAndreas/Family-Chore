@@ -30,6 +30,9 @@ ChoreSpec is a family-oriented chore gamification system. It transforms househol
 - **Point Calculation**: 
   `Awarded Points = floor(Base Task Points * User Role Multiplier)`
 - **Transactions**: Every point change is recorded as an immutable transaction (`EARN` or `REDEEM`).
+- **Gamification Polish (V1.2)**:
+  - **Daily First Task Bonus**: The first task completed by a user each day awards a flat `+5` bonus points (`bonus_points`).
+  - **Streak Multiplier (Future/Optional)**: Consecutive days of completing at least one task add a `+0.1` additive bonus to the user's role multiplier (capped at `+0.5`). 
 
 ### 2.3 Task Management (The Engine)
 #### Task Templates (`Task`)
@@ -55,7 +58,7 @@ ChoreSpec is a family-oriented chore gamification system. It transforms househol
 - **Goal Setting**: Users can select one active "Goal".
 - **Progress Tracking**: UI visualizes progress toward the goal (Points Earned vs. Cost) with pulse animations for affordable items.
 - **Tiered Unlocks (V1.1)**:
-  - Rewards are grouped into **Bronze** (Default), **Silver** (500 LP), and **Gold** (1500 LP) tiers.
+  - Rewards are grouped into **Bronze** (Default), **Silver** (300 LP), and **Gold** (1000 LP) tiers (adjusted from 500/1500 for faster early progression).
   - Tiers unlock based on `lifetime_points`. Spending points does not demote a user.
   - Locked rewards are visible but desaturated and unclickable to drive aspiration.
 - **Celebration**: Visual confetti effect upon unlocking a new tier.
