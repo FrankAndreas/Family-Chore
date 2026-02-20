@@ -359,6 +359,12 @@
     color: #f0f0f0;
 }
 
+.form-group option {
+    background: #0f0f23;
+    /* Explicit dark background to override browser defaults */
+    color: #f0f0f0;
+}
+
 /* Success Button */
 .btn-success {
     background: linear-gradient(135deg, #10b981, #059669);
