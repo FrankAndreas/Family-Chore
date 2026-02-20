@@ -334,31 +334,29 @@
 }
 
 /* Dark mode support */
-@media (prefers-color-scheme: dark) {
 
-    .goal-header h2,
-    .goal-info h3,
-    .form-group label,
-    .cost-value,
-    .reward-header h3,
-    .progress-stats {
-        color: #f0f0f0;
-    }
+.goal-header h2,
+.goal-info h3,
+.form-group label,
+.cost-value,
+.reward-header h3,
+.progress-stats {
+    color: #f0f0f0;
+}
 
-    .goal-info p,
-    .reward-description,
-    .cost-label,
-    .points-needed {
-        color: #aaa;
-    }
+.goal-info p,
+.reward-description,
+.cost-label,
+.points-needed {
+    color: #aaa;
+}
 
-    .form-group input,
-    .form-group select,
-    .form-group textarea {
-        background: rgba(255, 255, 255, 0.1);
-        border-color: rgba(255, 255, 255, 0.2);
-        color: #f0f0f0;
-    }
+.form-group input,
+.form-group select,
+.form-group textarea {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #f0f0f0;
 }
 
 /* Success Button */
@@ -403,8 +401,13 @@
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 .modal-content {
@@ -419,6 +422,7 @@
         opacity: 0;
         transform: translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -444,14 +448,12 @@
 }
 
 /* Dark mode for modal */
-@media (prefers-color-scheme: dark) {
-    .modal-content h2 {
-        color: #f0f0f0;
-    }
+.modal-content h2 {
+    color: #f0f0f0;
+}
 
-    .modal-content p {
-        color: #aaa;
-    }
+.modal-content p {
+    color: #aaa;
 }
 
 /* Tier Progress Section */
@@ -460,7 +462,8 @@
     padding: 20px;
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7));
     border: 1px solid rgba(255, 255, 255, 0.5);
-    border-radius: 16px; /* Matched typical border-radius */
+    border-radius: 16px;
+    /* Matched typical border-radius */
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
@@ -492,14 +495,15 @@
     border-radius: 8px;
     overflow: hidden;
     position: relative;
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .tier-progress-fill {
     height: 100%;
     border-radius: 8px;
     transition: width 1s ease-in-out;
-    background: linear-gradient(90deg, #cd7f32, #c0c0c0, #ffd700); /* Bronze -> Silver -> Gold */
+    background: linear-gradient(90deg, #cd7f32, #c0c0c0, #ffd700);
+    /* Bronze -> Silver -> Gold */
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -508,19 +512,12 @@
     filter: grayscale(1);
     opacity: 0.7;
     cursor: default;
-    pointer-events: none; /* Disable interactions */
 }
 
 /* Re-enable pointer events for the card itself so we can show tooltip if needed, 
    but for now spec says "Disabled (Buttons unclickable)". 
-   pointer-events: none on container is drastic but effective. 
    Accessibilty: might want to allow focus. 
-   Let's keep pointer-events: none but note it disables hover effects too. 
 */
-
-.reward-card.locked .reward-content {
-    /* Optional: separation */
-}
 
 .locked-overlay {
     position: absolute;
@@ -536,26 +533,134 @@
     align-items: center;
     gap: 8px;
     z-index: 10;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     white-space: nowrap;
 }
 
 /* Dark Mode updates */
-@media (prefers-color-scheme: dark) {
-    .tier-progress-container {
-        background: rgba(255, 255, 255, 0.05);
-        border-color: rgba(255, 255, 255, 0.1);
+.tier-progress-container {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.tier-header h2 {
+    color: #f0f0f0;
+}
+
+.tier-info {
+    color: #aaa;
+}
+
+.tier-progress-bar {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* --- New UI Polish Additions --- */
+
+/* Tier Sections */
+.tier-section {
+    margin-bottom: 40px;
+}
+
+.tier-section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+}
+
+.tier-section-header h2 {
+    margin: 0;
+    font-size: 24px;
+    color: #1a1a2e;
+}
+
+.tier-section-subtitle {
+    font-size: 14px;
+    color: #666;
+    font-weight: 500;
+}
+
+/* Glassmorphism for Modal inner math */
+.glass-panel-inner {
+    background: rgba(0, 0, 0, 0.03);
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.math-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 16px;
+    color: #1a1a2e;
+}
+
+.math-row .negative {
+    color: #ef4444;
+    font-weight: 600;
+}
+
+.math-divider {
+    border: none;
+    border-top: 1px dashed rgba(0, 0, 0, 0.1);
+    margin: 12px 0;
+}
+
+.math-row.total {
+    font-weight: 700;
+    font-size: 18px;
+    margin-bottom: 0;
+}
+
+/* Pulse Affordable Animation */
+.reward-card.pulse-affordable {
+    animation: pulseAffordable 2s ease-in-out infinite;
+    border: 2px solid rgba(16, 185, 129, 0.5);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(5, 150, 105, 0.05));
+}
+
+@keyframes pulseAffordable {
+
+    0%,
+    100% {
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
     }
-    
-    .tier-header h2 {
-        color: #f0f0f0;
+
+    50% {
+        box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+        transform: scale(1.02);
     }
-    
-    .tier-info {
-        color: #aaa;
-    }
-    
-    .tier-progress-bar {
-        background: rgba(255, 255, 255, 0.1);
-    }
+}
+
+/* Overrides for Dark Mode */
+.tier-section-header h2 {
+    color: #f0f0f0;
+}
+
+.tier-section-subtitle {
+    color: #aaa;
+}
+
+.tier-section-header {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.glass-panel-inner {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.math-row,
+.math-row.total {
+    color: #f0f0f0;
+}
+
+.math-divider {
+    border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+.math-row .negative {
+    color: #f87171;
 }

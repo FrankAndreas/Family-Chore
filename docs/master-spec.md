@@ -61,7 +61,12 @@ ChoreSpec is a family-oriented chore gamification system. It transforms househol
   - Rewards are grouped into **Bronze** (Default), **Silver** (300 LP), and **Gold** (1000 LP) tiers (adjusted from 500/1500 for faster early progression).
   - Tiers unlock based on `lifetime_points`. Spending points does not demote a user.
   - Locked rewards are visible but desaturated and unclickable to drive aspiration.
-- **Celebration**: Visual confetti effect upon unlocking a new tier.
+- **Reward Hub UI Polish (V1.3)**:
+  - **Tiered Layout**: Visually separate rewards into distinct sections based on their tier (Bronze, Silver, Gold) rather than a single flat list.
+  - **Aesthetics**: Apply premium "Glassmorphism" styling to reward cards, including subtle hover effects and improved typography.
+  - **Animations**: Implement smooth entry animations for reward cards and a celebratory "pulse" or highlight effect when a reward becomes affordable.
+  - **Redemption Modal**: Enhance the redemption confirmation modal with better visual hierarchy, clearly showing the point cost and remaining balance.
+- **Celebration**: Visual confetti effect upon unlocking a new tier or redeeming a high-value reward.
 - **Admin Override**: Admins see all rewards as unlocked for management purposes.
 
 ### 2.5 Analytics & Compliance

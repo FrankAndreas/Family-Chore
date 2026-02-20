@@ -144,13 +144,27 @@
             "points": "points",
             "points_val": "💰 {{points}} points",
             "set_goal_button": "Set as Goal",
-            "can_afford_badge": "✨ Can afford!"
+            "can_afford_badge": "✨ Can afford!",
+            "locked_label": "Locked (Reach {{tier}} tier)"
         },
         "empty_state": {
             "message": "No rewards available yet.",
             "admin_hint": "Create one to get started!"
         },
         "confirm_redeem_button": "Yes, Redeem!",
+        "confirm_redeem_title": "Redeem Reward?",
+        "confirm_redeem_message": "Do you really want to redeem {{name}} for {{points}} points?",
+        "redeem_button": "Redeem",
+        "modal": {
+            "current_balance": "Current Balance",
+            "reward_cost": "Cost",
+            "remaining_balance": "Remaining Balance"
+        },
+        "tier_names": {
+            "1": "Bronze",
+            "2": "Silver",
+            "3": "Gold"
+        },
         "tier_progress": {
             "title": "{{tier}} Progress",
             "max_level": "Max Level Reached! 🏆"

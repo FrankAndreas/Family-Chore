@@ -292,3 +292,18 @@ This file captures accumulated knowledge from development sessions. The Libraria
 
 ### Gotchas
 - **Database Migrations and Dates**: Creating a simple `DATE` field in SQLite by adding a column via automated scripts requires checking strings if date matching fails, though SQLAlchemy handles `datetime.date` mapping gracefully if configured correctly.
+
+---
+
+## 📅 2026-02-20: Reward Hub UI Polish & Advanced CSS
+
+### What We Learned
+- **Dark Mode vs. OS Settings**: When an application forces a global dark theme regardless of the OS preference (`prefers-color-scheme`), applying dark-mode overrides via media queries creates inconsistencies. The CSS should simply apply the dark theme universally.
+- **Glassmorphism Depth**: Using `backdrop-filter: blur()` combined with semi-transparent backgrounds and glowing box-shadows creates an immediate premium feel compared to flat colored cards.
+
+### Patterns Discovered
+- **Visual Math in Modals**: Explicitly showing the "Current Balance - Cost = Remaining Balance" inside the redemption confirmation modal builds user trust and transparency.
+- **i18n Scaling**: Adding new UI components often means scattering new text strings. Using a structured namespace (e.g., `rewards.modal.*`) keeps translation files manageable.
+
+### Gotchas
+- **Pointer Events**: Setting `pointer-events: none` on an element (like a locked card) successfully blocks clicks but also kills hover effects. It's often better to leave events enabled and handle the "disabled" logic on the interactive elements inside (unless visually stripping the component is intended).

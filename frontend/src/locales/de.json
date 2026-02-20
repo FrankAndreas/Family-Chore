@@ -138,6 +138,23 @@
             "submitting": "Erstelle..."
         },
         "confirm_redeem_button": "Ja, einlösen!",
+        "confirm_redeem_title": "Belohnung einlösen?",
+        "confirm_redeem_message": "Möchtest du {{name}} für {{points}} Punkte einlösen?",
+        "redeem_button": "Einlösen",
+        "modal": {
+            "current_balance": "Aktueller Kontostand",
+            "reward_cost": "Kosten",
+            "remaining_balance": "Verbleibender Kontostand"
+        },
+        "empty_state": {
+            "message": "Es gibt derzeit keine Belohnungen.",
+            "admin_hint": "Füge oben eine neue hinzu!"
+        },
+        "tier_names": {
+            "1": "Bronze",
+            "2": "Silber",
+            "3": "Gold"
+        },
         "tier_progress": {
             "title": "{{tier}}-Fortschritt",
             "max_level": "Maximalstufe erreicht! 🏆"

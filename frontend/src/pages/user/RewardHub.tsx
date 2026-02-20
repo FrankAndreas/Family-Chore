@@ -351,86 +351,110 @@ const RewardHub: React.FC = () => {
                 </div>
             )}
 
-            {/* Rewards Grid */}
-            <div className="rewards-grid">
-                {sortedRewards.length === 0 && (
-                    <div className="empty-state">
-                        <p>{t('rewards.empty_state.message')} {currentUser.role.name === 'Admin' && t('rewards.empty_state.admin_hint')}</p>
-                    </div>
-                )}
+            {/* Tiered Rewards */}
+            {sortedRewards.length === 0 && (
+                <div className="empty-state">
+                    <p>{t('rewards.empty_state.message')} {currentUser.role.name === 'Admin' && t('rewards.empty_state.admin_hint')}</p>
+                </div>
+            )}
 
-                {sortedRewards.map(reward => {
-                    const progress = getProgressPercentage(reward.cost_points);
-                    const affordable = canAfford(reward.cost_points);
-                    const isCurrentGoal = userGoal?.id === reward.id;
+            {[1, 2, 3].map(tier => {
+                const tierRewards = sortedRewards.filter(r => r.tier_level === tier);
+                if (tierRewards.length === 0) return null;
 
-                    // Locked logic
-                    const requiredPoints = reward.tier_level === 3 ? TIER_THRESHOLDS.GOLD
-                        : reward.tier_level === 2 ? TIER_THRESHOLDS.SILVER
-                            : TIER_THRESHOLDS.BRONZE;
+                const tierTitle = t(`rewards.tier_names.${tier}`);
+                let tierSubtitle = '(Default)';
+                let emoji = '🥉';
+                if (tier === 2) {
+                    tierSubtitle = `(Requires ${TIER_THRESHOLDS.SILVER} LP)`;
+                    emoji = '🥈';
+                } else if (tier === 3) {
+                    tierSubtitle = `(Requires ${TIER_THRESHOLDS.GOLD} LP)`;
+                    emoji = '🥇';
+                }
 
-                    const isLocked = !isAdmin && currentUser.lifetime_points < requiredPoints;
-
-                    return (
-                        <div
-                            key={reward.id}
-                            className={`reward-card glass-panel ${affordable ? 'affordable' : ''} ${isCurrentGoal ? 'current-goal' : ''} ${isLocked ? 'locked' : ''}`}
-                        >
-                            {isLocked && (
-                                <div className="locked-overlay">
-                                    🔒 {t('rewards.card.locked_label')}
-                                </div>
-                            )}
-
-                            {isCurrentGoal && <div className="goal-indicator">{t('rewards.card.goal_indicator')}</div>}
-
-                            <div className="reward-header">
-                                <h3>{reward.name}</h3>
-                                {getTierBadge(reward.tier_level)}
-                            </div>
-
-                            <p className="reward-description">{reward.description || t('rewards.card.no_description')}</p>
-
-                            <div className="reward-cost">
-                                <span className="cost-label">{t('rewards.card.cost_label')}</span>
-                                <span className="cost-value">{t('rewards.card.points_val', { points: reward.cost_points })}</span>
-                            </div>
-
-                            <div className="reward-progress">
-                                <div className="progress-bar">
-                                    <div
-                                        className="progress-fill"
-                                        style={{ width: `${progress}%` }}
-                                    ></div>
-                                </div>
-                                <span className="progress-text">{progress}%</span>
-                            </div>
-
-                            {!isCurrentGoal && (
-                                <button
-                                    className="btn btn-secondary btn-block"
-                                    onClick={() => handleSetGoal(reward.id)}
-                                >
-                                    {t('rewards.card.set_goal_button')}
-                                </button>
-                            )}
-
-                            {affordable && (
-                                <button
-                                    className="btn btn-success btn-block mt-sm"
-                                    onClick={() => handleRedeemClick(reward)}
-                                >
-                                    🎉 {t('rewards.redeem_button')}
-                                </button>
-                            )}
-
-                            {affordable && (
-                                <div className="affordable-badge">{t('rewards.card.can_afford_badge')}</div>
-                            )}
+                return (
+                    <div key={tier} className="tier-section fade-in">
+                        <div className="tier-section-header">
+                            <h2>{emoji} {tierTitle}</h2>
+                            <span className="tier-section-subtitle">{tierSubtitle}</span>
                         </div>
-                    );
-                })}
-            </div>
+                        <div className="rewards-grid">
+                            {tierRewards.map(reward => {
+                                const progress = getProgressPercentage(reward.cost_points);
+                                const affordable = canAfford(reward.cost_points);
+                                const isCurrentGoal = userGoal?.id === reward.id;
+
+                                // Locked logic
+                                const requiredPoints = reward.tier_level === 3 ? TIER_THRESHOLDS.GOLD
+                                    : reward.tier_level === 2 ? TIER_THRESHOLDS.SILVER
+                                        : TIER_THRESHOLDS.BRONZE;
+
+                                const isLocked = !isAdmin && currentUser.lifetime_points < requiredPoints;
+
+                                return (
+                                    <div
+                                        key={reward.id}
+                                        className={`reward-card glass-panel ${affordable && !isLocked ? 'affordable pulse-affordable' : ''} ${isCurrentGoal ? 'current-goal' : ''} ${isLocked ? 'locked' : ''}`}
+                                    >
+                                        {isLocked && (
+                                            <div className="locked-overlay">
+                                                🔒 {t('rewards.card.locked_label')}
+                                            </div>
+                                        )}
+
+                                        {isCurrentGoal && <div className="goal-indicator">{t('rewards.card.goal_indicator')}</div>}
+
+                                        <div className="reward-header">
+                                            <h3>{reward.name}</h3>
+                                            {getTierBadge(reward.tier_level)}
+                                        </div>
+
+                                        <p className="reward-description">{reward.description || t('rewards.card.no_description')}</p>
+
+                                        <div className="reward-cost">
+                                            <span className="cost-label">{t('rewards.card.cost_label')}</span>
+                                            <span className="cost-value">{t('rewards.card.points_val', { points: reward.cost_points })}</span>
+                                        </div>
+
+                                        <div className="reward-progress">
+                                            <div className="progress-bar">
+                                                <div
+                                                    className="progress-fill"
+                                                    style={{ width: `${progress}%` }}
+                                                ></div>
+                                            </div>
+                                            <span className="progress-text">{progress}%</span>
+                                        </div>
+
+                                        {!isCurrentGoal && (
+                                            <button
+                                                className="btn btn-secondary btn-block"
+                                                onClick={() => handleSetGoal(reward.id)}
+                                            >
+                                                {t('rewards.card.set_goal_button')}
+                                            </button>
+                                        )}
+
+                                        {affordable && !isLocked && (
+                                            <button
+                                                className="btn btn-success btn-block mt-sm"
+                                                onClick={() => handleRedeemClick(reward)}
+                                            >
+                                                🎉 {t('rewards.redeem_button')}
+                                            </button>
+                                        )}
+
+                                        {affordable && !isLocked && (
+                                            <div className="affordable-badge">{t('rewards.card.can_afford_badge')}</div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                );
+            })}
 
             {/* Redemption Confirmation Modal */}
             {redeemConfirm && redeemConfirm.show && (
@@ -441,6 +465,23 @@ const RewardHub: React.FC = () => {
                             name: redeemConfirm.reward.name,
                             points: redeemConfirm.reward.cost_points
                         })}</p>
+
+                        <div className="redemption-math mb-lg glass-panel-inner">
+                            <div className="math-row">
+                                <span>{t('rewards.modal.current_balance', 'Current Balance')}:</span>
+                                <span>{currentUser.current_points} pts</span>
+                            </div>
+                            <div className="math-row">
+                                <span>{t('rewards.modal.reward_cost', 'Reward Cost')}:</span>
+                                <span className="negative">- {redeemConfirm.reward.cost_points} pts</span>
+                            </div>
+                            <hr className="math-divider" />
+                            <div className="math-row total">
+                                <span>{t('rewards.modal.remaining_balance', 'Remaining Balance')}:</span>
+                                <span>{currentUser.current_points - redeemConfirm.reward.cost_points} pts</span>
+                            </div>
+                        </div>
+
                         <div className="modal-actions">
                             <button
                                 className="btn btn-secondary"
