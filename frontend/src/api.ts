@@ -18,6 +18,9 @@ export const getUsers = () => api.get('/users/');
 export const createUser = (nickname: string, login_pin: string, role_id: number) =>
     api.post('/users/', { nickname, login_pin, role_id });
 
+export const penalizeUser = (user_id: number, points: number, reason: string) =>
+    api.post(`/users/${user_id}/penalize`, { points, reason });
+
 // Role APIs
 export const getRoles = () => api.get('/roles/');
 

@@ -3,7 +3,7 @@
 Unit tests for Transaction operations.
 """
 from datetime import datetime, timedelta, timezone
-from backend import crud, models
+from backend import crud, models, schemas
 
 
 class TestTransactionHistory:
@@ -193,3 +193,79 @@ class TestTransactionHistory:
         # Filter by User (Global)
         global_user_txs = crud.get_all_transactions(seeded_db, user_id=user.id)
         assert len(global_user_txs) == 2
+
+
+class TestPenalty:
+    """Test applying penalties to users."""
+
+    def test_apply_penalty_success(self, seeded_db):
+        """Test valid penalty deduction."""
+        # Arrange
+        child_role = seeded_db.query(models.Role).filter(
+            models.Role.name == "Child"
+        ).first()
+
+        user = models.User(
+            nickname="BadKid",
+            login_pin="1234",
+            role_id=child_role.id,
+            current_points=100,
+            lifetime_points=500
+        )
+        seeded_db.add(user)
+        seeded_db.commit()
+
+        penalty_req = schemas.PenaltyRequest(points=20, reason="Misbehaved")
+
+        # Act
+        result = crud.apply_penalty(seeded_db, user.id, penalty_req)
+
+        # Assert
+        assert result["success"] is True
+        assert result["points_deducted"] == 20
+        assert result["remaining_points"] == 80
+
+        # Check user directly
+        seeded_db.refresh(user)
+        assert user.current_points == 80
+        assert user.lifetime_points == 500  # Should not change
+
+        # Check transaction
+        tx = seeded_db.query(models.Transaction).filter(
+            models.Transaction.id == result["transaction_id"]
+        ).first()
+        assert tx is not None
+        assert tx.type == "PENALTY"
+        assert tx.base_points_value == 20
+        assert tx.awarded_points == -20
+        assert tx.description == "Misbehaved"
+
+    def test_apply_penalty_negative_balance(self, seeded_db):
+        """Test penalty that brings balance below zero."""
+        # Arrange
+        child_role = seeded_db.query(models.Role).filter(
+            models.Role.name == "Child"
+        ).first()
+
+        user = models.User(
+            nickname="BrokeKid",
+            login_pin="1234",
+            role_id=child_role.id,
+            current_points=10,
+            lifetime_points=10
+        )
+        seeded_db.add(user)
+        seeded_db.commit()
+
+        penalty_req = schemas.PenaltyRequest(points=20, reason="Huge mistake")
+
+        # Act
+        result = crud.apply_penalty(seeded_db, user.id, penalty_req)
+
+        # Assert
+        assert result["success"] is True
+        assert result["remaining_points"] == -10
+
+        seeded_db.refresh(user)
+        assert user.current_points == -10
+        assert user.lifetime_points == 10

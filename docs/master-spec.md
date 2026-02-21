@@ -29,7 +29,11 @@ ChoreSpec is a family-oriented chore gamification system. It transforms househol
 - **Multipliers**: Each role has an editable `multiplier_value` (minimum 0.1).
 - **Point Calculation**: 
   `Awarded Points = floor(Base Task Points * User Role Multiplier)`
-- **Transactions**: Every point change is recorded as an immutable transaction (`EARN` or `REDEEM`).
+- **Transactions**: Every point change is recorded as an immutable transaction (`EARN`, `REDEEM`, or `PENALTY`).
+- **Penalties / Negative Points**:
+  - Admins can manually deduct points from users for missed chores or misbehavior.
+  - Penalties deduct from `current_points` (spendable balance) but do NOT reduce `lifetime_points` (to prevent demotion from unlocked tiers).
+  - A required "Reason" (text) is attached to the penalty transaction for transparency.
 - **Gamification Polish (V1.2)**:
   - **Daily First Task Bonus**: The first task completed by a user each day awards a flat `+5` bonus points (`bonus_points`).
   - **Streak Multiplier (Future/Optional)**: Consecutive days of completing at least one task add a `+0.1` additive bonus to the user's role multiplier (capped at `+0.5`). 
@@ -131,6 +135,20 @@ ChoreSpec is a family-oriented chore gamification system. It transforms househol
 - `POST /daily-reset/`: Manual trigger for task generation.
 - `GET /events`: SSE stream for UI updates.
 - `GET/PUT /settings/language/default`: Global localization toggle.
+
+### 4.1 BDD Scenarios (Negative Points / Penalties)
+**Scenario: Admin applies a penalty**
+- **Given** an Admin is logged in and viewing a user with 100 `current_points` and 500 `lifetime_points`
+- **When** the Admin submits a penalty of 20 points with reason "Missed trash" for that user
+- **Then** the user's `current_points` becomes 80
+- **And** the user's `lifetime_points` remains 500
+- **And** a `PENALTY` transaction is recorded in the activity log with "Missed trash"
+- **And** a real-time event is broadcasted to update the user's UI.
+
+**Scenario: Penalty prevents negative balance**
+- **Given** a user has 10 `current_points`
+- **When** the Admin applies a penalty of 20 points
+- **Then** the user's `current_points` becomes 0 (assuming floor is 0) *or* -10 (depending on Architect's plan, let's leave it up to Architect or state it explicitly: balance can go negative). Let's specify: The user's `current_points` can become negative (e.g., -10) to reflect a point debt.
 
 ---
 

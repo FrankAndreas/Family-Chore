@@ -125,7 +125,7 @@ class Transaction(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
-    type = Column(String, nullable=False)  # 'EARN' or 'REDEEM'
+    type = Column(String, nullable=False)  # 'EARN', 'REDEEM', or 'PENALTY'
 
     base_points_value = Column(Integer, nullable=False)
     multiplier_used = Column(Float, nullable=False)

@@ -338,3 +338,16 @@ This file captures accumulated knowledge from development sessions. The Libraria
 
 ### Gotchas
 - **File Permissions**: When changing the container user (e.g., to `appuser` or `nginx`), you must explicitly `chown` the directories the app needs to write to or serve from before switching the `USER` instruction.
+
+## 📅 2026-02-21: Negative Points & State Separation
+
+### What We Learned
+- **Separation of Balances**: Designing the system with separate `current_points` (spendable currency) and `lifetime_points` (XP/Tiers) early on made adding penalties trivial. We simply deduct from `current_points` without altering lifetime progression.
+- **Enum Extensibility**: The `TransactionType` model was easily extended to support `PENALTY` alongside `EARN` and `REDEEM`, demonstrating that a single, unified transaction log is robust.
+
+### Patterns Discovered
+- **Inline Modal Forms**: When building management dashboards (like User Management), placing simple action modals inline with the iterator (e.g., clicking a user opens an overlay passing that user's state) is much faster to implement than dedicated sub-routes.
+- **Centralized API Wrapper**: Using `api.ts` to construct `api.post` wrappers abstracts away base URLs and keeps React components clean.
+
+### Gotchas
+- **State Initialization**: In React, initializing a number input state to `''` instead of `0` or `undefined` can cause TypeScript union errors (`SetStateAction<number>`). Explicitly typing `useState<number | ''>('')` prevents coercion issues when the input is cleared by the user.

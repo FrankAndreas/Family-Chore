@@ -264,6 +264,35 @@ def login(user_credentials: schemas.UserLogin, db: Session = Depends(get_db)):
     return user
 
 
+@app.post("/users/{user_id}/penalize")
+async def penalize_user(user_id: int, penalty: schemas.PenaltyRequest, db: Session = Depends(get_db)):
+    """Admin endpoint to deduct points from a user."""
+    logger.info(f"Penalizing user {user_id} for {penalty.points} points: {penalty.reason}")
+    result = crud.apply_penalty(db, user_id=user_id, penalty=penalty)
+
+    if not result["success"]:
+        raise HTTPException(status_code=404, detail=result["error"])
+
+    # Notify User
+    crud.create_notification(db, schemas.NotificationCreate(
+        user_id=user_id,
+        type="SYSTEM",
+        title="Points Deducted",
+        message=f"You lost {result['points_deducted']} points. Reason: {penalty.reason}"
+    ))
+
+    # Broadcast SSE events
+    await broadcaster.broadcast("user_penalized", {
+        "user_id": user_id,
+        "points_deducted": result["points_deducted"],
+        "remaining_points": result["remaining_points"],
+        "reason": penalty.reason
+    })
+    await broadcaster.broadcast("notification", {"user_id": user_id})
+
+    return result
+
+
 # --- Role Endpoints ---
 
 

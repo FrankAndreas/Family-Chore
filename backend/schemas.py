@@ -48,6 +48,11 @@ class Role(RoleBase):
 # --- User Schemas ---
 
 
+class PenaltyRequest(BaseModel):
+    points: int = Field(..., gt=0, description="Points to deduct (must be positive integer)")
+    reason: str = Field(..., min_length=1, max_length=500, description="Reason for penalty")
+
+
 class UserBase(BaseModel):
     nickname: str
     role_id: int
@@ -253,7 +258,7 @@ class SplitRedemptionResponse(BaseModel):
 
 class TransactionBase(BaseModel):
     user_id: int
-    type: str  # 'EARN' or 'REDEEM'
+    type: str  # 'EARN', 'REDEEM', or 'PENALTY'
     base_points_value: int
     multiplier_used: float
     awarded_points: int
