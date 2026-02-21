@@ -322,3 +322,19 @@ This file captures accumulated knowledge from development sessions. The Libraria
 ### Gotchas
 - **Import/Export Validation**: If an optional/default field was missing in earlier JSON exports (like `requires_photo_verification`), importing old JSON dumps will crash Pydantic if default values are not correctly defined in the `TaskImportItem` schema. Never assume exported data perfectly perfectly matches current schemas.
 - **Data Privacy in APIs**: Moving sensitive or user-generated string inputs (like `photo_url`) from query parameters into the JSON request body prevents them from being logged in standard backend server logs (URL access logs).
+
+---
+
+## 📅 2026-02-21: System Hardening & Docker Polish
+
+### What We Learned
+- **Non-Root Execution**: Running Docker containers as non-root requires more than just a `USER` instruction. For Nginx, you must use an unprivileged base image (`nginxinc/nginx-unprivileged`) and switch from privileged ports (80) to unprivileged ones (8080).
+- **Build Context Overhead**: Without `.dockerignore` files, sending large directories like `.git` or `node_modules` to the Docker daemon significantly slows down build times and clutters the image layers.
+- **Global CSS Utility**: Standardizing empty state designs provides a premium feel across the app. Moving this to a global `index.css` prevents duplication in individual component CSS files.
+
+### Patterns Discovered
+- **Unprivileged Nginx**: Changing `listen 80;` to `listen 8080;` in `nginx.conf`, mapping `8080:8080` in `docker-compose.yml`, and using the `nginxinc` unprivileged image is a highly effective security pattern.
+- **Consistent Empty States**: Using a combination of a semi-transparent dashed border block, an emoji icon, and clear "All caught up" messaging is a robust pattern for gamified systems to prevent dead-end screens.
+
+### Gotchas
+- **File Permissions**: When changing the container user (e.g., to `appuser` or `nginx`), you must explicitly `chown` the directories the app needs to write to or serve from before switching the `USER` instruction.

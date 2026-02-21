@@ -445,7 +445,9 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
 
                     {tasks.length === 0 && (
                         <div className="empty-state">
-                            <h2>🎉 All caught up! No pending tasks.</h2>
+                            <div className="empty-state-icon">🎉</div>
+                            <h3>All caught up!</h3>
+                            <p>No pending tasks on the family board right now.</p>
                         </div>
                     )}
                 </div>
@@ -490,7 +492,8 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
 
                     {users.every(u => getAffordableRewards(u).length === 0) && (
                         <div className="empty-state">
-                            <h2>😢 No affordable rewards yet.</h2>
+                            <div className="empty-state-icon">😢</div>
+                            <h3>No affordable rewards yet</h3>
                             <p>Complete more tasks to earn points!</p>
                         </div>
                     )}
@@ -531,6 +534,8 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
 
                         {transactions.length === 0 ? (
                             <div className="empty-state">
+                                <div className="empty-state-icon">📭</div>
+                                <h3>No History Found</h3>
                                 <p>No recent activity matching your filters.</p>
                             </div>
                         ) : (

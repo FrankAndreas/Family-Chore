@@ -28,7 +28,7 @@ services:
     image: ghcr.io/frankandreas/family-chore-frontend:latest
     container_name: chorespec-frontend
     ports:
-      - "8080:80"
+      - "8080:8080"
     depends_on:
       - backend
     restart: unless-stopped

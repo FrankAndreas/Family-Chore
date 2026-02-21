@@ -547,12 +547,7 @@
     font-weight: 600;
 }
 
-.empty-state {
-    text-align: center;
-    padding: var(--spacing-xl);
-    color: var(--text-secondary);
-    font-style: italic;
-}
+
 
 /* Leaderboard Styles */
 .leaderboard {

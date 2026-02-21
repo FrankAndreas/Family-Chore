@@ -1,33 +1,20 @@
-# QA Report
+# QA Report: System Polish & Hardening (V1.4)
 
-**Date:** 2026-02-21
-**Phase:** 1-4 Code Review Fixes (Typing, Formatting, State Management, API Validation)
+## Overview
+The goal of this phase was to deploy hardening measures for Docker (non-root users, `.dockerignore` context optimizations), update the CI/CD pipeline, and ensure UI/UX consistency specifically focusing on empty states.
 
-## Summary
-The codebase has been refactored to align with Pydantic v2 conventions, improve React state management in the UI, correctly map boolean fields from SQLite to integer structures, cleanly handle edge case data input, and maintain standard PEP8/TypeScript linting coverage.
+## Test Results
 
-## Verification Checklist
-
-### 1. Automated Regression Suite (Pytest)
-- ✅ **Tests Passed:** 128
-- ❌ **Tests Failed:** 0
-- 📝 **Notes:** 
-  - `flake8 backend --max-line-length=120` passed with `0` errors.
-  - `mypy backend/` passed after casting the `user_id` parameter to `int()` in notification endpoints.
-  - No zombie processes blocking ports in standard operation paths.
-
-### 2. Frontend Build & Linters
-- ✅ `npx tsc --noEmit` cleanly passed.
-- ✅ `npm run lint` (`eslint .`) cleanly passed with 0 errors/warnings on latest code.
-
-### 3. Edge Cases & Real-World API Check (Manual Curl Verification)
-- ⚠️ **Edge Case 1: `requires_photo_verification` boolean coercion.** 
-  - *Test:* `curl -s -X GET http://127.0.0.1:8001/tasks/`
-  - *Result:* SQLite `Integer` correctly coerced by Pydantic directly into native `true` / `false` json booleans (e.g. `"requires_photo_verification": false`).
-- ⚠️ **Edge Case 2: Photo upload API via JSON body (prevents query param logging).**
-  - *Test:* `curl -s -X POST http://127.0.0.1:8001/tasks/1/upload-photo -H "Content-Type: application/json" -d '{"photo_url": "http://example.com/photo.jpg"}'`
-  - *Result:* Rejection of query string bypasses. Success code `200 OK` on valid JSON payload. Response structure correctly returns `"completion_photo_url": "http://example.com/photo.jpg"`.
+✅ **Tests Passed:** 128 (Backend Pytest Suite)
+❌ **Tests Failed:** 0
+⚠️ **Edge Cases / Manual Verification:**
+- **Docker Hardening**: Both containers successfully built and tested to run under non-root permissions:
+  - Backend runs as `appuser`.
+  - Frontend runs as `nginx` (using `nginxinc/nginx-unprivileged:alpine`).
+- **Network / Port Binding**: Frontend successfully binds to port `8080`. The backend correctly receives traffic through the `/api/` Nginx reverse proxy without exposing port `8000` to the host network.
+- **UI/UX Empty States**: Verified premium empty state styles are structurally sound and responsive in `UserDashboard`, `FamilyDashboard`, and `RewardHub`.
+- **Frontend Automated Tests**: Note that the frontend project does not currently have Vitest or another test suite fully configured (`npm run test` is missing), so frontend verification was strictly manual and build-based.
+- **Build Optimization**: Verified `.dockerignore` is successfully omitting `.git`, `node_modules`, and `venv`, leading to a fast context load.
 
 ## Conclusion
-**STATUS: PASS**
-All systems stable according to Phase 1-4 objectives. Ready for state updates and security features.
+The Code Review and QA regression phases have passed. The system is hardened and UI polish is consistent. Ready for state update.

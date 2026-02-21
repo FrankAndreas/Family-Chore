@@ -163,7 +163,9 @@ const UserDashboard: React.FC = () => {
                                 <h2>📅 Today's To-Do</h2>
                                 {tasks.length === 0 ? (
                                     <div className="empty-state">
-                                        <p>No pending tasks for today. Great job! 🌟</p>
+                                        <div className="empty-state-icon">🏖️</div>
+                                        <h3>You're All Caught Up!</h3>
+                                        <p>No pending tasks for today. Enjoy your free time or check back later! 🌟</p>
                                     </div>
                                 ) : (
                                     <div className="tasks-list">

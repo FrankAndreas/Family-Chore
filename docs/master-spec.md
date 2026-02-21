@@ -79,6 +79,11 @@ ChoreSpec is a family-oriented chore gamification system. It transforms househol
   - Helps identify if one user is carrying the load.
 - **Access**: Available to all users to promote healthy competition and accountability.
 
+### 2.6 System Polish & Hardening (V1.4)
+- **Deployment Hardening**: Provide a production-ready Docker setup, including environment variable management, non-root user execution, and network isolation.
+- **CI/CD Pipeline**: Add GitHub Actions pipelines for automated testing, linting (`flake8`, `mypy`, `eslint`), and build verification on every pull request.
+- **UI/UX Consistency**: Ensure consistent styling across all views, specifically focusing on mobile responsiveness, accessible form controls, robust generic empty states, and standardizing error handling.
+
 ---
 
 ## 3. Technical Implementation

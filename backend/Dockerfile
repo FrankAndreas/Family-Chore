@@ -13,5 +13,11 @@ COPY backend /app/backend
 
 # Set pythonpath to include /app
 ENV PYTHONPATH=/app
+# Create a non-root user and set permissions
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser && \
+    mkdir -p /app/data && \
+    chown -R appuser:appgroup /app
+
+USER appuser
 
 CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]

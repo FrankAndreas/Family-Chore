@@ -354,6 +354,8 @@ const RewardHub: React.FC = () => {
             {/* Tiered Rewards */}
             {sortedRewards.length === 0 && (
                 <div className="empty-state">
+                    <div className="empty-state-icon">🎁</div>
+                    <h3>No Rewards Available</h3>
                     <p>{t('rewards.empty_state.message')} {currentUser.role.name === 'Admin' && t('rewards.empty_state.admin_hint')}</p>
                 </div>
             )}
