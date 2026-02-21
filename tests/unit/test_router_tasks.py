@@ -5,7 +5,8 @@ from backend import models
 
 
 def test_create_task_api(client, db_session, seeded_db):
-    role = db_session.query(models.Role).filter(models.Role.name == "Contributor").first()
+    role = db_session.query(models.Role).filter(
+        models.Role.name == "Contributor").first()
 
     resp = client.post("/tasks/", json={
         "name": "APITask",
@@ -35,7 +36,8 @@ def test_update_task_api(client, db_session, seeded_db):
     t = resp_create.json()
 
     # Update
-    resp = client.put(f"/tasks/{t['id']}", json={"name": "UpdatedName", "description": "Desc"})
+    resp = client.put(
+        f"/tasks/{t['id']}", json={"name": "UpdatedName", "description": "Desc"})
     assert resp.status_code == 200
     assert resp.json()["name"] == "UpdatedName"
 
@@ -118,7 +120,8 @@ def test_complete_task_instance_api(client, db_session, seeded_db):
     db_session.commit()
 
     # Create Instance
-    instance = models.TaskInstance(task_id=task.id, user_id=user.id, due_time=datetime.now(), status="PENDING")
+    instance = models.TaskInstance(
+        task_id=task.id, user_id=user.id, due_time=datetime.now(), status="PENDING")
     db_session.add(instance)
     db_session.commit()
 
@@ -143,7 +146,8 @@ def test_get_user_daily_tasks(client, db_session, seeded_db):
     if not users:
         # Create one
         role = db_session.query(models.Role).first()
-        u = client.post("/users/", json={"nickname": "DailyUser", "login_pin": "0000", "role_id": role.id}).json()
+        u = client.post(
+            "/users/", json={"nickname": "DailyUser", "login_pin": "0000", "role_id": role.id}).json()
         uid = u["id"]
     else:
         uid = users[0]["id"]

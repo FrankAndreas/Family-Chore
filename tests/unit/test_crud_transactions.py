@@ -5,7 +5,8 @@ from backend import crud, models
 
 def test_get_user_transactions(db_session, seeded_db):
     role = db_session.query(models.Role).first()
-    user = models.User(nickname="TxCRUDUser", login_pin="1111", role_id=role.id)
+    user = models.User(nickname="TxCRUDUser",
+                       login_pin="1111", role_id=role.id)
     db_session.add(user)
     db_session.commit()
 
@@ -32,7 +33,8 @@ def test_get_user_transactions(db_session, seeded_db):
 
     # Filter by date (future)
     future = datetime.now() + timedelta(days=1)
-    txs_future = crud.get_user_transactions(db_session, user.id, start_date=future)
+    txs_future = crud.get_user_transactions(
+        db_session, user.id, start_date=future)
     assert len(txs_future) == 0
 
 

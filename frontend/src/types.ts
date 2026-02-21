@@ -15,6 +15,8 @@ export interface User {
     current_streak: number;
     last_task_date: string | null;
     preferred_language: string | null;
+    email?: string | null;
+    notifications_enabled?: boolean;
 }
 
 export interface Task {

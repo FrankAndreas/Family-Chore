@@ -21,7 +21,8 @@ def run_consolidated_migration(conn):
 
     for col_name, col_type in task_columns:
         try:
-            conn.execute(text(f"ALTER TABLE tasks ADD COLUMN {col_name} {col_type}"))
+            conn.execute(
+                text(f"ALTER TABLE tasks ADD COLUMN {col_name} {col_type}"))
             logger.info(f"✓ Added column tasks.{col_name}")
         except Exception as e:
             if "duplicate column name" in str(e).lower():
@@ -31,7 +32,8 @@ def run_consolidated_migration(conn):
 
     # 2. Transactions Table Updates
     try:
-        conn.execute(text("ALTER TABLE transactions ADD COLUMN description TEXT"))
+        conn.execute(
+            text("ALTER TABLE transactions ADD COLUMN description TEXT"))
         logger.info("✓ Added column transactions.description")
     except Exception as e:
         if "duplicate column name" in str(e).lower():
@@ -48,7 +50,8 @@ def run_consolidated_migration(conn):
 
     for col_name, col_type in user_columns:
         try:
-            conn.execute(text(f"ALTER TABLE users ADD COLUMN {col_name} {col_type}"))
+            conn.execute(
+                text(f"ALTER TABLE users ADD COLUMN {col_name} {col_type}"))
             logger.info(f"✓ Added column users.{col_name}")
         except Exception as e:
             if "duplicate column name" in str(e).lower():

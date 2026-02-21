@@ -33,16 +33,19 @@ def test_update_user_language_api(client, db_session, seeded_db):
     db_session.commit()
 
     # Update language
-    resp = client.put(f"/users/{u.id}/language", json={"preferred_language": "de"})
+    resp = client.put(f"/users/{u.id}/language",
+                      json={"preferred_language": "de"})
     assert resp.status_code == 200
     assert resp.json()["preferred_language"] == "de"
 
     # Update to null (default)
-    resp = client.put(f"/users/{u.id}/language", json={"preferred_language": None})
+    resp = client.put(f"/users/{u.id}/language",
+                      json={"preferred_language": None})
     assert resp.status_code == 200
     assert resp.json()["preferred_language"] in [None, ""]
 
 
 def test_update_user_language_invalid_user(client, db_session):
-    resp = client.put("/users/9999/language", json={"preferred_language": "en"})
+    resp = client.put("/users/9999/language",
+                      json={"preferred_language": "en"})
     assert resp.status_code == 404

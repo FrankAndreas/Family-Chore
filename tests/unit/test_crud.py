@@ -161,8 +161,10 @@ class TestDailyReset:
             models.Role.name == "Child"
         ).first()
 
-        user1 = models.User(nickname="Child1", login_pin="1111", role_id=child_role.id)
-        user2 = models.User(nickname="Child2", login_pin="2222", role_id=child_role.id)
+        user1 = models.User(nickname="Child1",
+                            login_pin="1111", role_id=child_role.id)
+        user2 = models.User(nickname="Child2",
+                            login_pin="2222", role_id=child_role.id)
         seeded_db.add_all([user1, user2])
 
         task = models.Task(
@@ -191,7 +193,8 @@ class TestDailyReset:
             models.Role.name == "Teenager"
         ).first()
 
-        user = models.User(nickname="Teen", login_pin="1234", role_id=teenager_role.id)
+        user = models.User(nickname="Teen", login_pin="1234",
+                           role_id=teenager_role.id)
         seeded_db.add(user)
 
         task = models.Task(

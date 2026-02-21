@@ -11,7 +11,8 @@ class SystemSettings(Base):
     __tablename__ = "system_settings"
 
     id = Column(Integer, primary_key=True, index=True)
-    key = Column(String, unique=True, nullable=False)  # e.g., "default_language"
+    # e.g., "default_language"
+    key = Column(String, unique=True, nullable=False)
     value = Column(String, nullable=False)  # e.g., "en" or "de"
     description = Column(Text, nullable=True)
 
@@ -42,10 +43,16 @@ class User(Base):
     current_points = Column(Integer, nullable=False, default=0)
     lifetime_points = Column(Integer, nullable=False, default=0)
 
-    current_goal_reward_id = Column(Integer, ForeignKey("rewards.id"), nullable=True)
+    current_goal_reward_id = Column(
+        Integer, ForeignKey("rewards.id"), nullable=True)
+
+    # Notifications & Contact
+    email = Column(String, unique=True, nullable=True)
+    notifications_enabled = Column(Integer, default=1)
 
     # Language preference (null = use system default)
-    preferred_language = Column(String, nullable=True)  # e.g., "de", "en", or null
+    # e.g., "de", "en", or null
+    preferred_language = Column(String, nullable=True)
 
     # Gamification Polish
     current_streak = Column(Integer, nullable=False, default=0)
@@ -53,7 +60,8 @@ class User(Base):
 
     # Relationships
     role = relationship("Role", back_populates="users")
-    current_goal = relationship("Reward", foreign_keys=[current_goal_reward_id])
+    current_goal = relationship("Reward", foreign_keys=[
+                                current_goal_reward_id])
     task_instances = relationship("TaskInstance", back_populates="user")
     transactions = relationship("Transaction", back_populates="user")
     notifications = relationship("Notification", back_populates="user")
@@ -87,8 +95,10 @@ class Task(Base):
     default_due_time = Column(String, nullable=False)
 
     # Recurring task configuration (for schedule_type="recurring")
-    recurrence_min_days = Column(Integer, nullable=True)  # Min days between completions (e.g., 3)
-    recurrence_max_days = Column(Integer, nullable=True)  # Max days between completions (e.g., 5)
+    # Min days between completions (e.g., 3)
+    recurrence_min_days = Column(Integer, nullable=True)
+    # Max days between completions (e.g., 5)
+    recurrence_max_days = Column(Integer, nullable=True)
 
     # V1.1 Fields
     requires_photo_verification = Column(Integer, default=0)  # 0=false, 1=true
@@ -115,7 +125,8 @@ class TaskInstance(Base):
     # Relationships
     task = relationship("Task", back_populates="instances")
     user = relationship("User", back_populates="task_instances")
-    transaction = relationship("Transaction", back_populates="reference_instance", uselist=False)
+    transaction = relationship(
+        "Transaction", back_populates="reference_instance", uselist=False)
 
 
 # 2.1 Transactions (Audit & Reporting)
@@ -132,13 +143,16 @@ class Transaction(Base):
     awarded_points = Column(Integer, nullable=False)
     description = Column(String, nullable=True)  # Snapshot of task/reward name
 
-    reference_instance_id = Column(Integer, ForeignKey("task_instances.id"), nullable=True)
+    reference_instance_id = Column(
+        Integer, ForeignKey("task_instances.id"), nullable=True)
 
-    timestamp = Column(DateTime, nullable=False, default=lambda: datetime.datetime.now(timezone.utc))
+    timestamp = Column(DateTime, nullable=False,
+                       default=lambda: datetime.datetime.now(timezone.utc))
 
     # Relationships
     user = relationship("User", back_populates="transactions")
-    reference_instance = relationship("TaskInstance", back_populates="transaction")
+    reference_instance = relationship(
+        "TaskInstance", back_populates="transaction")
 
 
 # 3.0 Notifications (System & User Alerts)
@@ -148,14 +162,17 @@ class Notification(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
-    type = Column(String, nullable=False)  # 'TASK_ASSIGNED', 'TASK_COMPLETED', 'REWARD_REDEEMED', 'SYSTEM'
+    # 'TASK_ASSIGNED', 'TASK_COMPLETED', 'REWARD_REDEEMED', 'SYSTEM'
+    type = Column(String, nullable=False)
     title = Column(String, nullable=False)
     message = Column(String, nullable=False)
 
     read = Column(Integer, default=0)
 
-    created_at = Column(DateTime, nullable=False, default=lambda: datetime.datetime.now(timezone.utc))
-    data = Column(Text, nullable=True)  # JSON string for extra data (e.g. {"task_id": 123})
+    created_at = Column(DateTime, nullable=False,
+                        default=lambda: datetime.datetime.now(timezone.utc))
+    # JSON string for extra data (e.g. {"task_id": 123})
+    data = Column(Text, nullable=True)
 
     # Relationships
     user = relationship("User", back_populates="notifications")

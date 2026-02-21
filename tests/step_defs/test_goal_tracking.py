@@ -21,7 +21,8 @@ def system_initialized(seeded_db):
 @given(parsers.parse('a user "{nickname}" exists with role "{role_name}" and {points:d} points'))
 def user_with_points(seeded_db, client, nickname, role_name, points, context):
     """Create user with specific initial points."""
-    role = seeded_db.query(models.Role).filter(models.Role.name == role_name).first()
+    role = seeded_db.query(models.Role).filter(
+        models.Role.name == role_name).first()
 
     # Create user directly in DB to set initial points
     user = models.User(
@@ -40,7 +41,8 @@ def user_with_points(seeded_db, client, nickname, role_name, points, context):
 @given(parsers.parse('a reward exists:\n{reward_table}'))
 def reward_exists(client, reward_table, context):
     """Create a reward from table data."""
-    lines = [line.strip() for line in reward_table.strip().split('\n') if line.strip()]
+    lines = [line.strip()
+             for line in reward_table.strip().split('\n') if line.strip()]
     data_line = lines[1] if len(lines) > 1 else lines[0]
     parts = [p.strip() for p in data_line.split('|') if p.strip()]
 
@@ -61,7 +63,8 @@ def reward_exists(client, reward_table, context):
 @given(parsers.parse('"{nickname}" has {points:d} current points'))
 def set_user_points(seeded_db, nickname, points):
     """Update user's points."""
-    user = seeded_db.query(models.User).filter(models.User.nickname == nickname).first()
+    user = seeded_db.query(models.User).filter(
+        models.User.nickname == nickname).first()
     user.current_points = points
     seeded_db.commit()
 
@@ -72,14 +75,16 @@ def user_has_set_goal(client, context, nickname, reward_name, cost):
     user = context[f'user_{nickname}']
     reward = context[f'reward_{reward_name}']
 
-    response = client.post(f"/users/{user['id']}/goal", params={"reward_id": reward['id']})
+    response = client.post(
+        f"/users/{user['id']}/goal", params={"reward_id": reward['id']})
     assert response.status_code == 200
 
 
 @given(parsers.parse('a task "{task_name}" with {points:d} base points assigned to "{role_name}"'))
 def task_assigned_to_role(seeded_db, client, task_name, points, role_name, context):
     """Create a task assigned to a specific role."""
-    role = seeded_db.query(models.Role).filter(models.Role.name == role_name).first()
+    role = seeded_db.query(models.Role).filter(
+        models.Role.name == role_name).first()
 
     response = client.post("/tasks/", json={
         "name": task_name,
@@ -95,7 +100,8 @@ def task_assigned_to_role(seeded_db, client, task_name, points, role_name, conte
 @given(parsers.parse('the "{role_name}" role has multiplier {multiplier:f}'))
 def set_role_multiplier(seeded_db, role_name, multiplier):
     """Set role multiplier."""
-    role = seeded_db.query(models.Role).filter(models.Role.name == role_name).first()
+    role = seeded_db.query(models.Role).filter(
+        models.Role.name == role_name).first()
     role.multiplier_value = multiplier
     seeded_db.commit()
 
@@ -108,7 +114,8 @@ def set_goal(client, context, nickname, reward_name):
     user = context[f'user_{nickname}']
     reward = context[f'reward_{reward_name}']
 
-    response = client.post(f"/users/{user['id']}/goal", params={"reward_id": reward['id']})
+    response = client.post(
+        f"/users/{user['id']}/goal", params={"reward_id": reward['id']})
     assert response.status_code == 200
     context['goal_response'] = response.json()
 
@@ -136,7 +143,8 @@ def complete_task(client, context, nickname):
 @then(parsers.parse('"{nickname}" should have "{reward_name}" as their current goal'))
 def verify_current_goal(seeded_db, nickname, reward_name):
     """Verify user's current goal in DB."""
-    user = seeded_db.query(models.User).filter(models.User.nickname == nickname).first()
+    user = seeded_db.query(models.User).filter(
+        models.User.nickname == nickname).first()
     assert user.current_goal is not None
     assert user.current_goal.name == reward_name
 
@@ -145,7 +153,8 @@ def verify_current_goal(seeded_db, nickname, reward_name):
 def verify_goal_metrics(seeded_db, context, table):
     """Verify goal calculation metrics."""
     # This logic would typically be in the frontend, but we verify the backend data supports it
-    lines = [line.strip() for line in table.strip().split('\n') if line.strip()]
+    lines = [line.strip()
+             for line in table.strip().split('\n') if line.strip()]
     data_line = lines[1] if len(lines) > 1 else lines[0]
     parts = [p.strip() for p in data_line.split('|') if p.strip()]
 
@@ -156,21 +165,25 @@ def verify_goal_metrics(seeded_db, context, table):
     # Get user from DB to check current state
     # In a real BDD test we might check a "dashboard" endpoint, but checking DB state is fine for backend tests
     user_id = context['user_Teen']['id']
-    user = seeded_db.query(models.User).filter(models.User.id == user_id).first()
+    user = seeded_db.query(models.User).filter(
+        models.User.id == user_id).first()
 
     assert user.current_goal.cost_points == expected_cost
     assert user.current_points == expected_earned
-    assert (user.current_goal.cost_points - user.current_points) == expected_needed
+    assert (user.current_goal.cost_points -
+            user.current_points) == expected_needed
 
 
 @then(parsers.parse('the progress should be {percent:d} percent'))
 def verify_progress_percent(seeded_db, context, percent):
     """Verify progress percentage calculation."""
     user_id = context['user_Teen']['id']
-    user = seeded_db.query(models.User).filter(models.User.id == user_id).first()
+    user = seeded_db.query(models.User).filter(
+        models.User.id == user_id).first()
 
     if user.current_goal.cost_points > 0:
-        calc_percent = min(100, int((user.current_points / user.current_goal.cost_points) * 100))
+        calc_percent = min(
+            100, int((user.current_points / user.current_goal.cost_points) * 100))
     else:
         calc_percent = 0
 
@@ -180,7 +193,8 @@ def verify_progress_percent(seeded_db, context, percent):
 @then(parsers.parse('"{nickname}" should have {points:d} current points'))
 def verify_points(seeded_db, nickname, points):
     """Verify user points."""
-    user = seeded_db.query(models.User).filter(models.User.nickname == nickname).first()
+    user = seeded_db.query(models.User).filter(
+        models.User.nickname == nickname).first()
     assert user.current_points == points
 
 
@@ -188,7 +202,8 @@ def verify_points(seeded_db, nickname, points):
 def verify_points_needed(seeded_db, context, points):
     """Verify points needed calculation."""
     user_id = context['user_Teen']['id']
-    user = seeded_db.query(models.User).filter(models.User.id == user_id).first()
+    user = seeded_db.query(models.User).filter(
+        models.User.id == user_id).first()
     needed = max(0, user.current_goal.cost_points - user.current_points)
     assert needed == points
 
@@ -197,7 +212,8 @@ def verify_points_needed(seeded_db, context, points):
 def verify_goal_status(seeded_db, context, status):
     """Verify goal status logic."""
     user_id = context['user_Teen']['id']
-    user = seeded_db.query(models.User).filter(models.User.id == user_id).first()
+    user = seeded_db.query(models.User).filter(
+        models.User.id == user_id).first()
 
     is_ready = user.current_points >= user.current_goal.cost_points
     expected_ready = (status == "READY TO REDEEM")

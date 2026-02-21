@@ -21,6 +21,9 @@ export const createUser = (nickname: string, login_pin: string, role_id: number)
 export const penalizeUser = (user_id: number, points: number, reason: string) =>
     api.post(`/users/${user_id}/penalize`, { points, reason });
 
+export const updateUser = (user_id: number, data: { email?: string | null, notifications_enabled?: boolean }) =>
+    api.put(`/users/${user_id}`, data);
+
 // Role APIs
 export const getRoles = () => api.get('/roles/');
 

@@ -49,8 +49,10 @@ class Role(RoleBase):
 
 
 class PenaltyRequest(BaseModel):
-    points: int = Field(..., gt=0, description="Points to deduct (must be positive integer)")
-    reason: str = Field(..., min_length=1, max_length=500, description="Reason for penalty")
+    points: int = Field(..., gt=0,
+                        description="Points to deduct (must be positive integer)")
+    reason: str = Field(..., min_length=1, max_length=500,
+                        description="Reason for penalty")
 
 
 class UserBase(BaseModel):
@@ -60,6 +62,9 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     login_pin: str = Field(..., pattern=r'^\d{4}$', description="4-digit PIN")
+    email: Optional[str] = Field(None, description="User's email address")
+    notifications_enabled: bool = Field(
+        True, description="Whether notifications are enabled")
 
     @field_validator('login_pin')
     @classmethod
@@ -74,6 +79,12 @@ class UserLogin(BaseModel):
     login_pin: str
 
 
+class UserUpdate(BaseModel):
+    """Schema for updating user profile settings."""
+    email: Optional[str] = None
+    notifications_enabled: Optional[bool] = None
+
+
 class User(UserBase):
     id: int
     current_points: int
@@ -82,6 +93,8 @@ class User(UserBase):
     preferred_language: Optional[str] = None
     current_streak: int = 0
     last_task_date: Optional[date] = None
+    email: Optional[str] = None
+    notifications_enabled: int = 1
     role: Role
 
     model_config = ConfigDict(from_attributes=True)
@@ -89,9 +102,12 @@ class User(UserBase):
 
 # --- Task Schemas ---
 class TaskBase(BaseModel):
-    name: str = Field(..., min_length=1, max_length=100, description="Task name")
-    description: str = Field(..., min_length=1, max_length=500, description="Task description")
-    base_points: int = Field(..., gt=0, le=1000, description="Base points (1-1000)")
+    name: str = Field(..., min_length=1, max_length=100,
+                      description="Task name")
+    description: str = Field(..., min_length=1,
+                             max_length=500, description="Task description")
+    base_points: int = Field(..., gt=0, le=1000,
+                             description="Base points (1-1000)")
     assigned_role_id: Optional[int] = None
     schedule_type: str = "daily"
     default_due_time: str = Field(
@@ -104,7 +120,8 @@ class TaskBase(BaseModel):
         None, ge=1, le=365, description="Minimum days between completions (recurring only)")
     recurrence_max_days: Optional[int] = Field(
         None, ge=1, le=365, description="Maximum days between completions (recurring only)")
-    requires_photo_verification: bool = Field(False, description="Whether this task requires photo verification")
+    requires_photo_verification: bool = Field(
+        False, description="Whether this task requires photo verification")
 
     @model_validator(mode='after')
     def validate_schedule_and_time(self):
@@ -114,23 +131,29 @@ class TaskBase(BaseModel):
             try:
                 hour, minute = map(int, self.default_due_time.split(':'))
                 if not (0 <= hour < 24 and 0 <= minute < 60):
-                    raise ValueError('Hour must be 0-23 and minute must be 0-59')
+                    raise ValueError(
+                        'Hour must be 0-23 and minute must be 0-59')
             except (ValueError, AttributeError):
-                raise ValueError('For daily tasks, default_due_time must be in HH:MM format (00:00-23:59)')
+                raise ValueError(
+                    'For daily tasks, default_due_time must be in HH:MM format (00:00-23:59)')
         elif self.schedule_type == "weekly":
             # Validate day of week
-            valid_days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+            valid_days = ["Monday", "Tuesday", "Wednesday",
+                          "Thursday", "Friday", "Saturday", "Sunday"]
             if self.default_due_time not in valid_days:
-                raise ValueError(f'For weekly tasks, default_due_time must be a day name: {", ".join(valid_days)}')
+                raise ValueError(
+                    f'For weekly tasks, default_due_time must be a day name: {", ".join(valid_days)}')
         elif self.schedule_type == "recurring":
             # Validate recurrence fields
             if self.recurrence_min_days is None or self.recurrence_max_days is None:
                 raise ValueError(
                     'For recurring tasks, both recurrence_min_days and recurrence_max_days must be specified')
             if self.recurrence_min_days > self.recurrence_max_days:
-                raise ValueError('recurrence_min_days must be less than or equal to recurrence_max_days')
+                raise ValueError(
+                    'recurrence_min_days must be less than or equal to recurrence_max_days')
         else:
-            raise ValueError('schedule_type must be "daily", "weekly", or "recurring"')
+            raise ValueError(
+                'schedule_type must be "daily", "weekly", or "recurring"')
 
         return self
 
@@ -160,17 +183,22 @@ class TaskUpdate(BaseModel):
                 try:
                     hour, minute = map(int, self.default_due_time.split(':'))
                     if not (0 <= hour < 24 and 0 <= minute < 60):
-                        raise ValueError('Hour must be 0-23 and minute must be 0-59')
+                        raise ValueError(
+                            'Hour must be 0-23 and minute must be 0-59')
                 except (ValueError, AttributeError):
-                    raise ValueError('For daily tasks, default_due_time must be in HH:MM format')
+                    raise ValueError(
+                        'For daily tasks, default_due_time must be in HH:MM format')
             elif self.schedule_type == "weekly" and self.default_due_time:
-                valid_days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+                valid_days = ["Monday", "Tuesday", "Wednesday",
+                              "Thursday", "Friday", "Saturday", "Sunday"]
                 if self.default_due_time not in valid_days:
-                    raise ValueError(f'For weekly tasks, default_due_time must be a day name: {", ".join(valid_days)}')
+                    raise ValueError(
+                        f'For weekly tasks, default_due_time must be a day name: {", ".join(valid_days)}')
             elif self.schedule_type == "recurring":
                 if self.recurrence_min_days and self.recurrence_max_days:
                     if self.recurrence_min_days > self.recurrence_max_days:
-                        raise ValueError('recurrence_min_days must be <= recurrence_max_days')
+                        raise ValueError(
+                            'recurrence_min_days must be <= recurrence_max_days')
         return self
 
 
@@ -207,10 +235,13 @@ class TaskReviewRequest(BaseModel):
 
 
 class RewardBase(BaseModel):
-    name: str = Field(..., min_length=1, max_length=100, description="Reward name")
-    cost_points: int = Field(..., gt=0, le=10000, description="Cost in points (1-10000)")
+    name: str = Field(..., min_length=1, max_length=100,
+                      description="Reward name")
+    cost_points: int = Field(..., gt=0, le=10000,
+                             description="Cost in points (1-10000)")
     description: Optional[str] = Field(None, max_length=500)
-    tier_level: int = Field(default=0, ge=0, le=10, description="Tier level (0-10)")
+    tier_level: int = Field(default=0, ge=0, le=10,
+                            description="Tier level (0-10)")
 
 
 class RewardCreate(RewardBase):
@@ -236,7 +267,8 @@ class RedemptionResponse(BaseModel):
 class SplitContribution(BaseModel):
     """A single user's contribution to a split redemption."""
     user_id: int
-    points: int = Field(..., ge=0, description="Points this user contributes (0 or more)")
+    points: int = Field(..., ge=0,
+                        description="Points this user contributes (0 or more)")
 
 
 class SplitRedemptionRequest(BaseModel):
@@ -249,7 +281,8 @@ class SplitRedemptionResponse(BaseModel):
     success: bool
     reward_name: Optional[str] = None
     total_points: Optional[int] = None
-    transactions: Optional[list[dict]] = None  # List of {user_id, user_name, points, transaction_id}
+    # List of {user_id, user_name, points, transaction_id}
+    transactions: Optional[list[dict]] = None
     error: Optional[str] = None
 
 
@@ -283,11 +316,16 @@ class Transaction(TransactionBase):
 
 class TaskImportItem(BaseModel):
     """Single task in import format - uses role name instead of ID for readability."""
-    name: str = Field(..., min_length=1, max_length=100, description="Task name")
-    description: str = Field(..., min_length=1, max_length=500, description="Task description")
-    base_points: int = Field(..., gt=0, le=1000, description="Base points (1-1000)")
-    assigned_role: Optional[str] = Field(None, description="Role name (e.g., 'Child', 'Teenager')")
-    schedule_type: str = Field("daily", description="Schedule type: daily, weekly, or recurring")
+    name: str = Field(..., min_length=1, max_length=100,
+                      description="Task name")
+    description: str = Field(..., min_length=1,
+                             max_length=500, description="Task description")
+    base_points: int = Field(..., gt=0, le=1000,
+                             description="Base points (1-1000)")
+    assigned_role: Optional[str] = Field(
+        None, description="Role name (e.g., 'Child', 'Teenager')")
+    schedule_type: str = Field(
+        "daily", description="Schedule type: daily, weekly, or recurring")
     default_due_time: str = Field(
         ...,
         description="Time in HH:MM format for daily, day name for weekly, or any value for recurring"
@@ -312,13 +350,15 @@ class TaskImportItem(BaseModel):
                     raise ValueError
                 hour, minute = map(int, parts)
             except (ValueError, AttributeError):
-                raise ValueError('For daily tasks, default_due_time must be in HH:MM format')
+                raise ValueError(
+                    'For daily tasks, default_due_time must be in HH:MM format')
 
             if not (0 <= hour < 24 and 0 <= minute < 60):
                 raise ValueError('Hour must be 0-23 and minute must be 0-59')
         elif self.schedule_type == "weekly":
             # Check if it's a valid day name
-            valid_days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+            valid_days = ["Monday", "Tuesday", "Wednesday",
+                          "Thursday", "Friday", "Saturday", "Sunday"]
             if self.default_due_time in valid_days:
                 return self
 
@@ -341,21 +381,26 @@ class TaskImportItem(BaseModel):
             except (ValueError, AttributeError):
                 pass
 
-            raise ValueError('For weekly tasks, default_due_time must be a day name (e.g. Monday)')
+            raise ValueError(
+                'For weekly tasks, default_due_time must be a day name (e.g. Monday)')
         elif self.schedule_type == "recurring":
             if self.recurrence_min_days is None or self.recurrence_max_days is None:
-                raise ValueError('For recurring tasks, both recurrence_min_days and recurrence_max_days required')
+                raise ValueError(
+                    'For recurring tasks, both recurrence_min_days and recurrence_max_days required')
             if self.recurrence_min_days > self.recurrence_max_days:
-                raise ValueError('recurrence_min_days must be <= recurrence_max_days')
+                raise ValueError(
+                    'recurrence_min_days must be <= recurrence_max_days')
         else:
-            raise ValueError('schedule_type must be "daily", "weekly", or "recurring"')
+            raise ValueError(
+                'schedule_type must be "daily", "weekly", or "recurring"')
         return self
 
 
 class TasksImport(BaseModel):
     """Import payload for bulk task creation."""
     tasks: List[TaskImportItem]
-    skip_duplicates: bool = Field(False, description="Skip tasks with names that already exist")
+    skip_duplicates: bool = Field(
+        False, description="Skip tasks with names that already exist")
 
 
 class TaskExportItem(BaseModel):

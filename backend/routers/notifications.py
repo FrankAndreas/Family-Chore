@@ -29,7 +29,8 @@ def read_user_notifications(
 @router.post("/{notification_id}/read", response_model=schemas.Notification)
 def mark_notification_read(notification_id: int, user_id: int, db: Session = Depends(get_db)):
     """Mark a notification as read."""
-    notification = crud.mark_notification_read(db, notification_id=notification_id, user_id=user_id)
+    notification = crud.mark_notification_read(
+        db, notification_id=notification_id, user_id=user_id)
     if not notification:
         raise HTTPException(status_code=404, detail="Notification not found")
     return notification

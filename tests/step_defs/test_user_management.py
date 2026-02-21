@@ -27,7 +27,8 @@ def roles_exist(seeded_db, roles_table):
 @given(parsers.parse('a user exists with:\n{user_table}'))
 def user_exists(seeded_db, client, user_table, context):
     """Create a user from table data."""
-    lines = [line.strip() for line in user_table.strip().split('\n') if line.strip()]
+    lines = [line.strip()
+             for line in user_table.strip().split('\n') if line.strip()]
     # Skip header line
     data_line = lines[1] if len(lines) > 1 else lines[0]
     parts = [p.strip() for p in data_line.split('|') if p.strip()]
@@ -37,7 +38,8 @@ def user_exists(seeded_db, client, user_table, context):
     role_name = parts[2]
 
     # Get role ID
-    role = seeded_db.query(models.Role).filter(models.Role.name == role_name).first()
+    role = seeded_db.query(models.Role).filter(
+        models.Role.name == role_name).first()
 
     # Create user via API
     response = client.post("/users/", json={
@@ -55,7 +57,8 @@ def user_exists(seeded_db, client, user_table, context):
 @when(parsers.parse('I create a new user with:\n{user_table}'))
 def create_user(seeded_db, client, user_table, context):
     """Create a new user from table data."""
-    lines = [line.strip() for line in user_table.strip().split('\n') if line.strip()]
+    lines = [line.strip()
+             for line in user_table.strip().split('\n') if line.strip()]
     data_line = lines[1] if len(lines) > 1 else lines[0]
     parts = [p.strip() for p in data_line.split('|') if p.strip()]
 
@@ -64,7 +67,8 @@ def create_user(seeded_db, client, user_table, context):
     role_name = parts[2]
 
     # Get role ID
-    role = seeded_db.query(models.Role).filter(models.Role.name == role_name).first()
+    role = seeded_db.query(models.Role).filter(
+        models.Role.name == role_name).first()
 
     # Create user via API
     response = client.post("/users/", json={
@@ -101,7 +105,8 @@ def user_created_successfully(context):
 def user_has_role(seeded_db, context, role_name):
     """Verify user has the specified role."""
     user = context.get('created_user') or context.get('login_response').json()
-    role = seeded_db.query(models.Role).filter(models.Role.id == user['role_id']).first()
+    role = seeded_db.query(models.Role).filter(
+        models.Role.id == user['role_id']).first()
     assert role.name == role_name
 
 
@@ -109,7 +114,8 @@ def user_has_role(seeded_db, context, role_name):
 def user_assigned_to_role(seeded_db, context, role_name):
     """Verify user is assigned to role."""
     user = context['created_user']
-    role = seeded_db.query(models.Role).filter(models.Role.id == user['role_id']).first()
+    role = seeded_db.query(models.Role).filter(
+        models.Role.id == user['role_id']).first()
     assert role.name == role_name
 
 
@@ -117,7 +123,8 @@ def user_assigned_to_role(seeded_db, context, role_name):
 def user_has_multiplier(seeded_db, context, multiplier):
     """Verify user's role has correct multiplier."""
     user = context.get('created_user') or context.get('login_response').json()
-    role = seeded_db.query(models.Role).filter(models.Role.id == user['role_id']).first()
+    role = seeded_db.query(models.Role).filter(
+        models.Role.id == user['role_id']).first()
     assert role.multiplier_value == multiplier
 
 

@@ -29,7 +29,23 @@ def create_user(db: Session, user: schemas.UserCreate) -> models.User:
     db.commit()
     db.refresh(db_user)
     # Re-query to ensure relationships are loaded
-    db_user = db.query(models.User).filter(models.User.id == db_user.id).first()
+    db_user = db.query(models.User).filter(
+        models.User.id == db_user.id).first()
+    return db_user
+
+
+def update_user(db: Session, user_id: int, user_update: schemas.UserUpdate) -> Optional[models.User]:
+    """Update user profile settings (e.g., email, notifications)."""
+    db_user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not db_user:
+        return None
+
+    update_data = user_update.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(db_user, field, value)
+
+    db.commit()
+    db.refresh(db_user)
     return db_user
 
 # --- Role CRUD ---
@@ -93,7 +109,8 @@ def generate_instances_for_task(db: Session, task: models.Task) -> int:
 
     # Find target users
     if task.assigned_role_id:
-        target_users = db.query(models.User).filter(models.User.role_id == task.assigned_role_id).all()
+        target_users = db.query(models.User).filter(
+            models.User.role_id == task.assigned_role_id).all()
     else:
         target_users = db.query(models.User).all()
 
@@ -102,11 +119,14 @@ def generate_instances_for_task(db: Session, task: models.Task) -> int:
         if task.schedule_type == "daily":
             try:
                 hour, minute = map(int, task.default_due_time.split(":"))
-                due_time = today.replace(hour=hour, minute=minute, second=0, microsecond=0)
+                due_time = today.replace(
+                    hour=hour, minute=minute, second=0, microsecond=0)
             except ValueError:
-                due_time = today.replace(hour=17, minute=0, second=0, microsecond=0)
+                due_time = today.replace(
+                    hour=17, minute=0, second=0, microsecond=0)
         else:  # weekly or recurring
-            due_time = today.replace(hour=23, minute=59, second=0, microsecond=0)
+            due_time = today.replace(
+                hour=23, minute=59, second=0, microsecond=0)
 
         # Check for existing instance today
         start_of_day = today.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -157,7 +177,8 @@ def delete_task(db: Session, task_id: int) -> bool:
         return False
 
     # Delete related task instances first (cascade)
-    db.query(models.TaskInstance).filter(models.TaskInstance.task_id == task_id).delete()
+    db.query(models.TaskInstance).filter(
+        models.TaskInstance.task_id == task_id).delete()
 
     # Delete the task
     db.delete(db_task)
@@ -206,7 +227,8 @@ def generate_daily_instances(db: Session):
         target_users = []
         if task.assigned_role_id:
             # Task assigned to specific role
-            target_users = db.query(models.User).filter(models.User.role_id == task.assigned_role_id).all()
+            target_users = db.query(models.User).filter(
+                models.User.role_id == task.assigned_role_id).all()
         else:
             # Task not assigned to any role - assign to ALL users (any family member can do it)
             target_users = db.query(models.User).all()
@@ -221,20 +243,25 @@ def generate_daily_instances(db: Session):
                 # For daily tasks, parse HH:MM time
                 try:
                     hour, minute = map(int, task.default_due_time.split(":"))
-                    due_time = today.replace(hour=hour, minute=minute, second=0, microsecond=0)
+                    due_time = today.replace(
+                        hour=hour, minute=minute, second=0, microsecond=0)
                 except ValueError:
                     # Fallback if time format is bad
-                    due_time = today.replace(hour=17, minute=0, second=0, microsecond=0)
+                    due_time = today.replace(
+                        hour=17, minute=0, second=0, microsecond=0)
             elif task.schedule_type == "weekly":
                 # For weekly tasks, set due time to end of day (23:59)
-                due_time = today.replace(hour=23, minute=59, second=0, microsecond=0)
+                due_time = today.replace(
+                    hour=23, minute=59, second=0, microsecond=0)
             else:  # recurring
                 # For recurring tasks, set due time to end of day (23:59)
-                due_time = today.replace(hour=23, minute=59, second=0, microsecond=0)
+                due_time = today.replace(
+                    hour=23, minute=59, second=0, microsecond=0)
 
             # Check for existing instance today (start of day to end of day)
             # Only check for PENDING instances - completed ones shouldn't block new ones
-            start_of_day = today.replace(hour=0, minute=0, second=0, microsecond=0)
+            start_of_day = today.replace(
+                hour=0, minute=0, second=0, microsecond=0)
             existing = db.query(models.TaskInstance).filter(
                 models.TaskInstance.task_id == task.id,
                 models.TaskInstance.user_id == user.id,
@@ -349,7 +376,8 @@ def _award_points_for_task(db: Session, instance: models.TaskInstance) -> models
 
 
 def complete_task_instance(db: Session, instance_id: int, actual_user_id: int = None) -> Optional[models.TaskInstance]:
-    instance = db.query(models.TaskInstance).filter(models.TaskInstance.id == instance_id).first()
+    instance = db.query(models.TaskInstance).filter(
+        models.TaskInstance.id == instance_id).first()
     if not instance:
         return None
 
@@ -370,7 +398,8 @@ def complete_task_instance(db: Session, instance_id: int, actual_user_id: int = 
     # If the task requires a photo, check if the photo is uploaded
     if task.requires_photo_verification:
         if not instance.completion_photo_url:
-            raise ValueError("Photo upload required before completing this task.")
+            raise ValueError(
+                "Photo upload required before completing this task.")
 
         # If photo is uploaded, set to IN_REVIEW, no points yet
         instance.status = "IN_REVIEW"
@@ -385,7 +414,8 @@ def review_task_instance(
     db: Session, instance_id: int, review: schemas.TaskReviewRequest
 ) -> Optional[models.TaskInstance]:
     """Admin endpoint to approve or reject a task."""
-    instance = db.query(models.TaskInstance).filter(models.TaskInstance.id == instance_id).first()
+    instance = db.query(models.TaskInstance).filter(
+        models.TaskInstance.id == instance_id).first()
     if not instance or instance.status != "IN_REVIEW":
         return None
 
@@ -455,7 +485,8 @@ def redeem_reward(db: Session, user_id: int, reward_id: int) -> dict:
     if not user:
         return {"success": False, "error": "User not found"}
 
-    reward = db.query(models.Reward).filter(models.Reward.id == reward_id).first()
+    reward = db.query(models.Reward).filter(
+        models.Reward.id == reward_id).first()
     if not reward:
         return {"success": False, "error": "Reward not found"}
 
@@ -506,7 +537,8 @@ def redeem_reward_split(db: Session, reward_id: int, contributions: list[dict]) 
     Returns dict with success status, transaction details, or error message.
     """
     # Get the reward
-    reward = db.query(models.Reward).filter(models.Reward.id == reward_id).first()
+    reward = db.query(models.Reward).filter(
+        models.Reward.id == reward_id).first()
     if not reward:
         return {"success": False, "error": "Reward not found"}
 
@@ -524,7 +556,8 @@ def redeem_reward_split(db: Session, reward_id: int, contributions: list[dict]) 
         if contrib["points"] == 0:
             continue  # Skip users with 0 contribution
 
-        user = db.query(models.User).filter(models.User.id == contrib["user_id"]).first()
+        user = db.query(models.User).filter(
+            models.User.id == contrib["user_id"]).first()
         if not user:
             return {"success": False, "error": f"User {contrib['user_id']} not found"}
 
@@ -621,12 +654,14 @@ def apply_penalty(db: Session, user_id: int, penalty: schemas.PenaltyRequest) ->
 def get_user_transactions(db: Session, user_id: int, skip: int = 0, limit: int = 100,
                           type: str = None, search: str = None, start_date: datetime = None, end_date: datetime = None):
     """Get transaction history for a specific user with filters."""
-    query = db.query(models.Transaction).filter(models.Transaction.user_id == user_id)
+    query = db.query(models.Transaction).filter(
+        models.Transaction.user_id == user_id)
 
     if type:
         query = query.filter(models.Transaction.type == type)
     if search:
-        query = query.filter(models.Transaction.description.ilike(f"%{search}%"))
+        query = query.filter(
+            models.Transaction.description.ilike(f"%{search}%"))
     if start_date:
         query = query.filter(models.Transaction.timestamp >= start_date)
     if end_date:
@@ -646,7 +681,8 @@ def get_all_transactions(db: Session, skip: int = 0, limit: int = 100,
     if type:
         query = query.filter(models.Transaction.type == type)
     if search:
-        query = query.filter(models.Transaction.description.ilike(f"%{search}%"))
+        query = query.filter(
+            models.Transaction.description.ilike(f"%{search}%"))
     if start_date:
         query = query.filter(models.Transaction.timestamp >= start_date)
     if end_date:
@@ -669,7 +705,8 @@ def set_system_setting(db: Session, key: str, value: str, description: str = Non
         if description:
             setting.description = description
     else:
-        setting = models.SystemSettings(key=key, value=value, description=description)
+        setting = models.SystemSettings(
+            key=key, value=value, description=description)
         db.add(setting)
     db.commit()
     db.refresh(setting)
@@ -701,7 +738,8 @@ def get_last_reset_date(db: Session) -> date | None:
 
 def set_last_reset_date(db: Session, reset_date: date):
     """Record when the daily reset was performed."""
-    set_system_setting(db, "last_daily_reset", reset_date.strftime("%Y-%m-%d"), "Date of last daily task generation")
+    set_system_setting(db, "last_daily_reset", reset_date.strftime(
+        "%Y-%m-%d"), "Date of last daily task generation")
 
 
 def is_reset_needed(db: Session) -> bool:
@@ -722,6 +760,41 @@ def perform_daily_reset_if_needed(db: Session) -> int:
     return int(count)
 
 
+# --- Notification Service Helpers ---
+
+def get_users_with_pending_daily_tasks(db: Session) -> List[models.User]:
+    """Find all users who have opted-in to notifications and have pending daily tasks today."""
+    start_of_day = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+
+    # Query users with email and notifications enabled who have pending tasks today
+    # Join User -> TaskInstance -> Task explicitly
+    users = db.query(models.User).join(
+        models.TaskInstance, models.TaskInstance.user_id == models.User.id
+    ).join(
+        models.Task, models.TaskInstance.task_id == models.Task.id
+    ).filter(
+        models.User.notifications_enabled == 1,
+        models.User.email.isnot(None),
+        models.TaskInstance.status == "PENDING",
+        models.TaskInstance.due_time >= start_of_day,
+        models.Task.schedule_type == "daily"
+    ).distinct().all()
+
+    return users
+
+
+def get_notifiable_admins(db: Session) -> List[models.User]:
+    """Find all admin users who have opted-in to notifications."""
+    # Find all users with "Admin" role, email, and notifications enabled
+    users = db.query(models.User).join(models.Role).filter(
+        models.Role.name == "Admin",
+        models.User.notifications_enabled == 1,
+        models.User.email.isnot(None)
+    ).all()
+
+    return users
+
+
 # --- Notification CRUD ---
 
 
@@ -734,13 +807,15 @@ def create_notification(db: Session, notification: schemas.NotificationCreate):
 
 
 def get_user_notifications(db: Session, user_id: int, skip: int = 0, limit: int = 50, unread_only: bool = False):
-    query = db.query(models.Notification).filter(models.Notification.user_id == user_id)
+    query = db.query(models.Notification).filter(
+        models.Notification.user_id == user_id)
     if unread_only:
         query = query.filter(models.Notification.read == 0)
     return query.order_by(models.Notification.created_at.desc()).offset(skip).limit(limit).all()
 
 
-def mark_notification_read(db: Session, notification_id: int, user_id: int):  # user_id for security check
+# user_id for security check
+def mark_notification_read(db: Session, notification_id: int, user_id: int):
     notification = db.query(models.Notification).filter(
         models.Notification.id == notification_id,
         models.Notification.user_id == user_id

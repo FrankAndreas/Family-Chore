@@ -1,22 +1,12 @@
-import pytest
+
 from backend import crud, schemas, models
-from backend.database import SessionLocal, Base, engine
-
-# Setup test DB
-Base.metadata.create_all(bind=engine)
 
 
-@pytest.fixture
-def db():
-    session = SessionLocal()
-    yield session
-    session.close()
-
-
-def test_family_dashboard_claim_logic(db):
+def test_family_dashboard_claim_logic(db_session):
     import uuid
     import datetime
     unique_id = str(uuid.uuid4())[:8]
+    db = db_session
 
     # 1. Setup Data
     # Create Role 1 (Parent, x1.0)

@@ -21,7 +21,8 @@ def system_initialized(seeded_db):
 @given(parsers.parse('a user "{nickname}" exists with role "{role_name}"'))
 def user_with_role(seeded_db, client, nickname, role_name, context):
     """Create a user with specific role."""
-    role = seeded_db.query(models.Role).filter(models.Role.name == role_name).first()
+    role = seeded_db.query(models.Role).filter(
+        models.Role.name == role_name).first()
 
     response = client.post("/users/", json={
         "nickname": nickname,
@@ -36,7 +37,8 @@ def user_with_role(seeded_db, client, nickname, role_name, context):
 @given(parsers.parse('a task exists:\n{task_table}'))
 def task_exists(seeded_db, client, task_table, context):
     """Create a task from table data."""
-    lines = [line.strip() for line in task_table.strip().split('\n') if line.strip()]
+    lines = [line.strip()
+             for line in task_table.strip().split('\n') if line.strip()]
     data_line = lines[1] if len(lines) > 1 else lines[0]
     parts = [p.strip() for p in data_line.split('|') if p.strip()]
 
@@ -48,7 +50,8 @@ def task_exists(seeded_db, client, task_table, context):
     due_time = parts[5]
 
     # Get role ID
-    role = seeded_db.query(models.Role).filter(models.Role.name == role_name).first()
+    role = seeded_db.query(models.Role).filter(
+        models.Role.name == role_name).first()
 
     response = client.post("/tasks/", json={
         "name": name,
@@ -66,7 +69,8 @@ def task_exists(seeded_db, client, task_table, context):
 @given(parsers.parse('the "{role_name}" role has multiplier value {multiplier:f}'))
 def role_has_multiplier(seeded_db, role_name, multiplier):
     """Verify or set role multiplier."""
-    role = seeded_db.query(models.Role).filter(models.Role.name == role_name).first()
+    role = seeded_db.query(models.Role).filter(
+        models.Role.name == role_name).first()
     if role.multiplier_value != multiplier:
         role.multiplier_value = multiplier
         seeded_db.commit()
@@ -77,7 +81,8 @@ def role_has_multiplier(seeded_db, role_name, multiplier):
 @when(parsers.parse('I create a task with:\n{task_table}'))
 def create_task(seeded_db, client, task_table, context):
     """Create a task from table data."""
-    lines = [line.strip() for line in task_table.strip().split('\n') if line.strip()]
+    lines = [line.strip()
+             for line in task_table.strip().split('\n') if line.strip()]
     data_line = lines[1] if len(lines) > 1 else lines[0]
     parts = [p.strip() for p in data_line.split('|') if p.strip()]
 
@@ -89,7 +94,8 @@ def create_task(seeded_db, client, task_table, context):
     due_time = parts[5] if len(parts) > 5 else "17:00"
 
     # Get role ID
-    role = seeded_db.query(models.Role).filter(models.Role.name == role_name).first()
+    role = seeded_db.query(models.Role).filter(
+        models.Role.name == role_name).first()
 
     response = client.post("/tasks/", json={
         "name": name,
@@ -138,7 +144,8 @@ def task_has_base_points(context, points):
 def task_assigned_to_role(seeded_db, context, role_name):
     """Verify task is assigned to role."""
     task = context['created_task']
-    role = seeded_db.query(models.Role).filter(models.Role.id == task['assigned_role_id']).first()
+    role = seeded_db.query(models.Role).filter(
+        models.Role.id == task['assigned_role_id']).first()
     assert role.name == role_name
 
 
@@ -189,13 +196,15 @@ def task_shows_calculated_points(seeded_db, context, points):
 def task_creation_fails_with_validation(context):
     """Verify task creation failed with validation error."""
     response = context['task_response']
-    assert response.status_code == 422  # Unprocessable Entity (validation error)
+    # Unprocessable Entity (validation error)
+    assert response.status_code == 422
 
 
 @given(parsers.parse('a task exists without role assignment:\n{task_table}'))
 def task_exists_without_role(client, task_table, context):
     """Create an unassigned task (no role) from table data."""
-    lines = [line.strip() for line in task_table.strip().split('\n') if line.strip()]
+    lines = [line.strip()
+             for line in task_table.strip().split('\n') if line.strip()]
     data_line = lines[1] if len(lines) > 1 else lines[0]
     parts = [p.strip() for p in data_line.split('|') if p.strip()]
 

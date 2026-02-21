@@ -31,7 +31,8 @@ def test_scheduler_timezone():
                 main.on_startup()
 
                 # Verify scheduler.configure was called with correct timezone
-                mock_scheduler.configure.assert_called_with(timezone="Asia/Tokyo")
+                mock_scheduler.configure.assert_called_with(
+                    timezone="Asia/Tokyo")
 
                 # Verify jobs added with correct timezone
                 # We expect 2 add_job calls
@@ -44,7 +45,8 @@ def test_scheduler_timezone():
                 # CronTrigger timezone should be Asia/Tokyo
                 assert str(trigger.timezone) == "Asia/Tokyo"
 
-                print("✅ Verification Successful: Scheduler configured with 'Asia/Tokyo'")
+                print(
+                    "✅ Verification Successful: Scheduler configured with 'Asia/Tokyo'")
 
 
 if __name__ == "__main__":

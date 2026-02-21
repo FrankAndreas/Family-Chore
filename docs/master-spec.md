@@ -88,6 +88,13 @@ ChoreSpec is a family-oriented chore gamification system. It transforms househol
 - **CI/CD Pipeline**: Add GitHub Actions pipelines for automated testing, linting (`flake8`, `mypy`, `eslint`), and build verification on every pull request.
 - **UI/UX Consistency**: Ensure consistent styling across all views, specifically focusing on mobile responsiveness, accessible form controls, robust generic empty states, and standardizing error handling.
 
+### 2.7 Notifications & Reminders (V1.5)
+- **Channels**: Web Push notifications (using service workers + VAPID) or lightweight Email integration (e.g., SMTP or Resend).
+- **Triggers**:
+  - **Daily Reminders**: Sent to users with pending daily tasks at a configurable time.
+  - **Approval Requests**: Sent to admins when a photo-verification task enters the `IN_REVIEW` queue.
+- **Opt-in/Opt-out**: Users can configure their notification preferences in their profile settings.
+
 ---
 
 ## 3. Technical Implementation
@@ -149,6 +156,19 @@ ChoreSpec is a family-oriented chore gamification system. It transforms househol
 - **Given** a user has 10 `current_points`
 - **When** the Admin applies a penalty of 20 points
 - **Then** the user's `current_points` becomes 0 (assuming floor is 0) *or* -10 (depending on Architect's plan, let's leave it up to Architect or state it explicitly: balance can go negative). Let's specify: The user's `current_points` can become negative (e.g., -10) to reflect a point debt.
+
+### 4.2 BDD Scenarios (Push Notifications / Reminders)
+**Scenario: Daily Chore Reminder**
+- **Given** a user has incomplete "Daily" tasks assigned for today
+- **When** the configured daily reminder time is reached
+- **Then** a push notification or email is dispatched to the user's configured contact method
+- **And** the notification lists the number of pending tasks.
+
+**Scenario: Task Approval Notification**
+- **Given** a user completes a task that `requires_photo_verification`
+- **When** the task transitions to `IN_REVIEW`
+- **Then** a notification is immediately dispatched to users with the "Admin" role
+- **And** the notification contains the task name and the user who completed it.
 
 ---
 

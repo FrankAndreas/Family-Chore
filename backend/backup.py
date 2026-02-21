@@ -52,7 +52,8 @@ class BackupManager:
                     os.remove(file_path)
                     deleted_files.append(file_path)
             except Exception as e:
-                logger.error(f"Error checking/deleting backup {file_path}: {e}")
+                logger.error(
+                    f"Error checking/deleting backup {file_path}: {e}")
 
         return deleted_files
 

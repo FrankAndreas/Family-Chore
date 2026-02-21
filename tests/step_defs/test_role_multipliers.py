@@ -22,7 +22,8 @@ def system_initialized(seeded_db):
 def user_with_role_and_multiplier(seeded_db, client, nickname, role_name, multiplier, context):
     """Create user and ensure role has specific multiplier."""
     # Set multiplier first
-    role = seeded_db.query(models.Role).filter(models.Role.name == role_name).first()
+    role = seeded_db.query(models.Role).filter(
+        models.Role.name == role_name).first()
     role.multiplier_value = multiplier
     seeded_db.commit()
 
@@ -39,7 +40,8 @@ def user_with_role_and_multiplier(seeded_db, client, nickname, role_name, multip
 @given(parsers.parse('a task "{task_name}" with {points:d} base points assigned to "{role_name}"'))
 def task_assigned_to_role(seeded_db, client, task_name, points, role_name, context):
     """Create a task assigned to a specific role."""
-    role = seeded_db.query(models.Role).filter(models.Role.name == role_name).first()
+    role = seeded_db.query(models.Role).filter(
+        models.Role.name == role_name).first()
 
     response = client.post("/tasks/", json={
         "name": task_name,
@@ -66,7 +68,8 @@ def request_roles(client, context):
 @when(parsers.parse('I update the "{role_name}" role multiplier to {multiplier:f}'))
 def update_role_multiplier(seeded_db, client, role_name, multiplier, context):
     """Update a role's multiplier."""
-    role = seeded_db.query(models.Role).filter(models.Role.name == role_name).first()
+    role = seeded_db.query(models.Role).filter(
+        models.Role.name == role_name).first()
 
     response = client.put(f"/roles/{role.id}", json={
         "multiplier_value": multiplier
@@ -126,7 +129,8 @@ def role_updated_successfully(context):
 @then(parsers.parse('the "{role_name}" role should have multiplier value {multiplier:f}'))
 def verify_role_multiplier(seeded_db, role_name, multiplier):
     """Verify role multiplier in database."""
-    role = seeded_db.query(models.Role).filter(models.Role.name == role_name).first()
+    role = seeded_db.query(models.Role).filter(
+        models.Role.name == role_name).first()
     # Use approx for float comparison
     assert abs(role.multiplier_value - multiplier) < 0.001
 
@@ -143,7 +147,8 @@ def update_fails_with_error(context, error_message):
 def user_receives_points(seeded_db, nickname, points):
     """Verify user's current points."""
     # Need to refresh user from DB
-    user_data = seeded_db.query(models.User).filter(models.User.nickname == nickname).first()
+    user_data = seeded_db.query(models.User).filter(
+        models.User.nickname == nickname).first()
     assert user_data.current_points == points
 
 

@@ -19,7 +19,8 @@ engine = create_engine(
     connect_args={"check_same_thread": False},
     poolclass=StaticPool,
 )
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+TestingSessionLocal = sessionmaker(
+    autocommit=False, autoflush=False, bind=engine)
 
 
 @pytest.fixture(scope="function")
@@ -67,7 +68,8 @@ def seeded_db(db_session):
 @pytest.fixture
 def admin_user(seeded_db):
     """Create an admin user for testing."""
-    admin_role = seeded_db.query(models.Role).filter(models.Role.name == "Admin").first()
+    admin_role = seeded_db.query(models.Role).filter(
+        models.Role.name == "Admin").first()
     user = models.User(
         nickname="TestAdmin",
         login_pin="1234",

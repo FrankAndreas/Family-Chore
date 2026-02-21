@@ -3,7 +3,8 @@ from backend import crud, models, schemas
 
 
 def test_create_user(db_session, seeded_db):
-    role = db_session.query(models.Role).filter(models.Role.name == "Child").first()
+    role = db_session.query(models.Role).filter(
+        models.Role.name == "Child").first()
 
     user_data = schemas.UserCreate(
         nickname="NewKid",
@@ -21,8 +22,10 @@ def test_create_user(db_session, seeded_db):
 
 def test_get_user_by_nickname(db_session, seeded_db):
     # Create user
-    role = db_session.query(models.Role).filter(models.Role.name == "Admin").first()
-    crud.create_user(db_session, schemas.UserCreate(nickname="Admin", login_pin="0000", role_id=role.id))
+    role = db_session.query(models.Role).filter(
+        models.Role.name == "Admin").first()
+    crud.create_user(db_session, schemas.UserCreate(
+        nickname="Admin", login_pin="0000", role_id=role.id))
 
     # Get by nickname
     user = crud.get_user_by_nickname(db_session, "Admin")
@@ -36,7 +39,8 @@ def test_get_user_by_nickname(db_session, seeded_db):
 def test_get_users_pagination(db_session, seeded_db):
     role = db_session.query(models.Role).first()
     for i in range(5):
-        crud.create_user(db_session, schemas.UserCreate(nickname=f"U{i}", login_pin="0000", role_id=role.id))
+        crud.create_user(db_session, schemas.UserCreate(
+            nickname=f"U{i}", login_pin="0000", role_id=role.id))
 
     users = crud.get_users(db_session, limit=2)
     assert len(users) == 2

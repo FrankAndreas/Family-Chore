@@ -16,7 +16,8 @@ def run_v1_5_migration(conn):
 
     This migration is idempotent.
     """
-    logger.info("Running v1.5 migration: requires_photo_verification TEXT -> INTEGER...")
+    logger.info(
+        "Running v1.5 migration: requires_photo_verification TEXT -> INTEGER...")
 
     try:
         # Check if the column is still TEXT by inspecting table info
@@ -24,14 +25,16 @@ def run_v1_5_migration(conn):
         columns = {row[1]: row[2] for row in result.fetchall()}
 
         if "requires_photo_verification" not in columns:
-            logger.info("Column requires_photo_verification doesn't exist yet, skipping conversion")
+            logger.info(
+                "Column requires_photo_verification doesn't exist yet, skipping conversion")
             conn.commit()
             return
 
         col_type = columns["requires_photo_verification"].upper()
 
         if col_type == "INTEGER":
-            logger.info("Column requires_photo_verification is already INTEGER, skipping")
+            logger.info(
+                "Column requires_photo_verification is already INTEGER, skipping")
             conn.commit()
             return
 
@@ -52,14 +55,16 @@ def run_v1_5_migration(conn):
 
         # Step 3 & 4: SQLite doesn't support DROP COLUMN in older versions,
         # but Python 3.12 ships with SQLite 3.41+ which does support it.
-        conn.execute(text("ALTER TABLE tasks DROP COLUMN requires_photo_verification"))
+        conn.execute(
+            text("ALTER TABLE tasks DROP COLUMN requires_photo_verification"))
         conn.execute(text(
             "ALTER TABLE tasks RENAME COLUMN requires_photo_verification_new "
             "TO requires_photo_verification"
         ))
 
         conn.commit()
-        logger.info("✓ Converted requires_photo_verification from TEXT to INTEGER")
+        logger.info(
+            "✓ Converted requires_photo_verification from TEXT to INTEGER")
 
     except Exception as e:
         logger.error(f"v1.5 migration error: {e}")

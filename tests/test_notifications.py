@@ -1,4 +1,6 @@
 from backend import crud, schemas
+from backend.notifications_service import send_email_background
+from fastapi import BackgroundTasks
 
 
 def test_create_notification(db_session, admin_user):
@@ -50,7 +52,8 @@ def test_mark_read_api(client, admin_user, db_session):
     )
 
     # Mark as read
-    response = client.post(f"/notifications/{notif.id}/read?user_id={admin_user.id}")
+    response = client.post(
+        f"/notifications/{notif.id}/read?user_id={admin_user.id}")
     assert response.status_code == 200
     assert response.json()["read"] == 1
 
@@ -86,5 +89,31 @@ def test_mark_all_read_api(client, admin_user, db_session):
     assert response.json() is True
 
     # Verify
-    unreads = crud.get_user_notifications(db_session, admin_user.id, unread_only=True)
+    unreads = crud.get_user_notifications(
+        db_session, admin_user.id, unread_only=True)
     assert len(unreads) == 0
+
+
+def test_get_notifiable_admins(db_session, admin_user):
+    # Admin starts without email
+    assert admin_user.email is None
+    admins = crud.get_notifiable_admins(db_session)
+    assert len(admins) == 0
+
+    # Add email and enable notifications
+    crud.update_user(db_session, admin_user.id, schemas.UserUpdate(
+        email="admin@example.com", notifications_enabled=True))
+    admins = crud.get_notifiable_admins(db_session)
+    assert len(admins) == 1
+    assert admins[0].email == "admin@example.com"
+
+
+def test_send_email_background():
+    # Test the BackgroundTasks wrapper queues the function correctly
+    bg_tasks = BackgroundTasks()
+    send_email_background(bg_tasks, "test@example.com", "Subject", "Body")
+
+    assert len(bg_tasks.tasks) == 1
+    task_queued = bg_tasks.tasks[0]
+    assert task_queued.func.__name__ == "send_email_sync"
+    assert task_queued.args == ("test@example.com", "Subject", "Body")

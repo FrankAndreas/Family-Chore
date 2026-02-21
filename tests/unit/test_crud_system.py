@@ -5,7 +5,8 @@ from backend import crud, models
 
 def test_system_settings_cycle(db_session):
     # 1. Set new setting
-    s = crud.set_system_setting(db_session, "theme", "dark", "Theme preference")
+    s = crud.set_system_setting(
+        db_session, "theme", "dark", "Theme preference")
     assert s.key == "theme"
     assert s.value == "dark"
     assert s.description == "Theme preference"
@@ -44,7 +45,8 @@ def test_daily_reset_logic(db_session, seeded_db):
 
     # 2. Perform reset
     # We need a task to verify it actually does something
-    role = seeded_db.query(models.Role).filter(models.Role.name == "Contributor").first()
+    role = seeded_db.query(models.Role).filter(
+        models.Role.name == "Contributor").first()
     task = models.Task(name="Daily", description="D", base_points=10,
                        schedule_type="daily", default_due_time="12:00", assigned_role_id=role.id)
     seeded_db.add(task)

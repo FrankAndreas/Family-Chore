@@ -351,3 +351,17 @@ This file captures accumulated knowledge from development sessions. The Libraria
 
 ### Gotchas
 - **State Initialization**: In React, initializing a number input state to `''` instead of `0` or `undefined` can cause TypeScript union errors (`SetStateAction<number>`). Explicitly typing `useState<number | ''>('')` prevents coercion issues when the input is cleared by the user.
+
+---
+
+## 📅 2026-02-21: Email Notifications & Background Tasks
+
+### What We Learned
+- **FastAPI BackgroundTasks**: Using `BackgroundTasks` is an extremely lightweight and effective way to handle async operations like sending emails without blocking the HTTP response. However, they only execute *after* the endpoint completes, so if you are calling the logic from a cron job (outside a request context), you must pass a mock `BackgroundTasks` or handle execution manually.
+- **Email Development Fallbacks**: In local dev environments without a configured SMTP server, dumping email payloads to the terminal via `logger.info` is a vital fallback to prevent crashes and allow QA verification.
+
+### Patterns Discovered
+- **Explicit Joins**: When writing complex SQLAlchemy queries involving multiple related tables (e.g., `User` -> `TaskInstance` -> `Task`), using explicit `join(models.Target, condition)` is significantly more reliable than implicit joins (`join(Target)`) which can sometimes yield ambiguous ORM issues or unexpected row multiplications.
+
+### Gotchas
+- **Test Database Migrations**: When adding new columns to models (like `email` to `User`), persistent unmigrated test databases will fail with `sqlite3.OperationalError` (missing column). Tests should prefer completely in-memory `sqlite:///:memory:` databases constructed cleanly via `Base.metadata.create_all` before every run to avoid state contamination.

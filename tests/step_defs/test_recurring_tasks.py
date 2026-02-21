@@ -21,7 +21,8 @@ def system_initialized(seeded_db):
 def user_exists(seeded_db, client, context, nickname, role_name):
     """Create a user with specific role."""
     # Get role
-    role = seeded_db.query(models.Role).filter(models.Role.name == role_name).first()
+    role = seeded_db.query(models.Role).filter(
+        models.Role.name == role_name).first()
     assert role is not None, f"Role {role_name} not found"
 
     # Create user
@@ -39,7 +40,8 @@ def user_exists(seeded_db, client, context, nickname, role_name):
 @given(parsers.parse('a recurring task exists:\n{task_table}'))
 def recurring_task_exists(seeded_db, client, task_table, context):
     """Create a recurring task from table data."""
-    lines = [line.strip() for line in task_table.strip().split('\n') if line.strip()]
+    lines = [line.strip()
+             for line in task_table.strip().split('\n') if line.strip()]
     data_line = lines[1] if len(lines) > 1 else lines[0]
     parts = [p.strip() for p in data_line.split('|') if p.strip()]
 
@@ -51,7 +53,8 @@ def recurring_task_exists(seeded_db, client, task_table, context):
     max_days = int(parts[5])
 
     # Get role ID
-    role = seeded_db.query(models.Role).filter(models.Role.name == role_name).first()
+    role = seeded_db.query(models.Role).filter(
+        models.Role.name == role_name).first()
 
     response = client.post("/tasks/", json={
         "name": name,
@@ -72,7 +75,8 @@ def recurring_task_exists(seeded_db, client, task_table, context):
 @given(parsers.parse('a recurring task exists for all family members:\n{task_table}'))
 def recurring_task_for_all(client, task_table, context):
     """Create a recurring task for all family members."""
-    lines = [line.strip() for line in task_table.strip().split('\n') if line.strip()]
+    lines = [line.strip()
+             for line in task_table.strip().split('\n') if line.strip()]
     data_line = lines[1] if len(lines) > 1 else lines[0]
     parts = [p.strip() for p in data_line.split('|') if p.strip()]
 
@@ -130,7 +134,8 @@ def user_completed_task(seeded_db, client, context, nickname, task_name):
     task_instance = None
     for t in tasks:
         # Find the task by name
-        task = seeded_db.query(models.Task).filter(models.Task.id == t['task_id']).first()
+        task = seeded_db.query(models.Task).filter(
+            models.Task.id == t['task_id']).first()
         if task.name == task_name:
             task_instance = t
             break
@@ -148,7 +153,8 @@ def user_completed_task(seeded_db, client, context, nickname, task_name):
 @when(parsers.parse('I create a recurring task with:\n{task_table}'))
 def create_recurring_task(seeded_db, client, task_table, context):
     """Create a recurring task from table data."""
-    lines = [line.strip() for line in task_table.strip().split('\n') if line.strip()]
+    lines = [line.strip()
+             for line in task_table.strip().split('\n') if line.strip()]
     data_line = lines[1] if len(lines) > 1 else lines[0]
     parts = [p.strip() for p in data_line.split('|') if p.strip()]
 
@@ -160,7 +166,8 @@ def create_recurring_task(seeded_db, client, task_table, context):
     max_days = int(parts[5]) if len(parts) > 5 and parts[5].isdigit() else None
 
     # Get role ID
-    role = seeded_db.query(models.Role).filter(models.Role.name == role_name).first()
+    role = seeded_db.query(models.Role).filter(
+        models.Role.name == role_name).first()
 
     response = client.post("/tasks/", json={
         "name": name,
@@ -181,7 +188,8 @@ def create_recurring_task(seeded_db, client, task_table, context):
 @when(parsers.parse('I create a recurring task missing max_days:\n{task_table}'))
 def create_recurring_task_missing_max(seeded_db, client, task_table, context):
     """Create a recurring task with missing max_days."""
-    lines = [line.strip() for line in task_table.strip().split('\n') if line.strip()]
+    lines = [line.strip()
+             for line in task_table.strip().split('\n') if line.strip()]
     data_line = lines[1] if len(lines) > 1 else lines[0]
     parts = [p.strip() for p in data_line.split('|') if p.strip()]
 
@@ -191,7 +199,8 @@ def create_recurring_task_missing_max(seeded_db, client, task_table, context):
     role_name = parts[3]
     min_days = int(parts[4]) if len(parts) > 4 else None
 
-    role = seeded_db.query(models.Role).filter(models.Role.name == role_name).first()
+    role = seeded_db.query(models.Role).filter(
+        models.Role.name == role_name).first()
 
     response = client.post("/tasks/", json={
         "name": name,
@@ -241,7 +250,8 @@ def complete_task_by_name(seeded_db, client, context, nickname, task_name):
 
     task_instance = None
     for t in tasks:
-        task = seeded_db.query(models.Task).filter(models.Task.id == t['task_id']).first()
+        task = seeded_db.query(models.Task).filter(
+            models.Task.id == t['task_id']).first()
         if task.name == task_name:
             task_instance = t
             break
@@ -265,7 +275,8 @@ def advance_time_and_reset(seeded_db, client, context, days):
 
         if instance and instance.completed_at:
             # Move completion time back by the specified days
-            instance.completed_at = instance.completed_at - timedelta(days=days)
+            instance.completed_at = instance.completed_at - \
+                timedelta(days=days)
             seeded_db.commit()
 
     # Trigger daily reset
@@ -334,4 +345,5 @@ def task_instance_completed(context):
 def task_creation_fails(context):
     """Verify task creation failed with validation error."""
     assert 'task_response' in context
-    assert context['task_response'].status_code in [400, 422]  # Bad request or validation error
+    assert context['task_response'].status_code in [
+        400, 422]  # Bad request or validation error

@@ -6,17 +6,22 @@ from backend import crud, models, schemas
 @pytest.fixture
 def reward_setup(db_session, seeded_db):
     # Create test users with different roles
-    teen_role = db_session.query(models.Role).filter(models.Role.name == "Teenager").first()
-    child_role = db_session.query(models.Role).filter(models.Role.name == "Child").first()
+    teen_role = db_session.query(models.Role).filter(
+        models.Role.name == "Teenager").first()
+    child_role = db_session.query(models.Role).filter(
+        models.Role.name == "Child").first()
 
-    teen = models.User(nickname="TeenUser", login_pin="1111", role_id=teen_role.id, current_points=1000)
-    child = models.User(nickname="ChildUser", login_pin="2222", role_id=child_role.id, current_points=50)
+    teen = models.User(nickname="TeenUser", login_pin="1111",
+                       role_id=teen_role.id, current_points=1000)
+    child = models.User(nickname="ChildUser", login_pin="2222",
+                        role_id=child_role.id, current_points=50)
 
     db_session.add(teen)
     db_session.add(child)
 
     # Create test rewards
-    reward1 = models.Reward(name="Pizza Night", cost_points=500, description="Yum")
+    reward1 = models.Reward(
+        name="Pizza Night", cost_points=500, description="Yum")
     reward2 = models.Reward(name="Toy", cost_points=100, description="Fun")
 
     db_session.add(reward1)
@@ -172,7 +177,8 @@ def test_redeem_reward_split_validation(db_session, reward_setup):
         {"user_id": teen.id, "points": 50},
         {"user_id": child.id, "points": 10}
     ]
-    result = crud.redeem_reward_split(db_session, reward.id, contributions_bad_sum)
+    result = crud.redeem_reward_split(
+        db_session, reward.id, contributions_bad_sum)
     assert result["success"] is False
     assert "does not equal reward cost" in result["error"]
 
@@ -182,7 +188,8 @@ def test_redeem_reward_split_validation(db_session, reward_setup):
         {"user_id": teen.id, "points": 40},
         {"user_id": child.id, "points": 60}
     ]
-    result = crud.redeem_reward_split(db_session, reward.id, contributions_too_poor)
+    result = crud.redeem_reward_split(
+        db_session, reward.id, contributions_too_poor)
     assert result["success"] is False
     assert "has only 50 pts" in result["error"]
 
@@ -190,7 +197,8 @@ def test_redeem_reward_split_validation(db_session, reward_setup):
     contributions_bad_user = [
         {"user_id": 9999, "points": 100}
     ]
-    result = crud.redeem_reward_split(db_session, reward.id, contributions_bad_user)
+    result = crud.redeem_reward_split(
+        db_session, reward.id, contributions_bad_user)
     assert result["success"] is False
     assert "User 9999 not found" in result["error"]
 

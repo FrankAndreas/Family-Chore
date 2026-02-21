@@ -7,7 +7,8 @@ from backend import crud, models, schemas
 @pytest.fixture
 def task_setup(db_session, seeded_db):
     # Create a user
-    role = db_session.query(models.Role).filter(models.Role.name == "Contributor").first()
+    role = db_session.query(models.Role).filter(
+        models.Role.name == "Contributor").first()
     user = models.User(nickname="TaskUser", login_pin="1234", role_id=role.id)
     db_session.add(user)
     db_session.commit()
@@ -72,10 +73,12 @@ def test_delete_task(db_session, task_setup):
     assert result is True
 
     # Verify task is gone
-    assert db_session.query(models.Task).filter(models.Task.id == task.id).first() is None
+    assert db_session.query(models.Task).filter(
+        models.Task.id == task.id).first() is None
 
     # Verify instance is gone (cascade)
-    assert db_session.query(models.TaskInstance).filter(models.TaskInstance.id == instance_id).first() is None
+    assert db_session.query(models.TaskInstance).filter(
+        models.TaskInstance.id == instance_id).first() is None
 
 
 def test_delete_task_not_found(db_session):
@@ -99,7 +102,8 @@ def test_generate_instances_weekly_wrong_day(db_session, task_setup):
     # verify creating the task triggered generation (which should return 0)
     # create_task calls generate_instances_for_task internally
 
-    instances = db_session.query(models.TaskInstance).filter(models.TaskInstance.task_id == task.id).all()
+    instances = db_session.query(models.TaskInstance).filter(
+        models.TaskInstance.task_id == task.id).all()
     assert len(instances) == 0
 
 
@@ -118,7 +122,8 @@ def test_generate_instances_weekly_correct_day(db_session, task_setup):
     # This should generate an instance
     task = crud.create_task(db_session, task_data)
 
-    instances = db_session.query(models.TaskInstance).filter(models.TaskInstance.task_id == task.id).all()
+    instances = db_session.query(models.TaskInstance).filter(
+        models.TaskInstance.task_id == task.id).all()
     assert len(instances) == 1
     assert instances[0].user_id == task_setup["user"].id
 
@@ -174,7 +179,8 @@ def test_get_all_pending_tasks(db_session, task_setup):
     ))
 
     pending = crud.get_all_pending_tasks(db_session)
-    assert len(pending) >= 1  # At least the one we just created (plus maybe setup ones)
+    # At least the one we just created (plus maybe setup ones)
+    assert len(pending) >= 1
 
     # Mark one as completed
     t = pending[0]

@@ -19,7 +19,8 @@ def add_recurrence_fields():
     with engine.connect() as conn:
         try:
             # Add recurrence_min_days column
-            conn.execute(text("ALTER TABLE tasks ADD COLUMN recurrence_min_days INTEGER"))
+            conn.execute(
+                text("ALTER TABLE tasks ADD COLUMN recurrence_min_days INTEGER"))
             print("✓ Added recurrence_min_days column")
         except Exception as e:
             if "duplicate column name" in str(e).lower():
@@ -29,7 +30,8 @@ def add_recurrence_fields():
 
         try:
             # Add recurrence_max_days column
-            conn.execute(text("ALTER TABLE tasks ADD COLUMN recurrence_max_days INTEGER"))
+            conn.execute(
+                text("ALTER TABLE tasks ADD COLUMN recurrence_max_days INTEGER"))
             print("✓ Added recurrence_max_days column")
         except Exception as e:
             if "duplicate column name" in str(e).lower():

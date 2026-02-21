@@ -18,7 +18,8 @@ def seed_data():
         ]
 
         for role_data in roles:
-            existing_role = db.query(Role).filter(Role.name == role_data["name"]).first()
+            existing_role = db.query(Role).filter(
+                Role.name == role_data["name"]).first()
             if not existing_role:
                 logger.info(f"Creating role: {role_data['name']}")
                 new_role = Role(**role_data)
@@ -31,7 +32,8 @@ def seed_data():
         # 2. Seed Admin User
         admin_role = db.query(Role).filter(Role.name == "Admin").first()
         if admin_role:
-            existing_user = db.query(User).filter(User.nickname == "Admin").first()
+            existing_user = db.query(User).filter(
+                User.nickname == "Admin").first()
             if not existing_user:
                 logger.info("Creating default Admin user...")
                 admin_user = User(

@@ -8,7 +8,8 @@ from backend.database import engine
 def update_transactions_schema():
     with engine.connect() as conn:
         try:
-            conn.execute(text("ALTER TABLE transactions ADD COLUMN description TEXT"))
+            conn.execute(
+                text("ALTER TABLE transactions ADD COLUMN description TEXT"))
             print("✓ Added description column")
         except Exception as e:
             if "duplicate column name" in str(e).lower():

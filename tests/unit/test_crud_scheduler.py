@@ -7,7 +7,8 @@ from backend import crud, models
 @pytest.fixture
 def scheduler_setup(db_session, seeded_db):
     # Users
-    role = db_session.query(models.Role).filter(models.Role.name == "Contributor").first()
+    role = db_session.query(models.Role).filter(
+        models.Role.name == "Contributor").first()
     u1 = models.User(nickname="U1", login_pin="0000", role_id=role.id)
     u2 = models.User(nickname="U2", login_pin="0000", role_id=role.id)
     db_session.add_all([u1, u2])

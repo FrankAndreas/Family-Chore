@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
@@ -17,6 +17,7 @@ from .database import engine, get_db, SessionLocal
 from .routers import analytics, notifications
 from .migrations.manager import MigrationManager
 from .backup import BackupManager
+from .notifications_service import send_email_background
 
 
 # Initialize Tables
@@ -46,7 +47,8 @@ class EventBroadcaster:
         message = {"type": event_type, "data": data}
         for queue in self.clients:
             await queue.put(message)
-        logger.info(f"SSE broadcast: {event_type} to {len(self.clients)} clients")
+        logger.info(
+            f"SSE broadcast: {event_type} to {len(self.clients)} clients")
 
 
 broadcaster = EventBroadcaster()
@@ -63,7 +65,34 @@ def scheduled_daily_reset():
         db = SessionLocal()
         count = crud.perform_daily_reset_if_needed(db)
         if count > 0:
-            logger.info(f"Midnight scheduler: Generated {count} task instances")
+            logger.info(
+                f"Midnight scheduler: Generated {count} task instances")
+            # Create a mock BackgroundTasks for the scheduler
+            bg_tasks = BackgroundTasks()
+            users_to_notify = crud.get_users_with_pending_daily_tasks(db)
+            notified_count = 0
+            for user in users_to_notify:
+                if user.email:
+                    send_email_background(
+                        bg_tasks,
+                        user.email,
+                        "Your Daily Chores Await!",
+                        f"Hi {user.nickname},\n\n"
+                        "You have uncompleted daily chores waiting for you. Let's get them done!"
+                    )
+                    notified_count += 1
+
+            # Since scheduler runs outside a request, we must await bg_tasks manually or run sync
+            # To be safe, let's just run them directly in a small event loop or use the sync version
+            # Because BackgroundTasks is meant for FastAPI endpoints, we can just run the sync version here
+            # But BackgroundTasks just stores functions and their args. Let's run them.
+            if notified_count > 0:
+                logger.info(
+                    f"Midnight scheduler: Queued {notified_count} reminder emails.")
+                # Execute the queued tasks synchronously (this is running in a scheduler thread anyway)
+                for task in bg_tasks.tasks:
+                    task.func(*task.args, **task.kwargs)
+
         else:
             logger.info("Midnight scheduler: No new instances needed")
         db.close()
@@ -109,7 +138,8 @@ async def lifespan(app: FastAPI):
         if count > 0:
             logger.info(f"Startup: Generated {count} task instances for today")
         else:
-            logger.info("Startup: Daily reset already performed today, skipping")
+            logger.info(
+                "Startup: Daily reset already performed today, skipping")
         db.close()
     except Exception as e:
         logger.error(f"Failed to generate daily instances on startup: {e}")
@@ -123,7 +153,8 @@ async def lifespan(app: FastAPI):
             timezone_str = setting.value
         else:
             # Create default if not exists
-            crud.set_system_setting(db, "default_timezone", timezone_str, "System-wide timezone for scheduler")
+            crud.set_system_setting(
+                db, "default_timezone", timezone_str, "System-wide timezone for scheduler")
         db.close()
     except Exception as e:
         logger.error(f"Failed to fetch timezone setting: {e}")
@@ -134,7 +165,8 @@ async def lifespan(app: FastAPI):
     # Start the midnight scheduler
     scheduler.add_job(
         scheduled_daily_reset,
-        trigger=CronTrigger(hour=0, minute=0, timezone=timezone_str),  # Run at midnight local time
+        # Run at midnight local time
+        trigger=CronTrigger(hour=0, minute=0, timezone=timezone_str),
         id="daily_reset_job",
         replace_existing=True
     )
@@ -148,7 +180,8 @@ async def lifespan(app: FastAPI):
     )
 
     scheduler.start()
-    logger.info("Midnight scheduler started - daily reset will run at 00:00, backups at 02:00")
+    logger.info(
+        "Midnight scheduler started - daily reset will run at 00:00, backups at 02:00")
 
     yield  # Application runs here
 
@@ -240,7 +273,8 @@ def read_root():
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db_user = crud.get_user_by_nickname(db, nickname=user.nickname)
     if db_user:
-        raise HTTPException(status_code=400, detail="Nickname already registered")
+        raise HTTPException(
+            status_code=400, detail="Nickname already registered")
     return crud.create_user(db=db, user=user)
 
 
@@ -250,24 +284,37 @@ def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return users
 
 
+@app.put("/users/{user_id}", response_model=schemas.User)
+def update_user(user_id: int, user_update: schemas.UserUpdate, db: Session = Depends(get_db)):
+    """Update user settings (e.g. email, notifications_enabled)."""
+    user = crud.update_user(db, user_id=user_id, user_update=user_update)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+
 @app.post("/login/", response_model=schemas.User)
 def login(user_credentials: schemas.UserLogin, db: Session = Depends(get_db)):
     logger.info(f"Login attempt for user: {user_credentials.nickname}")
     user = crud.get_user_by_nickname(db, nickname=user_credentials.nickname)
     if not user:
-        logger.warning(f"Login failed - user not found: {user_credentials.nickname}")
+        logger.warning(
+            f"Login failed - user not found: {user_credentials.nickname}")
         raise HTTPException(status_code=404, detail="User not found")
     if user.login_pin != user_credentials.login_pin:
-        logger.warning(f"Login failed - incorrect PIN for user: {user_credentials.nickname}")
+        logger.warning(
+            f"Login failed - incorrect PIN for user: {user_credentials.nickname}")
         raise HTTPException(status_code=401, detail="Incorrect PIN")
-    logger.info(f"Login successful for user: {user_credentials.nickname} (ID: {user.id})")
+    logger.info(
+        f"Login successful for user: {user_credentials.nickname} (ID: {user.id})")
     return user
 
 
 @app.post("/users/{user_id}/penalize")
 async def penalize_user(user_id: int, penalty: schemas.PenaltyRequest, db: Session = Depends(get_db)):
     """Admin endpoint to deduct points from a user."""
-    logger.info(f"Penalizing user {user_id} for {penalty.points} points: {penalty.reason}")
+    logger.info(
+        f"Penalizing user {user_id} for {penalty.points} points: {penalty.reason}")
     result = crud.apply_penalty(db, user_id=user_id, penalty=penalty)
 
     if not result["success"]:
@@ -299,16 +346,21 @@ async def penalize_user(user_id: int, penalty: schemas.PenaltyRequest, db: Sessi
 @app.post("/roles/", response_model=schemas.Role)
 def create_role(role: schemas.RoleCreate, db: Session = Depends(get_db)):
     """Create a new role."""
-    logger.info(f"Creating role: {role.name} with multiplier {role.multiplier_value}")
+    logger.info(
+        f"Creating role: {role.name} with multiplier {role.multiplier_value}")
     # Check if role name already exists
-    existing = db.query(models.Role).filter(models.Role.name == role.name).first()
+    existing = db.query(models.Role).filter(
+        models.Role.name == role.name).first()
     if existing:
-        raise HTTPException(status_code=400, detail="Role with this name already exists")
+        raise HTTPException(
+            status_code=400, detail="Role with this name already exists")
 
     if role.multiplier_value < 0.1:
-        raise HTTPException(status_code=400, detail="Multiplier must be >= 0.1")
+        raise HTTPException(
+            status_code=400, detail="Multiplier must be >= 0.1")
 
-    db_role = models.Role(name=role.name, multiplier_value=role.multiplier_value)
+    db_role = models.Role(
+        name=role.name, multiplier_value=role.multiplier_value)
     db.add(db_role)
     db.commit()
     db.refresh(db_role)
@@ -337,7 +389,8 @@ def update_role(role_id: int, role_update: schemas.RoleUpdate, db: Session = Dep
 
     # Validation (AC 2.4)
     if role_update.multiplier_value < 0.1:
-        raise HTTPException(status_code=400, detail="Multiplier must be >= 0.1")
+        raise HTTPException(
+            status_code=400, detail="Multiplier must be >= 0.1")
 
     return crud.update_role_multiplier(db, role_id=role_id, multiplier=role_update.multiplier_value)
 
@@ -345,14 +398,16 @@ def update_role(role_id: int, role_update: schemas.RoleUpdate, db: Session = Dep
 @app.delete("/roles/{role_id}")
 def delete_role(role_id: int, reassign_to_role_id: int = None, db: Session = Depends(get_db)):
     """Delete a role. If users are assigned, reassign_to_role_id must be provided."""
-    logger.info(f"Deleting role: {role_id}, reassign to: {reassign_to_role_id}")
+    logger.info(
+        f"Deleting role: {role_id}, reassign to: {reassign_to_role_id}")
 
     db_role = crud.get_role(db, role_id=role_id)
     if not db_role:
         raise HTTPException(status_code=404, detail="Role not found")
 
     # Check if users are assigned to this role
-    users_with_role = db.query(models.User).filter(models.User.role_id == role_id).all()
+    users_with_role = db.query(models.User).filter(
+        models.User.role_id == role_id).all()
 
     if users_with_role:
         if not reassign_to_role_id:
@@ -364,16 +419,19 @@ def delete_role(role_id: int, reassign_to_role_id: int = None, db: Session = Dep
         # Validate target role exists
         target_role = crud.get_role(db, role_id=reassign_to_role_id)
         if not target_role:
-            raise HTTPException(status_code=400, detail="Target role for reassignment not found")
+            raise HTTPException(
+                status_code=400, detail="Target role for reassignment not found")
 
         # Reassign all users
         for user in users_with_role:
             user.role_id = reassign_to_role_id
         db.commit()
-        logger.info(f"Reassigned {len(users_with_role)} users from role {role_id} to {reassign_to_role_id}")
+        logger.info(
+            f"Reassigned {len(users_with_role)} users from role {role_id} to {reassign_to_role_id}")
 
     # Also update tasks assigned to this role
-    tasks_with_role = db.query(models.Task).filter(models.Task.assigned_role_id == role_id).all()
+    tasks_with_role = db.query(models.Task).filter(
+        models.Task.assigned_role_id == role_id).all()
     for task in tasks_with_role:
         task.assigned_role_id = None  # Set to "All Family Members"
     db.commit()
@@ -394,9 +452,11 @@ def delete_role(role_id: int, reassign_to_role_id: int = None, db: Session = Dep
 
 @app.post("/tasks/", response_model=schemas.Task)
 async def create_task(task: schemas.TaskCreate, db: Session = Depends(get_db)):
-    logger.info(f"Creating task: {task.name} with {task.base_points} base points")
+    logger.info(
+        f"Creating task: {task.name} with {task.base_points} base points")
     created_task = crud.create_task(db=db, task=task)
-    logger.info(f"Task created successfully: {created_task.name} (ID: {created_task.id})")
+    logger.info(
+        f"Task created successfully: {created_task.name} (ID: {created_task.id})")
 
     # Broadcast SSE event for real-time updates
     await broadcaster.broadcast("task_created", {"task_id": created_task.id, "name": created_task.name})
@@ -414,11 +474,13 @@ def read_tasks(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
 def update_task(task_id: int, task_update: schemas.TaskUpdate, db: Session = Depends(get_db)):
     """Update an existing task."""
     logger.info(f"Updating task: {task_id}")
-    updated_task = crud.update_task(db, task_id=task_id, task_update=task_update)
+    updated_task = crud.update_task(
+        db, task_id=task_id, task_update=task_update)
     if not updated_task:
         logger.error(f"Task not found: {task_id}")
         raise HTTPException(status_code=404, detail="Task not found")
-    logger.info(f"Task updated successfully: {updated_task.name} (ID: {updated_task.id})")
+    logger.info(
+        f"Task updated successfully: {updated_task.name} (ID: {updated_task.id})")
     return updated_task
 
 
@@ -453,7 +515,8 @@ def export_tasks(db: Session = Depends(get_db)):
             name=task.name,
             description=task.description,
             base_points=task.base_points,
-            assigned_role=roles.get(task.assigned_role_id) if task.assigned_role_id else None,
+            assigned_role=roles.get(
+                task.assigned_role_id) if task.assigned_role_id else None,
             schedule_type=task.schedule_type,
             default_due_time=task.default_due_time,
             recurrence_min_days=task.recurrence_min_days,
@@ -483,7 +546,8 @@ async def import_tasks(import_data: schemas.TasksImport, db: Session = Depends(g
         "teenager": "teenager",  # Same
         "mitwirkender": "contributor",
         "administrator": "admin",
-        "elternteil": "admin",  # Map Parent/Elternteil to Admin or specific role if exists? Seed data has Admin.
+        # Map Parent/Elternteil to Admin or specific role if exists? Seed data has Admin.
+        "elternteil": "admin",
         "partner": "contributor",  # Default assumption
     }
 
@@ -515,7 +579,8 @@ async def import_tasks(import_data: schemas.TasksImport, db: Session = Depends(g
             if task_item.assigned_role:
                 role_name_lower = task_item.assigned_role.lower()
                 if role_name_lower not in roles:
-                    errors.append(f"Task '{task_item.name}': Unknown role '{task_item.assigned_role}'")
+                    errors.append(
+                        f"Task '{task_item.name}': Unknown role '{task_item.assigned_role}'")
                     continue
                 assigned_role_id = roles[role_name_lower]
 
@@ -533,7 +598,8 @@ async def import_tasks(import_data: schemas.TasksImport, db: Session = Depends(g
             )
             new_task = crud.create_task(db=db, task=task_create)
             created.append(new_task.name)
-            existing_names.add(task_item.name.lower())  # Prevent duplicates within import
+            # Prevent duplicates within import
+            existing_names.add(task_item.name.lower())
             logger.info(f"Imported task: {new_task.name} (ID: {new_task.id})")
 
         except Exception as e:
@@ -543,7 +609,8 @@ async def import_tasks(import_data: schemas.TasksImport, db: Session = Depends(g
     if created:
         await broadcaster.broadcast("tasks_imported", {"count": len(created)})
 
-    logger.info(f"Import complete: {len(created)} created, {len(skipped)} skipped, {len(errors)} errors")
+    logger.info(
+        f"Import complete: {len(created)} created, {len(skipped)} skipped, {len(errors)} errors")
 
     return {
         "success": len(errors) == 0,
@@ -555,11 +622,26 @@ async def import_tasks(import_data: schemas.TasksImport, db: Session = Depends(g
 
 
 @app.post("/daily-reset/")
-def trigger_daily_reset(db: Session = Depends(get_db)):
+def trigger_daily_reset(background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     logger.info("Triggering daily reset...")
     count = crud.generate_daily_instances(db)
-    logger.info(f"Daily reset complete. Created {count} task instances.")
-    return {"message": f"Daily reset complete. Created {count} task instances."}
+
+    # Send daily reminders via Email
+    users_to_notify = crud.get_users_with_pending_daily_tasks(db)
+    notified_count = 0
+    for user in users_to_notify:
+        if user.email:
+            send_email_background(
+                background_tasks,
+                to_email=str(user.email),
+                subject="Your Daily Chores Await!",
+                body=f"Hi {user.nickname},\n\nYou have uncompleted daily chores waiting for you. Let's get them done!"
+            )
+            notified_count += 1
+
+    logger.info(
+        f"Daily reset complete. Created {count} task instances. Queued {notified_count} emails.")
+    return {"message": f"Daily reset complete. Created {count} task instances. Queued {notified_count} emails."}
 
 
 @app.get("/tasks/daily/{user_id}", response_model=List[schemas.TaskInstance])
@@ -573,16 +655,24 @@ def read_all_pending_tasks(db: Session = Depends(get_db)):
 
 
 @app.post("/tasks/{instance_id}/complete", response_model=schemas.TaskInstance)
-async def complete_task(instance_id: int, actual_user_id: int = None, db: Session = Depends(get_db)):
-    logger.info(f"Attempting to complete task instance: {instance_id} (Claimed by user_id: {actual_user_id})")
+async def complete_task(
+    instance_id: int,
+    background_tasks: BackgroundTasks,
+    actual_user_id: int = None,
+    db: Session = Depends(get_db)
+):
+    logger.info(
+        f"Attempting to complete task instance: {instance_id} (Claimed by user_id: {actual_user_id})")
     try:
-        instance = crud.complete_task_instance(db, instance_id=instance_id, actual_user_id=actual_user_id)
+        instance = crud.complete_task_instance(
+            db, instance_id=instance_id, actual_user_id=actual_user_id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     if not instance:
         logger.error(f"Task instance not found: {instance_id}")
         raise HTTPException(status_code=404, detail="Task instance not found")
-    logger.info(f"Task completed successfully: instance {instance_id} by user {instance.user_id}")
+    logger.info(
+        f"Task completed successfully: instance {instance_id} by user {instance.user_id}")
 
     # Notify User if completed
     if instance.status == "COMPLETED":
@@ -599,6 +689,20 @@ async def complete_task(instance_id: int, actual_user_id: int = None, db: Sessio
             title="Task In Review",
             message=f"Your photo for '{instance.task.name}' is pending admin review."
         ))
+        # Send Email to Admins
+        admins = crud.get_notifiable_admins(db)
+        for admin in admins:
+            if admin.email:
+                send_email_background(
+                    background_tasks,
+                    to_email=str(admin.email),
+                    subject=f"Approval Required: {instance.task.name}",
+                    body=(
+                        f"Hi {admin.nickname},\n\n"
+                        f"A photo for the task '{instance.task.name}' has been uploaded by another "
+                        "user and requires your approval.\nPlease review it at the God Mode Family Dashboard."
+                    )
+                )
 
     # Broadcast SSE event for real-time updates
     await broadcaster.broadcast("task_completed", {"instance_id": instance_id, "user_id": instance.user_id})
@@ -611,7 +715,8 @@ async def complete_task(instance_id: int, actual_user_id: int = None, db: Sessio
 @app.post("/tasks/{instance_id}/upload-photo", response_model=schemas.TaskInstance)
 async def upload_task_photo(instance_id: int, body: schemas.PhotoUploadRequest, db: Session = Depends(get_db)):
     """Upload a photo URL for task verification."""
-    instance = db.query(models.TaskInstance).filter(models.TaskInstance.id == instance_id).first()
+    instance = db.query(models.TaskInstance).filter(
+        models.TaskInstance.id == instance_id).first()
     if not instance:
         raise HTTPException(status_code=404, detail="Task instance not found")
 
@@ -631,10 +736,13 @@ def get_review_queue(db: Session = Depends(get_db)):
 @app.post("/tasks/{instance_id}/review", response_model=schemas.TaskInstance)
 async def review_task(instance_id: int, review: schemas.TaskReviewRequest, db: Session = Depends(get_db)):
     """Admin endpoint to approve or reject a task."""
-    logger.info(f"Reviewing task instance {instance_id}: approved={review.is_approved}")
-    instance = crud.review_task_instance(db, instance_id=instance_id, review=review)
+    logger.info(
+        f"Reviewing task instance {instance_id}: approved={review.is_approved}")
+    instance = crud.review_task_instance(
+        db, instance_id=instance_id, review=review)
     if not instance:
-        raise HTTPException(status_code=404, detail="Task instance not found or not in review")
+        raise HTTPException(
+            status_code=404, detail="Task instance not found or not in review")
 
     # Real-time update
     await broadcaster.broadcast("task_reviewed", {
@@ -682,7 +790,8 @@ async def redeem_reward(reward_id: int, user_id: int, db: Session = Depends(get_
         logger.warning(f"Redemption failed: {result['error']}")
         raise HTTPException(status_code=400, detail=result["error"])
 
-    logger.info(f"Redemption successful: {result['reward_name']} for {result['points_spent']} points")
+    logger.info(
+        f"Redemption successful: {result['reward_name']} for {result['points_spent']} points")
 
     # Notify User
     crud.create_notification(db, schemas.NotificationCreate(
@@ -715,18 +824,22 @@ async def redeem_reward_split(
     Redeem a reward by pooling points from multiple users.
     Each contributing user gets their own transaction record.
     """
-    logger.info(f"Split redemption for reward {reward_id} with {len(request.contributions)} contributors")
+    logger.info(
+        f"Split redemption for reward {reward_id} with {len(request.contributions)} contributors")
 
     # Convert contributions to list of dicts
-    contributions = [{"user_id": c.user_id, "points": c.points} for c in request.contributions]
+    contributions = [{"user_id": c.user_id, "points": c.points}
+                     for c in request.contributions]
 
-    result = crud.redeem_reward_split(db, reward_id=reward_id, contributions=contributions)
+    result = crud.redeem_reward_split(
+        db, reward_id=reward_id, contributions=contributions)
 
     if not result["success"]:
         logger.warning(f"Split redemption failed: {result['error']}")
         raise HTTPException(status_code=400, detail=result["error"])
 
-    logger.info(f"Split redemption successful: {result['reward_name']} for {result['total_points']} points")
+    logger.info(
+        f"Split redemption successful: {result['reward_name']} for {result['total_points']} points")
 
     # Broadcast SSE event for real-time updates
     await broadcaster.broadcast("reward_redeemed", {
@@ -797,7 +910,8 @@ def get_default_language(db: Session = Depends(get_db)):
     setting = crud.get_system_setting(db, "default_language")
     if not setting:
         # Create default if not exists
-        setting = crud.set_system_setting(db, "default_language", "en", "Family default language")
+        setting = crud.set_system_setting(
+            db, "default_language", "en", "Family default language")
     return setting
 
 
@@ -808,7 +922,8 @@ def set_default_language(setting: schemas.SystemSettingsBase, db: Session = Depe
 
 @app.put("/users/{user_id}/language", response_model=schemas.User)
 def update_user_language(user_id: int, lang_update: schemas.UserLanguageUpdate, db: Session = Depends(get_db)):
-    user = crud.update_user_language(db, user_id=user_id, language=lang_update.preferred_language or "")
+    user = crud.update_user_language(
+        db, user_id=user_id, language=lang_update.preferred_language or "")
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user

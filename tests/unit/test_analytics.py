@@ -84,7 +84,8 @@ class TestAnalytics:
 
         # Verify counts
         today_str = datetime.now().date().strftime("%Y-%m-%d")
-        yesterday_str = (datetime.now().date() - timedelta(days=1)).strftime("%Y-%m-%d")
+        yesterday_str = (datetime.now().date() -
+                         timedelta(days=1)).strftime("%Y-%m-%d")
 
         found_today = False
         found_yesterday = False
