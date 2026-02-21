@@ -307,3 +307,17 @@ This file captures accumulated knowledge from development sessions. The Libraria
 
 ### Gotchas
 - **Pointer Events**: Setting `pointer-events: none` on an element (like a locked card) successfully blocks clicks but also kills hover effects. It's often better to leave events enabled and handle the "disabled" logic on the interactive elements inside (unless visually stripping the component is intended).
+
+---
+
+## 📅 2026-02-21: State Machines & Boolean Coercion
+
+### What We Learned
+- **Cross-Layer Boolean Handling**: Storing booleans as `Text` in SQLite (e.g. `'true'`, `'false'`, `'1'`, `'0'`) creates massive friction across the stack. Pydantic can often coerce these during parsing, but direct SQLAlchemy queries or backend logic that compares `if model.bool_field == "true"` will fail if Python evaluates `True` instead. Always normalize at the boundary: `str(val).lower() in ('true', '1')`.
+- **Review Queues**: For features requiring asynchronous human approval (e.g. Photo Verification), adding an explicit `IN_REVIEW` status to the TaskInstance state machine is far cleaner than adding orthogonal boolean flags (`is_pending_review = True`), keeping the core status enum as the single source of truth for the instance lifecycle.
+
+### Patterns Discovered
+- **Progressive Enhancement of Endpoints**: Instead of rewriting the main `complete_task` endpoint to handle file uploads directly, adding a separate `upload-photo` endpoint that acts as a prerequisite keeps the main logic generic and handles file size/transfer constraints better.
+
+### Gotchas
+- **Import/Export Validation**: If an optional/default field was missing in earlier JSON exports (like `requires_photo_verification`), importing old JSON dumps will crash Pydantic if default values are not correctly defined in the `TaskImportItem` schema. Never assume exported data perfectly perfectly matches current schemas.

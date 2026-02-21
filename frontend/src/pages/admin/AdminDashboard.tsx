@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getUsers, getTasks, triggerDailyReset, getAllTransactions } from '../../api';
-import type { User, Task, Transaction, TransactionFilters } from '../../types';
+import { getUsers, getTasks, triggerDailyReset, getAllTransactions, getReviewQueue, reviewTask } from '../../api';
+import type { User, Task, Transaction, TransactionFilters, TaskInstance } from '../../types';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import './Dashboard.css';
 
@@ -10,21 +10,25 @@ const AdminDashboard: React.FC = () => {
     const [users, setUsers] = useState<User[]>([]);
     const [tasks, setTasks] = useState<Task[]>([]);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [reviewQueue, setReviewQueue] = useState<TaskInstance[]>([]);
     const [loading, setLoading] = useState(true);
     const [resetting, setResetting] = useState(false);
+    const [reviewingId, setReviewingId] = useState<number | null>(null);
 
     const [filters, setFilters] = useState<TransactionFilters>({});
 
     const fetchData = useCallback(async () => {
         try {
-            const [usersRes, tasksRes, transactionsRes] = await Promise.all([
+            const [usersRes, tasksRes, transactionsRes, reviewRes] = await Promise.all([
                 getUsers(),
                 getTasks(),
-                getAllTransactions({ limit: 50, ...filters })
+                getAllTransactions({ limit: 50, ...filters }),
+                getReviewQueue()
             ]);
             setUsers(usersRes.data);
             setTasks(tasksRes.data);
             setTransactions(transactionsRes.data);
+            setReviewQueue(reviewRes.data);
         } catch (err) {
             console.error('Failed to fetch dashboard data', err);
         } finally {
@@ -46,6 +50,24 @@ const AdminDashboard: React.FC = () => {
             alert('Failed to trigger daily reset');
         } finally {
             setResetting(false);
+        }
+    };
+
+    const handleReview = async (instanceId: number, isApproved: boolean) => {
+        setReviewingId(instanceId);
+        try {
+            const rejectReason = isApproved ? undefined : window.prompt("Reason for rejection:");
+            if (!isApproved && rejectReason === null) {
+                return; // cancelled
+            }
+            await reviewTask(instanceId, isApproved, rejectReason || undefined);
+            alert(isApproved ? 'Task approved and points awarded!' : 'Task rejected.');
+            fetchData();
+        } catch (err) {
+            console.error('Failed to review task', err);
+            alert('Failed to submit review.');
+        } finally {
+            setReviewingId(null);
         }
     };
 
@@ -151,6 +173,45 @@ const AdminDashboard: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            {reviewQueue.length > 0 && (
+                <div className="section glass-panel full-width">
+                    <h2>📸 Review Queue</h2>
+                    <div className="tasks-list">
+                        {reviewQueue.map(instance => (
+                            <div key={instance.id} className="task-item-card">
+                                <div className="task-item-content">
+                                    <h3>{instance.task?.name || `Task #${instance.task_id}`}</h3>
+                                    <p className="task-description">Completed by: {getUserName(instance.user_id)}</p>
+                                    <div className="task-meta-info" style={{ marginTop: '10px' }}>
+                                        {instance.completion_photo_url && (
+                                            <a href={instance.completion_photo_url} target="_blank" rel="noopener noreferrer" className="btn btn-secondary">
+                                                View Photo 🖼️
+                                            </a>
+                                        )}
+                                    </div>
+                                </div>
+                                <div style={{ display: 'flex', gap: '10px' }}>
+                                    <button
+                                        className="btn btn-primary"
+                                        onClick={() => handleReview(instance.id, true)}
+                                        disabled={reviewingId === instance.id}
+                                    >
+                                        ✅ Approve
+                                    </button>
+                                    <button
+                                        className="btn btn-danger"
+                                        onClick={() => handleReview(instance.id, false)}
+                                        disabled={reviewingId === instance.id}
+                                    >
+                                        ❌ Reject
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             <div className="section glass-panel full-width">
                 <h2>📜 Global Activity Log</h2>

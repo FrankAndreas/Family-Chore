@@ -296,6 +296,17 @@ def complete_task_instance(db: Session, instance_id: int, actual_user_id: int = 
     user = instance.user
     role = user.role
 
+    # If the task requires a photo, check if the photo is uploaded
+    if str(task.requires_photo_verification).lower() in ("true", "1"):
+        if not instance.completion_photo_url:
+            return None  # Must upload photo first
+
+        # If photo is uploaded, set to IN_REVIEW, no points yet
+        instance.status = "IN_REVIEW"
+        db.commit()
+        db.refresh(instance)
+        return instance
+
     # 2. Gamification Polish: Streaks & Daily Bonus
     today_date = datetime.now().date()
     is_first_task_today = user.last_task_date != today_date
@@ -358,6 +369,99 @@ def complete_task_instance(db: Session, instance_id: int, actual_user_id: int = 
     db.commit()
     db.refresh(instance)
     return instance
+
+
+def review_task_instance(db: Session, instance_id: int, review: schemas.TaskReviewRequest):
+    """Admin endpoint to approve or reject a task."""
+    instance = db.query(models.TaskInstance).filter(models.TaskInstance.id == instance_id).first()
+    if not instance or instance.status != "IN_REVIEW":
+        return None
+
+    if not review.is_approved:
+        # Reject: Send back to pending, clear photo
+        instance.status = "PENDING"
+        instance.completion_photo_url = None
+        db.commit()
+        db.refresh(instance)
+
+        # Notify
+        create_notification(db, schemas.NotificationCreate(
+            user_id=int(instance.user_id),
+            type="SYSTEM",
+            title="Chore Rejected",
+            message=(
+                f"Your photo for '{instance.task.name}' was rejected. "
+                f"Reason: {review.reject_reason or 'No reason provided'}"
+            )
+        ))
+
+        return instance
+
+    # Approved: Award points.
+    task = instance.task
+    user = instance.user
+    role = user.role
+
+    # 2. Gamification Polish: Streaks & Daily Bonus
+    today_date = datetime.now().date()
+    is_first_task_today = user.last_task_date != today_date
+    daily_bonus = 5 if is_first_task_today else 0
+
+    if is_first_task_today:
+        if user.last_task_date == today_date - timedelta(days=1):
+            user.current_streak += 1
+        else:
+            user.current_streak = 1
+        user.last_task_date = today_date
+
+    streak_bonus = min(0.5, max(0, user.current_streak - 1) * 0.1)
+    effective_multiplier = role.multiplier_value + streak_bonus
+
+    base_points = task.base_points
+    awarded_points = int(base_points * effective_multiplier) + daily_bonus
+
+    instance.status = "COMPLETED"
+    instance.completed_at = datetime.utcnow()
+
+    desc = f"Completed task: {task.name}"
+    if daily_bonus > 0:
+        desc += f" (+{daily_bonus} Daily Bonus)"
+    if streak_bonus > 0.0:
+        desc += f" [Streak: {user.current_streak} days]"
+
+    transaction = models.Transaction(
+        user_id=user.id,
+        type="EARN",
+        base_points_value=base_points,
+        multiplier_used=effective_multiplier,
+        awarded_points=awarded_points,
+        description=desc,
+        reference_instance_id=instance.id,
+        timestamp=datetime.utcnow()
+    )
+    db.add(transaction)
+
+    user.current_points += awarded_points
+    user.lifetime_points += awarded_points
+
+    if task.schedule_type == "recurring":
+        other_instances = db.query(models.TaskInstance).filter(
+            models.TaskInstance.task_id == task.id,
+            models.TaskInstance.id != instance.id,
+            models.TaskInstance.status == "PENDING"
+        ).all()
+        for other in other_instances:
+            other.status = "COMPLETED"
+            other.completed_at = datetime.utcnow()
+
+    db.commit()
+    db.refresh(instance)
+    return instance
+
+
+def get_review_queue(db: Session):
+    """Get all tasks currently waiting for admin review."""
+    return db.query(models.TaskInstance).filter(models.TaskInstance.status == "IN_REVIEW").all()
 
 # --- Reward CRUD ---
 

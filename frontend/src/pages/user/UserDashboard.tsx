@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { getUserDailyTasks, completeTask, getTasks, getUserTransactions } from '../../api';
+import { getUserDailyTasks, completeTask, getTasks, getUserTransactions, uploadTaskPhoto } from '../../api';
 import type { TaskInstance, Task, User, Transaction, TransactionFilters } from '../../types';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import Toast from '../../components/Toast';
@@ -23,6 +23,7 @@ const UserDashboard: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'tasks' | 'history'>('tasks');
     const [completingId, setCompletingId] = useState<number | null>(null);
+    const [photoUrl, setPhotoUrl] = useState<string>('');
     const { toasts, removeToast, success, error: showError } = useToast();
 
     const [filters, setFilters] = useState<TransactionFilters>({});
@@ -46,7 +47,8 @@ const UserDashboard: React.FC = () => {
                     ...instance,
                     taskDetails: templates.find(t => t.id === instance.task_id)
                 }));
-                setTasks(instancesWithDetails);
+                // Only show PENDING or IN_REVIEW tasks on the dashboard actively
+                setTasks(instancesWithDetails.filter(t => t.status === 'PENDING' || t.status === 'IN_REVIEW'));
             } else if (activeTab === 'history') {
                 const transactionsRes = await getUserTransactions(currentUser.id, { limit: 50, ...filters });
                 setTransactions(transactionsRes.data);
@@ -65,11 +67,30 @@ const UserDashboard: React.FC = () => {
         }
     }, [fetchData, currentUser]);
 
-    const handleComplete = async (instanceId: number) => {
-        setCompletingId(instanceId);
+    const handleComplete = async (instance: TaskInstanceWithDetails) => {
+        setCompletingId(instance.id);
         try {
-            await completeTask(instanceId);
-            success('Task completed! Points awarded. 🎉');
+            const task = instance.taskDetails;
+            if (task?.requires_photo_verification && !photoUrl && instance.status !== 'IN_REVIEW') {
+                showError('Please provide a photo URL for this task.');
+                setCompletingId(null);
+                return;
+            }
+
+            if (task?.requires_photo_verification && photoUrl && instance.status !== 'IN_REVIEW') {
+                // First upload photo
+                // Then call complete Task (or we can just call upload photo and the backend does the rest? No, backend requires both right now, let's keep it simple and just do photo upload then complete, or change complete to accept photo)
+                // The backend `upload-photo` sets the URL. Then `completeTask` sets it to IN_REVIEW.
+                await uploadTaskPhoto(instance.id, photoUrl);
+            }
+
+            const res = await completeTask(instance.id);
+            if (res.data.status === 'IN_REVIEW') {
+                success('Task submitted for review! 📸');
+                setPhotoUrl(''); // clear
+            } else {
+                success('Task completed! Points awarded. 🎉');
+            }
             fetchData(); // Refresh list to show updated status
         } catch (err) {
             console.error('Failed to complete task', err);
@@ -85,7 +106,6 @@ const UserDashboard: React.FC = () => {
 
     if (!currentUser) return <LoadingSpinner fullPage message="Loading..." />;
 
-    const pendingTasks = tasks.filter(t => t.status === 'PENDING');
     // const completedTasks = tasks.filter(t => t.status === 'COMPLETED'); // Keep logic for now but unused
 
     return (
@@ -143,15 +163,16 @@ const UserDashboard: React.FC = () => {
                         <div className="dashboard-sections">
                             <div className="section glass-panel">
                                 <h2>📅 Today's To-Do</h2>
-                                {pendingTasks.length === 0 ? (
+                                {tasks.length === 0 ? (
                                     <div className="empty-state">
                                         <p>No pending tasks for today. Great job! 🌟</p>
                                     </div>
                                 ) : (
                                     <div className="tasks-list">
-                                        {pendingTasks.map(instance => {
+                                        {tasks.map(instance => {
                                             const task = instance.taskDetails;
                                             const calculatedPoints = task ? Math.round(task.base_points * currentUser.role.multiplier_value) : 0;
+                                            const isInReview = instance.status === 'IN_REVIEW';
                                             return (
                                                 <div key={instance.id} className="task-item-card">
                                                     <div className="task-item-content">
@@ -164,14 +185,34 @@ const UserDashboard: React.FC = () => {
                                                             <span className="points-earn">
                                                                 💰 {calculatedPoints} points
                                                             </span>
+                                                            {isInReview && (
+                                                                <span className="badge badge-warning" style={{ marginLeft: '10px' }}>
+                                                                    ⏳ In Review
+                                                                </span>
+                                                            )}
                                                         </div>
+                                                        {task?.requires_photo_verification && !isInReview && (
+                                                            <div className="photo-upload-section" style={{ marginTop: '10px' }}>
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="Enter Photo URL..."
+                                                                    value={completingId === instance.id ? photoUrl : ''}
+                                                                    onChange={(e) => setPhotoUrl(e.target.value)}
+                                                                    onFocus={() => setCompletingId(instance.id)}
+                                                                    defaultValue={undefined}
+                                                                    className="filter-input"
+                                                                    style={{ width: '100%' }}
+                                                                />
+                                                                <small>This task requires a photo verification.</small>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                     <button
-                                                        className="btn btn-primary"
-                                                        onClick={() => handleComplete(instance.id)}
-                                                        disabled={completingId === instance.id}
+                                                        className={`btn ${isInReview ? 'btn-secondary' : 'btn-primary'}`}
+                                                        onClick={() => handleComplete(instance)}
+                                                        disabled={completingId === instance.id || isInReview}
                                                     >
-                                                        {completingId === instance.id ? 'Completing...' : 'Mark Complete'}
+                                                        {completingId === instance.id ? 'Submitting...' : (isInReview ? 'Pending Admin Review' : 'Mark Complete')}
                                                     </button>
                                                 </div>
                                             );

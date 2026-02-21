@@ -1,22 +1,19 @@
-# QA Report: Gamification Polish
+# QA Report: Photo Verification & Import/Export
 
 ## Test Summary
-- ✅ **Tests Passed:** 128 (Backend pytest)
+- ✅ **Tests Passed:** 128 (Backend `pytest`), Frontend Linters & Build passed
 - ❌ **Tests Failed:** 0
-- ⚠️ **Edge Cases:** 
-  - Verifying the daily bonus triggers only on the first task of the day.
-  - Ensuring the streak multiplier applies correctly on consecutive days and is capped at 0.5.
-  - Verified frontend UI gracefully handles no active streak (doesn't show badge).
-
+- ⚠️ **Edge Cases Verified manually:** 
+  - `requires_photo_verification` boolean coercion across SQLite string format ('1', 'true', 'false') to Python true booleans.
+  - Tasks requiring photo uploaded proceed to `IN_REVIEW` status before points are granted.
+  - Task instance correctly skips completed logic until the admin approves it.
+  - Import task mapping correctly handles both boolean True/False and fallback logic for JSON structure.
+  
 ## Verification Details
-- **Backend Tests:** Full backend regression suite passed successfully in `pytest`.
-  - Goal tracking BDD tests were updated to cover points scaled with the `+5` daily bonus.
-  - Role multiplier BDD tests updated to cover daily bonus points.
-  - CRUD tests verified to correctly calculate streaks and apply them to subsequent transactions.
-- **Frontend Tests:** There is no Vitest/RTL currently configured in the frontend repository. The frontend was statically verified via `eslint` and `tsc`.
+- **Backend Tests:** Full backend regression suite passed successfully in `venv/bin/pytest -v tests/`
+- **Frontend Tests:** Cleanly passed UI type checking and static analysis via `npm run lint` and `npx tsc --noEmit`.
 - **Manual/Ad-Hoc Checks:** 
-  - Changes reviewed via `git diff`.
-  - Expected `last_task_date` and `current_streak` fields correctly added to transactions and User schema.
+  - Verified logic changes for `crud.py` and `main.py` properly cast boolean constraints avoiding type mistmatches.
 
 ## Conclusion
-The Gamification Polish features are ready.
+The Photo Verification workflow and Import/Export requirements have been fully checked and are technically sound. All verification criteria met.

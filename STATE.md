@@ -6,17 +6,17 @@
 ## 🧠 Global Context
 The project is a **Family Chore Gamification System** (Universal-GSD-Core). We are in the **Polishing & Verification** phase — refining UI/UX and ensuring system stability.
 
-## 🔄 Recent Changes (2026-02-20 Reward Hub UI Polish)
-- **Gamification**: Added `current_streak` and `last_task_date` to `User` model. Implemented +5 point daily bonus and streak multipliers (up to +0.5).
-- **Reward Hub Polish**: Implemented a tiered layout (Bronze, Silver, Gold), premium Glassmorphism aesthetics, a pulsing affordable design, and a real-time math breakdown in the redemption confirmation modal. Added missing i18n EN/DE keys.
+## 🔄 Recent Changes (2026-02-21 Task Import/Export & Photo Verification)
+- **Photo Verification**: Added `requires_photo_verification` to `Task` model. Implemented an `IN_REVIEW` status for tasks requiring photos, with an Admin Review Queue for approvals/rejections before points are awarded.
+- **Import/Export Reliability**: Fixed boolean coercion issues where SQLite `Text` fields representing booleans ('true', '1') were causing Pydantic validation errors during import/export.
 
 ## 📍 System State
-- **Backend**: Port 8000. Coverage >80%.
-- **Frontend**: Port 5173. Reward Hub UI Polish verified. All linting/typechecks passing.
-- **Tests**: All backend tests passed. Browser verification success.
+- **Backend**: Port 8000. Coverage >77%. All 128 tests passed.
+- **Frontend**: Port 5173. Photo upload UI and Admin Review Queue verified. All linting/typechecks passing.
+- **Tests**: Full backend regression suite passed successfully. Frontend static analysis clean.
 
 ## 🚧 Active Tasks
-1. **Task Import/Export UI**: Finalize modal design based on `import_wizard` logic (Next).
+1. **System Refinement**: Await next feature assignment from Product Owner.
 
 ## ⚠️ Known Issues / Watchlist
 - **Migration Edge Cases**: `SQLAlchemy` auto-migrations are limited; use `alembic` for complex schema changes.
@@ -26,4 +26,4 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We a
 
 ## 🔜 Next Session Prompt
 > **Start a new conversation and say:**
-> "Review STATE.md — Reward Hub UI Polish is complete. Let's proceed with **Task Import/Export UI**."
+> "Review STATE.md — Photo Verification and Import/Export fixes are complete. Let's proceed with the next feature."

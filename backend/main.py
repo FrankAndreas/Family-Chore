@@ -429,6 +429,7 @@ def export_tasks(db: Session = Depends(get_db)):
             default_due_time=task.default_due_time,
             recurrence_min_days=task.recurrence_min_days,
             recurrence_max_days=task.recurrence_max_days,
+            requires_photo_verification=str(task.requires_photo_verification).lower() in ("true", "1"),
         ))
 
     logger.info(f"Exported {len(export_items)} tasks")
@@ -499,6 +500,7 @@ async def import_tasks(import_data: schemas.TasksImport, db: Session = Depends(g
                 default_due_time=task_item.default_due_time,
                 recurrence_min_days=task_item.recurrence_min_days,
                 recurrence_max_days=task_item.recurrence_max_days,
+                requires_photo_verification=task_item.requires_photo_verification is True,
             )
             new_task = crud.create_task(db=db, task=task_create)
             created.append(new_task.name)
@@ -550,17 +552,64 @@ async def complete_task(instance_id: int, actual_user_id: int = None, db: Sessio
         raise HTTPException(status_code=404, detail="Task instance not found")
     logger.info(f"Task completed successfully: instance {instance_id} by user {instance.user_id}")
 
-    # Notify User
-    crud.create_notification(db, schemas.NotificationCreate(
-        user_id=instance.user_id,
-        type="TASK_COMPLETED",
-        title="Task Completed!",
-        message=f"You earned {instance.transaction.awarded_points} points for '{instance.task.name}'."
-    ))
+    # Notify User if completed
+    if instance.status == "COMPLETED":
+        crud.create_notification(db, schemas.NotificationCreate(
+            user_id=instance.user_id,
+            type="TASK_COMPLETED",
+            title="Task Completed!",
+            message=f"You earned {instance.transaction.awarded_points} points for '{instance.task.name}'."
+        ))
+    elif instance.status == "IN_REVIEW":
+        crud.create_notification(db, schemas.NotificationCreate(
+            user_id=instance.user_id,
+            type="SYSTEM",
+            title="Task In Review",
+            message=f"Your photo for '{instance.task.name}' is pending admin review."
+        ))
 
     # Broadcast SSE event for real-time updates
     await broadcaster.broadcast("task_completed", {"instance_id": instance_id, "user_id": instance.user_id})
     # Broadcast notification event so frontend refreshes list
+    await broadcaster.broadcast("notification", {"user_id": instance.user_id})
+
+    return instance
+
+
+@app.post("/tasks/{instance_id}/upload-photo", response_model=schemas.TaskInstance)
+async def upload_task_photo(instance_id: int, photo_url: str, db: Session = Depends(get_db)):
+    """Upload a photo URL for task verification (dummy implementation for MVP)."""
+    instance = db.query(models.TaskInstance).filter(models.TaskInstance.id == instance_id).first()
+    if not instance:
+        raise HTTPException(status_code=404, detail="Task instance not found")
+
+    instance.completion_photo_url = photo_url
+    db.commit()
+    db.refresh(instance)
+
+    return instance
+
+
+@app.get("/tasks/review-queue", response_model=List[schemas.TaskInstance])
+def get_review_queue(db: Session = Depends(get_db)):
+    """Get all tasks currently waiting for admin review."""
+    return crud.get_review_queue(db)
+
+
+@app.post("/tasks/{instance_id}/review", response_model=schemas.TaskInstance)
+async def review_task(instance_id: int, review: schemas.TaskReviewRequest, db: Session = Depends(get_db)):
+    """Admin endpoint to approve or reject a task."""
+    logger.info(f"Reviewing task instance {instance_id}: approved={review.is_approved}")
+    instance = crud.review_task_instance(db, instance_id=instance_id, review=review)
+    if not instance:
+        raise HTTPException(status_code=404, detail="Task instance not found or not in review")
+
+    # Real-time update
+    await broadcaster.broadcast("task_reviewed", {
+        "instance_id": instance_id,
+        "user_id": instance.user_id,
+        "is_approved": review.is_approved
+    })
     await broadcaster.broadcast("notification", {"user_id": instance.user_id})
 
     return instance

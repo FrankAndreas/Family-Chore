@@ -45,6 +45,7 @@ export const createTask = (taskData: {
     default_due_time: string;
     recurrence_min_days?: number | null;  // For recurring tasks
     recurrence_max_days?: number | null;  // For recurring tasks
+    requires_photo_verification?: boolean;
 }) => api.post('/tasks/', taskData);
 
 export const triggerDailyReset = () => api.post('/daily-reset/');
@@ -68,7 +69,16 @@ export const updateTask = (task_id: number, taskData: Partial<{
     default_due_time: string;
     recurrence_min_days?: number | null;
     recurrence_max_days?: number | null;
+    requires_photo_verification?: boolean;
 }>) => api.put(`/tasks/${task_id}`, taskData);
+
+export const uploadTaskPhoto = (instance_id: number, photo_url: string) =>
+    api.post(`/tasks/${instance_id}/upload-photo`, null, { params: { photo_url } });
+
+export const getReviewQueue = () => api.get('/tasks/review-queue');
+
+export const reviewTask = (instance_id: number, is_approved: boolean, reject_reason?: string) =>
+    api.post(`/tasks/${instance_id}/review`, { is_approved, reject_reason });
 
 export const deleteTask = (task_id: number) => api.delete(`/tasks/${task_id}`);
 
@@ -82,6 +92,7 @@ export interface TaskImportItem {
     default_due_time: string;
     recurrence_min_days?: number | null;
     recurrence_max_days?: number | null;
+    requires_photo_verification?: boolean;
 }
 
 export interface TasksExport {

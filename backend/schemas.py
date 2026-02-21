@@ -97,6 +97,7 @@ class TaskBase(BaseModel):
         None, ge=1, le=365, description="Minimum days between completions (recurring only)")
     recurrence_max_days: Optional[int] = Field(
         None, ge=1, le=365, description="Maximum days between completions (recurring only)")
+    requires_photo_verification: bool = Field(False, description="Whether this task requires photo verification")
 
     @model_validator(mode='after')
     def validate_schedule_and_time(self):
@@ -141,6 +142,7 @@ class TaskUpdate(BaseModel):
     default_due_time: Optional[str] = None
     recurrence_min_days: Optional[int] = Field(None, ge=1, le=365)
     recurrence_max_days: Optional[int] = Field(None, ge=1, le=365)
+    requires_photo_verification: Optional[bool] = None
 
     @model_validator(mode='after')
     def validate_update_fields(self):
@@ -188,6 +190,11 @@ class TaskInstance(TaskInstanceBase):
     user: Optional[User] = None  # Include user details
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class TaskReviewRequest(BaseModel):
+    is_approved: bool
+    reject_reason: Optional[str] = None
 
 # --- Reward Schemas ---
 
@@ -280,6 +287,7 @@ class TaskImportItem(BaseModel):
     )
     recurrence_min_days: Optional[int] = Field(None, ge=1, le=365)
     recurrence_max_days: Optional[int] = Field(None, ge=1, le=365)
+    requires_photo_verification: bool = False
 
     @model_validator(mode='after')
     def validate_schedule_and_time(self):
@@ -353,6 +361,7 @@ class TaskExportItem(BaseModel):
     default_due_time: str
     recurrence_min_days: Optional[int] = None
     recurrence_max_days: Optional[int] = None
+    requires_photo_verification: bool = False
 
 
 class TasksExport(BaseModel):

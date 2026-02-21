@@ -90,7 +90,7 @@ class Task(Base):
     recurrence_max_days = Column(Integer, nullable=True)  # Max days between completions (e.g., 5)
 
     # V1.1 Fields
-    requires_photo_verification = Column(Text, default="false")
+    requires_photo_verification = Column(Text, default="false")  # Text for SQLite compatibility, true/false.
 
     # Relationships
     assigned_role = relationship("Role", back_populates="tasks")

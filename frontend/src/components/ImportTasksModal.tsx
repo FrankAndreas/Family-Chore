@@ -121,7 +121,8 @@ const ImportTasksModal: React.FC<ImportTasksModalProps> = ({
   "schedule_type": "string (e.g. 'daily')",
   "default_due_time": "string (HH:MM)",
   "recurrence_min_days": "number (optional)",
-  "recurrence_max_days": "number (optional)"
+  "recurrence_max_days": "number (optional)",
+  "requires_photo_verification": "boolean (optional)"
 }`;
 
     const sampleJson = `{
@@ -132,7 +133,8 @@ const ImportTasksModal: React.FC<ImportTasksModalProps> = ({
       "base_points": 5,
       "assigned_role": "Child",
       "schedule_type": "daily",
-      "default_due_time": "07:30"
+      "default_due_time": "07:30",
+      "requires_photo_verification": false
     }
   ]
 }`;

@@ -26,6 +26,7 @@ export interface Task {
     default_due_time: string;
     recurrence_min_days?: number | null;
     recurrence_max_days?: number | null;
+    requires_photo_verification?: boolean;
 }
 
 export interface TaskInstance {
