@@ -155,6 +155,13 @@ The system refreshes every night at midnight.
 - New Daily tasks serve up.
 - Recurring tasks check if their cooldown is over.
 
+### 📸 Photo Verification Tasks
+Some tasks require photo proof:
+1. Enter a **Photo URL** in the input field on the task card.
+2. Click **"Mark Complete"** — your task goes to **"In Review"** status.
+3. An Admin will approve or reject it from the **Review Queue** on the Admin Dashboard.
+4. If approved, points are awarded. If rejected, you'll get a notification explaining why.
+
 ---
 
 ## ❓ FAQ
@@ -172,4 +179,4 @@ A: Go to the **Settings** page and select "Deutsch". You can set it as your pers
 A: This usually means the server is restarting or you lost internet connection. It should disappear automatically once connected.
 
 ---
-*Generated for ChoreSpec v1.1*
+*Generated for ChoreSpec v1.5*

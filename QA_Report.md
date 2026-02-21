@@ -1,19 +1,33 @@
-# QA Report: Photo Verification & Import/Export
+# QA Report
 
-## Test Summary
-- ✅ **Tests Passed:** 128 (Backend `pytest`), Frontend Linters & Build passed
+**Date:** 2026-02-21
+**Phase:** 1-4 Code Review Fixes (Typing, Formatting, State Management, API Validation)
+
+## Summary
+The codebase has been refactored to align with Pydantic v2 conventions, improve React state management in the UI, correctly map boolean fields from SQLite to integer structures, cleanly handle edge case data input, and maintain standard PEP8/TypeScript linting coverage.
+
+## Verification Checklist
+
+### 1. Automated Regression Suite (Pytest)
+- ✅ **Tests Passed:** 128
 - ❌ **Tests Failed:** 0
-- ⚠️ **Edge Cases Verified manually:** 
-  - `requires_photo_verification` boolean coercion across SQLite string format ('1', 'true', 'false') to Python true booleans.
-  - Tasks requiring photo uploaded proceed to `IN_REVIEW` status before points are granted.
-  - Task instance correctly skips completed logic until the admin approves it.
-  - Import task mapping correctly handles both boolean True/False and fallback logic for JSON structure.
-  
-## Verification Details
-- **Backend Tests:** Full backend regression suite passed successfully in `venv/bin/pytest -v tests/`
-- **Frontend Tests:** Cleanly passed UI type checking and static analysis via `npm run lint` and `npx tsc --noEmit`.
-- **Manual/Ad-Hoc Checks:** 
-  - Verified logic changes for `crud.py` and `main.py` properly cast boolean constraints avoiding type mistmatches.
+- 📝 **Notes:** 
+  - `flake8 backend --max-line-length=120` passed with `0` errors.
+  - `mypy backend/` passed after casting the `user_id` parameter to `int()` in notification endpoints.
+  - No zombie processes blocking ports in standard operation paths.
+
+### 2. Frontend Build & Linters
+- ✅ `npx tsc --noEmit` cleanly passed.
+- ✅ `npm run lint` (`eslint .`) cleanly passed with 0 errors/warnings on latest code.
+
+### 3. Edge Cases & Real-World API Check (Manual Curl Verification)
+- ⚠️ **Edge Case 1: `requires_photo_verification` boolean coercion.** 
+  - *Test:* `curl -s -X GET http://127.0.0.1:8001/tasks/`
+  - *Result:* SQLite `Integer` correctly coerced by Pydantic directly into native `true` / `false` json booleans (e.g. `"requires_photo_verification": false`).
+- ⚠️ **Edge Case 2: Photo upload API via JSON body (prevents query param logging).**
+  - *Test:* `curl -s -X POST http://127.0.0.1:8001/tasks/1/upload-photo -H "Content-Type: application/json" -d '{"photo_url": "http://example.com/photo.jpg"}'`
+  - *Result:* Rejection of query string bypasses. Success code `200 OK` on valid JSON payload. Response structure correctly returns `"completion_photo_url": "http://example.com/photo.jpg"`.
 
 ## Conclusion
-The Photo Verification workflow and Import/Export requirements have been fully checked and are technically sound. All verification criteria met.
+**STATUS: PASS**
+All systems stable according to Phase 1-4 objectives. Ready for state updates and security features.

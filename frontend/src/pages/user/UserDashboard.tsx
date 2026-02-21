@@ -23,7 +23,7 @@ const UserDashboard: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'tasks' | 'history'>('tasks');
     const [completingId, setCompletingId] = useState<number | null>(null);
-    const [photoUrl, setPhotoUrl] = useState<string>('');
+    const [photoUrls, setPhotoUrls] = useState<Record<number, string>>({});
     const { toasts, removeToast, success, error: showError } = useToast();
 
     const [filters, setFilters] = useState<TransactionFilters>({});
@@ -71,23 +71,21 @@ const UserDashboard: React.FC = () => {
         setCompletingId(instance.id);
         try {
             const task = instance.taskDetails;
-            if (task?.requires_photo_verification && !photoUrl && instance.status !== 'IN_REVIEW') {
+            if (task?.requires_photo_verification && !photoUrls[instance.id] && instance.status !== 'IN_REVIEW') {
                 showError('Please provide a photo URL for this task.');
                 setCompletingId(null);
                 return;
             }
 
-            if (task?.requires_photo_verification && photoUrl && instance.status !== 'IN_REVIEW') {
-                // First upload photo
-                // Then call complete Task (or we can just call upload photo and the backend does the rest? No, backend requires both right now, let's keep it simple and just do photo upload then complete, or change complete to accept photo)
-                // The backend `upload-photo` sets the URL. Then `completeTask` sets it to IN_REVIEW.
-                await uploadTaskPhoto(instance.id, photoUrl);
+            if (task?.requires_photo_verification && photoUrls[instance.id] && instance.status !== 'IN_REVIEW') {
+                // First upload photo, then call completeTask
+                await uploadTaskPhoto(instance.id, photoUrls[instance.id]);
             }
 
             const res = await completeTask(instance.id);
             if (res.data.status === 'IN_REVIEW') {
                 success('Task submitted for review! 📸');
-                setPhotoUrl(''); // clear
+                setPhotoUrls(prev => { const next = { ...prev }; delete next[instance.id]; return next; });
             } else {
                 success('Task completed! Points awarded. 🎉');
             }
@@ -196,8 +194,8 @@ const UserDashboard: React.FC = () => {
                                                                 <input
                                                                     type="text"
                                                                     placeholder="Enter Photo URL..."
-                                                                    value={completingId === instance.id ? photoUrl : ''}
-                                                                    onChange={(e) => setPhotoUrl(e.target.value)}
+                                                                    value={photoUrls[instance.id] || ''}
+                                                                    onChange={(e) => setPhotoUrls(prev => ({ ...prev, [instance.id]: e.target.value }))}
                                                                     onFocus={() => setCompletingId(instance.id)}
                                                                     defaultValue={undefined}
                                                                     className="filter-input"

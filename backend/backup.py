@@ -1,8 +1,11 @@
 import shutil
 import os
 import glob
+import logging
 from datetime import datetime
 from typing import List, Dict
+
+logger = logging.getLogger(__name__)
 
 
 class BackupManager:
@@ -49,7 +52,7 @@ class BackupManager:
                     os.remove(file_path)
                     deleted_files.append(file_path)
             except Exception as e:
-                print(f"Error checking/deleting backup {file_path}: {e}")
+                logger.error(f"Error checking/deleting backup {file_path}: {e}")
 
         return deleted_files
 

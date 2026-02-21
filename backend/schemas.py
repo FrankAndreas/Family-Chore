@@ -20,7 +20,9 @@ class UserLanguageUpdate(BaseModel):
     preferred_language: Optional[str] = Field(
         None, pattern=r'^(en|de)?$', description="Language code: 'en', 'de', or null for default")
 
-# --- Role Schemas ---
+
+class PhotoUploadRequest(BaseModel):
+    photo_url: str = Field(..., description="URL of the uploaded photo")
 
 # --- Role Schemas ---
 

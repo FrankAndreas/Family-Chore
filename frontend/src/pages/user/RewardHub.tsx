@@ -92,8 +92,8 @@ const RewardHub: React.FC = () => {
             await redeemReward(redeemConfirm.reward.id, currentUser.id);
             success(t('rewards.toasts.redeem_success', { name: redeemConfirm.reward.name }));
             setRedeemConfirm(null);
-            // Refresh page to update points (SSE should handle this, but forcing refresh)
-            window.location.reload();
+            // Re-fetch rewards instead of full page reload (preserves React state and SSE)
+            fetchRewards();
         } catch (err) {
             error(t('rewards.toasts.redeem_error'));
             console.error('Failed to redeem reward', err);

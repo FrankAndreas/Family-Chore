@@ -1,6 +1,9 @@
 
+import logging
 from backend.database import SessionLocal
 from backend.models import Role, User
+
+logger = logging.getLogger(__name__)
 
 
 def seed_data():
@@ -17,11 +20,11 @@ def seed_data():
         for role_data in roles:
             existing_role = db.query(Role).filter(Role.name == role_data["name"]).first()
             if not existing_role:
-                print(f"Creating role: {role_data['name']}")
+                logger.info(f"Creating role: {role_data['name']}")
                 new_role = Role(**role_data)
                 db.add(new_role)
             else:
-                print(f"Role {role_data['name']} already exists.")
+                logger.info(f"Role {role_data['name']} already exists.")
 
         db.commit()
 
@@ -30,7 +33,7 @@ def seed_data():
         if admin_role:
             existing_user = db.query(User).filter(User.nickname == "Admin").first()
             if not existing_user:
-                print("Creating default Admin user...")
+                logger.info("Creating default Admin user...")
                 admin_user = User(
                     nickname="Admin",
                     login_pin="1234",
@@ -40,12 +43,12 @@ def seed_data():
                 )
                 db.add(admin_user)
                 db.commit()
-                print("Admin user created.")
+                logger.info("Admin user created.")
             else:
-                print("Admin user already exists.")
+                logger.info("Admin user already exists.")
 
     except Exception as e:
-        print(f"Error seeding data: {e}")
+        logger.error(f"Error seeding data: {e}")
         db.rollback()
     finally:
         db.close()

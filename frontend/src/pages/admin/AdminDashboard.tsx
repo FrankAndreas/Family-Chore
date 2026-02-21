@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { getUsers, getTasks, triggerDailyReset, getAllTransactions, getReviewQueue, reviewTask } from '../../api';
 import type { User, Task, Transaction, TransactionFilters, TaskInstance } from '../../types';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import Toast from '../../components/Toast';
+import { useToast } from '../../hooks/useToast';
 import './Dashboard.css';
 
 const AdminDashboard: React.FC = () => {
@@ -14,6 +16,11 @@ const AdminDashboard: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [resetting, setResetting] = useState(false);
     const [reviewingId, setReviewingId] = useState<number | null>(null);
+    const { toasts, removeToast, success, error: showError } = useToast();
+
+    // Rejection modal state
+    const [rejectModal, setRejectModal] = useState<{ instanceId: number; show: boolean } | null>(null);
+    const [rejectReason, setRejectReason] = useState('');
 
     const [filters, setFilters] = useState<TransactionFilters>({});
 
@@ -44,28 +51,45 @@ const AdminDashboard: React.FC = () => {
         setResetting(true);
         try {
             await triggerDailyReset();
-            alert('Daily reset completed! Task instances generated.');
+            success('Daily reset completed! Task instances generated.');
         } catch (err) {
             console.error('Failed to trigger daily reset', err);
-            alert('Failed to trigger daily reset');
+            showError('Failed to trigger daily reset');
         } finally {
             setResetting(false);
         }
     };
 
-    const handleReview = async (instanceId: number, isApproved: boolean) => {
+    const handleApprove = async (instanceId: number) => {
         setReviewingId(instanceId);
         try {
-            const rejectReason = isApproved ? undefined : window.prompt("Reason for rejection:");
-            if (!isApproved && rejectReason === null) {
-                return; // cancelled
-            }
-            await reviewTask(instanceId, isApproved, rejectReason || undefined);
-            alert(isApproved ? 'Task approved and points awarded!' : 'Task rejected.');
+            await reviewTask(instanceId, true, undefined);
+            success('Task approved and points awarded!');
             fetchData();
         } catch (err) {
-            console.error('Failed to review task', err);
-            alert('Failed to submit review.');
+            console.error('Failed to approve task', err);
+            showError('Failed to submit review.');
+        } finally {
+            setReviewingId(null);
+        }
+    };
+
+    const handleRejectClick = (instanceId: number) => {
+        setRejectModal({ instanceId, show: true });
+        setRejectReason('');
+    };
+
+    const handleRejectConfirm = async () => {
+        if (!rejectModal) return;
+        setReviewingId(rejectModal.instanceId);
+        try {
+            await reviewTask(rejectModal.instanceId, false, rejectReason || undefined);
+            success('Task rejected.');
+            setRejectModal(null);
+            fetchData();
+        } catch (err) {
+            console.error('Failed to reject task', err);
+            showError('Failed to submit review.');
         } finally {
             setReviewingId(null);
         }
@@ -89,6 +113,18 @@ const AdminDashboard: React.FC = () => {
 
     return (
         <div className="page-container fade-in">
+            {/* Toast notifications */}
+            <div className="toast-container">
+                {toasts.map(toast => (
+                    <Toast
+                        key={toast.id}
+                        message={toast.message}
+                        type={toast.type}
+                        duration={toast.duration}
+                        onClose={() => removeToast(toast.id)}
+                    />
+                ))}
+            </div>
             <header className="page-header">
                 <h1 className="page-title">Admin Dashboard</h1>
                 <p className="page-subtitle">Overview of family performance and system status</p>
@@ -129,7 +165,7 @@ const AdminDashboard: React.FC = () => {
                 <div className="section glass-panel">
                     <h2>Top Performers</h2>
                     <div className="leaderboard">
-                        {users
+                        {[...users]
                             .sort((a, b) => b.current_points - a.current_points)
                             .slice(0, 5)
                             .map((user, index) => (
@@ -194,14 +230,14 @@ const AdminDashboard: React.FC = () => {
                                 <div style={{ display: 'flex', gap: '10px' }}>
                                     <button
                                         className="btn btn-primary"
-                                        onClick={() => handleReview(instance.id, true)}
+                                        onClick={() => handleApprove(instance.id)}
                                         disabled={reviewingId === instance.id}
                                     >
                                         ✅ Approve
                                     </button>
                                     <button
                                         className="btn btn-danger"
-                                        onClick={() => handleReview(instance.id, false)}
+                                        onClick={() => handleRejectClick(instance.id)}
                                         disabled={reviewingId === instance.id}
                                     >
                                         ❌ Reject
@@ -287,6 +323,40 @@ const AdminDashboard: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            {/* Rejection Reason Modal */}
+            {rejectModal && rejectModal.show && (
+                <div className="modal-overlay" onClick={() => setRejectModal(null)}>
+                    <div className="modal-content glass-panel" onClick={e => e.stopPropagation()}>
+                        <h2>Reject Task</h2>
+                        <p>Please provide a reason for rejecting this task:</p>
+                        <textarea
+                            value={rejectReason}
+                            onChange={(e) => setRejectReason(e.target.value)}
+                            placeholder="Reason for rejection (optional)"
+                            rows={3}
+                            className="filter-input"
+                            style={{ width: '100%', marginBottom: '16px' }}
+                        />
+                        <div className="modal-actions" style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                            <button
+                                className="btn btn-secondary"
+                                onClick={() => setRejectModal(null)}
+                                disabled={reviewingId !== null}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="btn btn-danger"
+                                onClick={handleRejectConfirm}
+                                disabled={reviewingId !== null}
+                            >
+                                {reviewingId !== null ? 'Rejecting...' : 'Confirm Rejection'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

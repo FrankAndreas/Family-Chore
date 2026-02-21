@@ -40,7 +40,7 @@ ChoreSpec is a family-oriented chore gamification system. It transforms househol
 - **Targeting**: 
   - **Specific Role**: Only users in that role see the task.
   - **All Family Members** (`assigned_role_id = null`): All users see and can claim the task.
-- **Photo Requirement**: Tasks can be flagged as `requires_photo_verification`.
+- **Photo Requirement**: Tasks can be flagged as `requires_photo_verification`, routing completions to an admin `IN_REVIEW` queue before points are awarded.
 
 #### Scheduling Types
 1. **Daily**: Appears every day at a specific `HH:MM`.
@@ -50,7 +50,7 @@ ChoreSpec is a family-oriented chore gamification system. It transforms househol
 
 #### Task Instances (`TaskInstance`)
 - Realized chores generated from templates.
-- **States**: `PENDING`, `COMPLETED`.
+- **States**: `PENDING`, `IN_REVIEW`, `COMPLETED`.
 - **Claiming Logic**: A user can complete an instance assigned to a different user; the system automatically reassigns that instance to the "claimer" for reward allocation.
 
 ### 2.4 Reward Hub
@@ -113,7 +113,10 @@ ChoreSpec is a family-oriented chore gamification system. It transforms househol
 - `POST /tasks/`: Create template (auto-generates instances for today).
 - `GET /tasks/daily/{user_id}`: Personalized task list.
 - `GET /tasks/pending`: Global view of all uncompleted chores.
-- `POST /tasks/{id}/complete`: The core "payday" endpoint.
+- `GET /tasks/review-queue`: Admin view of tasks pending photo verification.
+- `POST /tasks/{id}/upload-photo`: Provide evidence for verification.
+- `POST /tasks/{id}/complete`: The core "payday" endpoint. (Transitions to IN_REVIEW if photo required).
+- `POST /tasks/{id}/review`: Admin approval/rejection of verified tasks.
 
 ### Analytics
 - `GET /analytics/weekly`: Last 7 days task completion stats.

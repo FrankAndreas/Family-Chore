@@ -321,3 +321,4 @@ This file captures accumulated knowledge from development sessions. The Libraria
 
 ### Gotchas
 - **Import/Export Validation**: If an optional/default field was missing in earlier JSON exports (like `requires_photo_verification`), importing old JSON dumps will crash Pydantic if default values are not correctly defined in the `TaskImportItem` schema. Never assume exported data perfectly perfectly matches current schemas.
+- **Data Privacy in APIs**: Moving sensitive or user-generated string inputs (like `photo_url`) from query parameters into the JSON request body prevents them from being logged in standard backend server logs (URL access logs).

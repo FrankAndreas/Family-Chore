@@ -1,4 +1,5 @@
 import datetime
+from datetime import timezone
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Date, Text
 from sqlalchemy.orm import relationship
 from .database import Base
@@ -90,7 +91,7 @@ class Task(Base):
     recurrence_max_days = Column(Integer, nullable=True)  # Max days between completions (e.g., 5)
 
     # V1.1 Fields
-    requires_photo_verification = Column(Text, default="false")  # Text for SQLite compatibility, true/false.
+    requires_photo_verification = Column(Integer, default=0)  # 0=false, 1=true
 
     # Relationships
     assigned_role = relationship("Role", back_populates="tasks")
@@ -133,7 +134,7 @@ class Transaction(Base):
 
     reference_instance_id = Column(Integer, ForeignKey("task_instances.id"), nullable=True)
 
-    timestamp = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    timestamp = Column(DateTime, nullable=False, default=lambda: datetime.datetime.now(timezone.utc))
 
     # Relationships
     user = relationship("User", back_populates="transactions")
@@ -153,7 +154,7 @@ class Notification(Base):
 
     read = Column(Integer, default=0)
 
-    created_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, nullable=False, default=lambda: datetime.datetime.now(timezone.utc))
     data = Column(Text, nullable=True)  # JSON string for extra data (e.g. {"task_id": 123})
 
     # Relationships

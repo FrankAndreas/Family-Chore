@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
+from contextlib import asynccontextmanager
 import logging
 import asyncio
 import json
@@ -24,8 +25,6 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
-
-app = FastAPI(title="ChoreSpec MVP")
 
 
 # SSE: Event broadcasting system
@@ -88,18 +87,9 @@ def run_backup_job():
         logger.error(f"Backup job failed: {e}")
 
 
-@app.post("/backups/run")
-def trigger_manual_backup():
-    """Manually trigger a backup in the background."""
-    # Run synchronously for simplicity in this MVP, or use BackgroundTasks
-    # Using background task pattern:
-
-    run_backup_job()  # For now run sync to return status immediately for verification
-    return {"status": "Backup completed"}
-
-
-@app.on_event("startup")
-def on_startup():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # --- Startup ---
     # 1. Run migrations first to ensure schema is up-to-date
     MigrationManager.run_migrations()
 
@@ -160,9 +150,9 @@ def on_startup():
     scheduler.start()
     logger.info("Midnight scheduler started - daily reset will run at 00:00, backups at 02:00")
 
+    yield  # Application runs here
 
-@app.on_event("shutdown")
-def on_shutdown():
+    # --- Shutdown ---
     logger.info("Initiating application shutdown...")
     try:
         if scheduler.running:
@@ -174,6 +164,9 @@ def on_shutdown():
     except Exception as e:
         logger.error(f"Error during scheduler shutdown: {e}")
     logger.info("Application shutdown complete.")
+
+
+app = FastAPI(title="ChoreSpec MVP", lifespan=lifespan)
 
 
 # Add CORS middleware
@@ -191,6 +184,13 @@ app.add_middleware(
 
 app.include_router(analytics.router)
 app.include_router(notifications.router)
+
+
+@app.post("/backups/run")
+def trigger_manual_backup():
+    """Manually trigger a backup in the background."""
+    run_backup_job()
+    return {"status": "Backup completed"}
 
 
 # --- SSE Endpoint ---
@@ -429,7 +429,7 @@ def export_tasks(db: Session = Depends(get_db)):
             default_due_time=task.default_due_time,
             recurrence_min_days=task.recurrence_min_days,
             recurrence_max_days=task.recurrence_max_days,
-            requires_photo_verification=str(task.requires_photo_verification).lower() in ("true", "1"),
+            requires_photo_verification=bool(task.requires_photo_verification),
         ))
 
     logger.info(f"Exported {len(export_items)} tasks")
@@ -546,7 +546,10 @@ def read_all_pending_tasks(db: Session = Depends(get_db)):
 @app.post("/tasks/{instance_id}/complete", response_model=schemas.TaskInstance)
 async def complete_task(instance_id: int, actual_user_id: int = None, db: Session = Depends(get_db)):
     logger.info(f"Attempting to complete task instance: {instance_id} (Claimed by user_id: {actual_user_id})")
-    instance = crud.complete_task_instance(db, instance_id=instance_id, actual_user_id=actual_user_id)
+    try:
+        instance = crud.complete_task_instance(db, instance_id=instance_id, actual_user_id=actual_user_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     if not instance:
         logger.error(f"Task instance not found: {instance_id}")
         raise HTTPException(status_code=404, detail="Task instance not found")
@@ -555,14 +558,14 @@ async def complete_task(instance_id: int, actual_user_id: int = None, db: Sessio
     # Notify User if completed
     if instance.status == "COMPLETED":
         crud.create_notification(db, schemas.NotificationCreate(
-            user_id=instance.user_id,
+            user_id=int(instance.user_id),
             type="TASK_COMPLETED",
             title="Task Completed!",
             message=f"You earned {instance.transaction.awarded_points} points for '{instance.task.name}'."
         ))
     elif instance.status == "IN_REVIEW":
         crud.create_notification(db, schemas.NotificationCreate(
-            user_id=instance.user_id,
+            user_id=int(instance.user_id),
             type="SYSTEM",
             title="Task In Review",
             message=f"Your photo for '{instance.task.name}' is pending admin review."
@@ -577,13 +580,13 @@ async def complete_task(instance_id: int, actual_user_id: int = None, db: Sessio
 
 
 @app.post("/tasks/{instance_id}/upload-photo", response_model=schemas.TaskInstance)
-async def upload_task_photo(instance_id: int, photo_url: str, db: Session = Depends(get_db)):
-    """Upload a photo URL for task verification (dummy implementation for MVP)."""
+async def upload_task_photo(instance_id: int, body: schemas.PhotoUploadRequest, db: Session = Depends(get_db)):
+    """Upload a photo URL for task verification."""
     instance = db.query(models.TaskInstance).filter(models.TaskInstance.id == instance_id).first()
     if not instance:
         raise HTTPException(status_code=404, detail="Task instance not found")
 
-    instance.completion_photo_url = photo_url
+    instance.completion_photo_url = body.photo_url
     db.commit()
     db.refresh(instance)
 

@@ -1,29 +1,30 @@
 # State & Global Memory
 
-**Librarian**: Agent-Librarian (Model: gemini-3-flash)
-**Last Updated**: 2026-02-08 15:05
+**Librarian**: Agent-Librarian
+**Last Updated**: 2026-02-21 13:48
 
 ## 🧠 Global Context
-The project is a **Family Chore Gamification System** (Universal-GSD-Core). We are in the **Polishing & Verification** phase — refining UI/UX and ensuring system stability.
+The project is a **Family Chore Gamification System** (Universal-GSD-Core). We have just completed a major **Code Quality & UX Refactoring** (Phases 1-4), ensuring robust type validation, bug-free components, and a clean test suite.
 
-## 🔄 Recent Changes (2026-02-21 Task Import/Export & Photo Verification)
-- **Photo Verification**: Added `requires_photo_verification` to `Task` model. Implemented an `IN_REVIEW` status for tasks requiring photos, with an Admin Review Queue for approvals/rejections before points are awarded.
-- **Import/Export Reliability**: Fixed boolean coercion issues where SQLite `Text` fields representing booleans ('true', '1') were causing Pydantic validation errors during import/export.
+## 🔄 Recent Changes (2026-02-21 Photo Verification & Code Quality)
+- **Photo Verification Flow**: `requires_photo_verification` triggers `IN_REVIEW` status, relying on an Admin Review Queue for approval. Fixed query-param data leak by moving photo uploads to JSON body requests.
+- **Frontend Refactoring**: Addressed React anti-patterns (mutating state, shared inputs) to prevent race conditions and improve UX (Toast over blocking `alert`).
+- **Data Integrity**: Enforced SQLite text-to-integer boolean conversions safely via migration.
+- **Validation**: Strict typings added (mypy), deprecated Pydantic v1 methods removed.
 
 ## 📍 System State
-- **Backend**: Port 8000. Coverage >77%. All 128 tests passed.
-- **Frontend**: Port 5173. Photo upload UI and Admin Review Queue verified. All linting/typechecks passing.
-- **Tests**: Full backend regression suite passed successfully. Frontend static analysis clean.
+- **Backend**: Port 8000. Coverage >78%. All 128 tests passed. Flake8 and Mypy clean.
+- **Frontend**: Port 5173. Admin Review Queue and robust modals verified. ESLint and TypeScript clean.
+- **Tests**: QA verification complete with real-world API assertions.
 
 ## 🚧 Active Tasks
-1. **System Refinement**: Await next feature assignment from Product Owner.
+1. **Security Hardening**: Address deferred security tasks (C1, C2, C4, L4).
 
 ## ⚠️ Known Issues / Watchlist
-- **Migration Edge Cases**: `SQLAlchemy` auto-migrations are limited; use `alembic` for complex schema changes.
-- **Timezone**: "Europe/Berlin" set in config but relies on system time in some Docker contexts.
+- **Security Check**: The app currently stores PINs in plaintext and lacks authentication middleware. This is the top priority for the next session.
 
 ---
 
 ## 🔜 Next Session Prompt
 > **Start a new conversation and say:**
-> "Review STATE.md — Photo Verification and Import/Export fixes are complete. Let's proceed with the next feature."
+> "Review STATE.md — Code Quality and UI refactoring is complete. Let's proceed with the Security Phase to address plaintext PINs and authentication."

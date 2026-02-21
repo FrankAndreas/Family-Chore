@@ -1,23 +1,24 @@
 from sqlalchemy.orm import Session
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, timezone
+from typing import Optional, List
 from . import models, schemas
 
 # --- User CRUD ---
 
 
-def get_user(db: Session, user_id: int):
+def get_user(db: Session, user_id: int) -> Optional[models.User]:
     return db.query(models.User).filter(models.User.id == user_id).first()
 
 
-def get_user_by_nickname(db: Session, nickname: str):
+def get_user_by_nickname(db: Session, nickname: str) -> Optional[models.User]:
     return db.query(models.User).filter(models.User.nickname == nickname).first()
 
 
-def get_users(db: Session, skip: int = 0, limit: int = 100):
+def get_users(db: Session, skip: int = 0, limit: int = 100) -> List[models.User]:
     return db.query(models.User).offset(skip).limit(limit).all()
 
 
-def create_user(db: Session, user: schemas.UserCreate):
+def create_user(db: Session, user: schemas.UserCreate) -> models.User:
     # Note: In a real app, hash the PIN here.
     db_user = models.User(
         nickname=user.nickname,
@@ -53,8 +54,8 @@ def update_role_multiplier(db: Session, role_id: int, multiplier: float):
 # --- Task CRUD ---
 
 
-def create_task(db: Session, task: schemas.TaskCreate):
-    db_task = models.Task(**task.dict())
+def create_task(db: Session, task: schemas.TaskCreate) -> models.Task:
+    db_task = models.Task(**task.model_dump())
     db.add(db_task)
     db.commit()
     db.refresh(db_task)
@@ -140,7 +141,7 @@ def update_task(db: Session, task_id: int, task_update: schemas.TaskUpdate):
         return None
 
     # Update only provided fields
-    update_data = task_update.dict(exclude_unset=True)
+    update_data = task_update.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(db_task, field, value)
 
@@ -275,39 +276,16 @@ def get_all_pending_tasks(db: Session):
     ).all()
 
 
-def complete_task_instance(db: Session, instance_id: int, actual_user_id: int = None):
-    instance = db.query(models.TaskInstance).filter(models.TaskInstance.id == instance_id).first()
-    if not instance:
-        return None
-
-    if instance.status == "COMPLETED":
-        return instance  # Already done
-
-    # 1. Get related data (and handle reassignment if needed)
-    if actual_user_id and actual_user_id != instance.user_id:
-        # User B is claiming User A's task
-        # We update the instance to point to User B
-        # This is a transient change for this instance only; it does not affect the recurring Task definition.
-        instance.user_id = actual_user_id
-        db.commit()
-        db.refresh(instance)
-
+def _award_points_for_task(db: Session, instance: models.TaskInstance) -> models.TaskInstance:
+    """
+    Shared helper: calculate streaks, daily bonus, award points, create transaction,
+    and mark recurring siblings as completed. Commits and refreshes the instance.
+    """
     task = instance.task
     user = instance.user
     role = user.role
 
-    # If the task requires a photo, check if the photo is uploaded
-    if str(task.requires_photo_verification).lower() in ("true", "1"):
-        if not instance.completion_photo_url:
-            return None  # Must upload photo first
-
-        # If photo is uploaded, set to IN_REVIEW, no points yet
-        instance.status = "IN_REVIEW"
-        db.commit()
-        db.refresh(instance)
-        return instance
-
-    # 2. Gamification Polish: Streaks & Daily Bonus
+    # 1. Gamification: Streaks & Daily Bonus
     today_date = datetime.now().date()
     is_first_task_today = user.last_task_date != today_date
     daily_bonus = 5 if is_first_task_today else 0
@@ -322,15 +300,15 @@ def complete_task_instance(db: Session, instance_id: int, actual_user_id: int = 
     streak_bonus = min(0.5, max(0, user.current_streak - 1) * 0.1)
     effective_multiplier = role.multiplier_value + streak_bonus
 
-    # 3. Calculate Points with Streak & Bonus
+    # 2. Calculate Points
     base_points = task.base_points
     awarded_points = int(base_points * effective_multiplier) + daily_bonus
 
-    # 4. Update Instance
+    # 3. Update Instance
     instance.status = "COMPLETED"
-    instance.completed_at = datetime.utcnow()
+    instance.completed_at = datetime.now(timezone.utc)
 
-    # 5. Create Transaction
+    # 4. Create Transaction
     desc = f"Completed task: {task.name}"
     if daily_bonus > 0:
         desc += f" (+{daily_bonus} Daily Bonus)"
@@ -345,7 +323,7 @@ def complete_task_instance(db: Session, instance_id: int, actual_user_id: int = 
         awarded_points=awarded_points,
         description=desc,
         reference_instance_id=instance.id,
-        timestamp=datetime.utcnow()
+        timestamp=datetime.now(timezone.utc)
     )
     db.add(transaction)
 
@@ -354,7 +332,6 @@ def complete_task_instance(db: Session, instance_id: int, actual_user_id: int = 
     user.lifetime_points += awarded_points
 
     # 6. For recurring tasks, mark all other pending instances as completed
-    # This ensures the cooldown applies to all users
     if task.schedule_type == "recurring":
         other_instances = db.query(models.TaskInstance).filter(
             models.TaskInstance.task_id == task.id,
@@ -364,14 +341,49 @@ def complete_task_instance(db: Session, instance_id: int, actual_user_id: int = 
 
         for other in other_instances:
             other.status = "COMPLETED"
-            other.completed_at = datetime.utcnow()
+            other.completed_at = datetime.now(timezone.utc)
 
     db.commit()
     db.refresh(instance)
     return instance
 
 
-def review_task_instance(db: Session, instance_id: int, review: schemas.TaskReviewRequest):
+def complete_task_instance(db: Session, instance_id: int, actual_user_id: int = None) -> Optional[models.TaskInstance]:
+    instance = db.query(models.TaskInstance).filter(models.TaskInstance.id == instance_id).first()
+    if not instance:
+        return None
+
+    if instance.status == "COMPLETED":
+        return instance  # Already done
+
+    # 1. Get related data (and handle reassignment if needed)
+    if actual_user_id and actual_user_id != instance.user_id:
+        # User B is claiming User A's task
+        instance.user_id = actual_user_id
+        db.commit()
+        db.refresh(instance)
+
+    task = instance.task
+    # user = instance.user  # Commented out: used only via _award_points_for_task
+    # role = user.role  # Commented out: used only via _award_points_for_task
+
+    # If the task requires a photo, check if the photo is uploaded
+    if task.requires_photo_verification:
+        if not instance.completion_photo_url:
+            raise ValueError("Photo upload required before completing this task.")
+
+        # If photo is uploaded, set to IN_REVIEW, no points yet
+        instance.status = "IN_REVIEW"
+        db.commit()
+        db.refresh(instance)
+        return instance
+
+    return _award_points_for_task(db, instance)
+
+
+def review_task_instance(
+    db: Session, instance_id: int, review: schemas.TaskReviewRequest
+) -> Optional[models.TaskInstance]:
     """Admin endpoint to approve or reject a task."""
     instance = db.query(models.TaskInstance).filter(models.TaskInstance.id == instance_id).first()
     if not instance or instance.status != "IN_REVIEW":
@@ -397,66 +409,8 @@ def review_task_instance(db: Session, instance_id: int, review: schemas.TaskRevi
 
         return instance
 
-    # Approved: Award points.
-    task = instance.task
-    user = instance.user
-    role = user.role
-
-    # 2. Gamification Polish: Streaks & Daily Bonus
-    today_date = datetime.now().date()
-    is_first_task_today = user.last_task_date != today_date
-    daily_bonus = 5 if is_first_task_today else 0
-
-    if is_first_task_today:
-        if user.last_task_date == today_date - timedelta(days=1):
-            user.current_streak += 1
-        else:
-            user.current_streak = 1
-        user.last_task_date = today_date
-
-    streak_bonus = min(0.5, max(0, user.current_streak - 1) * 0.1)
-    effective_multiplier = role.multiplier_value + streak_bonus
-
-    base_points = task.base_points
-    awarded_points = int(base_points * effective_multiplier) + daily_bonus
-
-    instance.status = "COMPLETED"
-    instance.completed_at = datetime.utcnow()
-
-    desc = f"Completed task: {task.name}"
-    if daily_bonus > 0:
-        desc += f" (+{daily_bonus} Daily Bonus)"
-    if streak_bonus > 0.0:
-        desc += f" [Streak: {user.current_streak} days]"
-
-    transaction = models.Transaction(
-        user_id=user.id,
-        type="EARN",
-        base_points_value=base_points,
-        multiplier_used=effective_multiplier,
-        awarded_points=awarded_points,
-        description=desc,
-        reference_instance_id=instance.id,
-        timestamp=datetime.utcnow()
-    )
-    db.add(transaction)
-
-    user.current_points += awarded_points
-    user.lifetime_points += awarded_points
-
-    if task.schedule_type == "recurring":
-        other_instances = db.query(models.TaskInstance).filter(
-            models.TaskInstance.task_id == task.id,
-            models.TaskInstance.id != instance.id,
-            models.TaskInstance.status == "PENDING"
-        ).all()
-        for other in other_instances:
-            other.status = "COMPLETED"
-            other.completed_at = datetime.utcnow()
-
-    db.commit()
-    db.refresh(instance)
-    return instance
+    # Approved: Award points using shared helper.
+    return _award_points_for_task(db, instance)
 
 
 def get_review_queue(db: Session):
@@ -467,7 +421,7 @@ def get_review_queue(db: Session):
 
 
 def create_reward(db: Session, reward: schemas.RewardCreate):
-    db_reward = models.Reward(**reward.dict())
+    db_reward = models.Reward(**reward.model_dump())
     db.add(db_reward)
     db.commit()
     db.refresh(db_reward)
@@ -524,7 +478,7 @@ def redeem_reward(db: Session, user_id: int, reward_id: int) -> dict:
         awarded_points=-reward.cost_points,  # Negative to show deduction
         description=f"Redeemed reward: {reward.name}",
         reference_instance_id=None,  # No task instance reference
-        timestamp=datetime.utcnow()
+        timestamp=datetime.now(timezone.utc)
     )
     db.add(transaction)
 
@@ -600,7 +554,7 @@ def redeem_reward_split(db: Session, reward_id: int, contributions: list[dict]) 
             awarded_points=-points,
             description=f"Redeemed reward: {reward.name} (Split)",
             reference_instance_id=None,
-            timestamp=datetime.utcnow()
+            timestamp=datetime.now(timezone.utc)
         )
         db.add(transaction)
         db.flush()  # Get transaction ID
@@ -737,7 +691,7 @@ def perform_daily_reset_if_needed(db: Session) -> int:
 
 
 def create_notification(db: Session, notification: schemas.NotificationCreate):
-    db_notification = models.Notification(**notification.dict())
+    db_notification = models.Notification(**notification.model_dump())
     db.add(db_notification)
     db.commit()
     db.refresh(db_notification)

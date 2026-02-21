@@ -14,6 +14,7 @@ export interface User {
     current_goal_reward_id: number | null;
     current_streak: number;
     last_task_date: string | null;
+    preferred_language: string | null;
 }
 
 export interface Task {

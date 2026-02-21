@@ -73,7 +73,7 @@ export const updateTask = (task_id: number, taskData: Partial<{
 }>) => api.put(`/tasks/${task_id}`, taskData);
 
 export const uploadTaskPhoto = (instance_id: number, photo_url: string) =>
-    api.post(`/tasks/${instance_id}/upload-photo`, null, { params: { photo_url } });
+    api.post(`/tasks/${instance_id}/upload-photo`, { photo_url });
 
 export const getReviewQueue = () => api.get('/tasks/review-queue');
 
