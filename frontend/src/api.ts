@@ -78,8 +78,15 @@ export const updateTask = (task_id: number, taskData: Partial<{
     requires_photo_verification?: boolean;
 }>) => api.put(`/tasks/${task_id}`, taskData);
 
-export const uploadTaskPhoto = (instance_id: number, photo_url: string) =>
-    api.post(`/tasks/${instance_id}/upload-photo`, { photo_url });
+export const uploadTaskPhoto = (instance_id: number, photo_file: File) => {
+    const formData = new FormData();
+    formData.append('file', photo_file);
+    return api.post(`/tasks/${instance_id}/upload-photo`, formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    });
+};
 
 export const getReviewQueue = () => api.get('/tasks/review-queue');
 

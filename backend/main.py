@@ -1,4 +1,5 @@
-from fastapi import FastAPI, Depends, HTTPException, BackgroundTasks
+from fastapi import FastAPI, Depends, HTTPException, BackgroundTasks, File, UploadFile
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
@@ -7,6 +8,8 @@ from contextlib import asynccontextmanager
 import logging
 import asyncio
 import json
+import os
+import uuid
 import datetime
 from datetime import timezone
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -214,6 +217,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Ensure uploads directory exists and mount it
+os.makedirs("uploads", exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 app.include_router(analytics.router)
 app.include_router(notifications.router)
@@ -713,14 +720,28 @@ async def complete_task(
 
 
 @app.post("/tasks/{instance_id}/upload-photo", response_model=schemas.TaskInstance)
-async def upload_task_photo(instance_id: int, body: schemas.PhotoUploadRequest, db: Session = Depends(get_db)):
-    """Upload a photo URL for task verification."""
+async def upload_task_photo(instance_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
+    """Upload a photo for task verification using multipart/form-data."""
     instance = db.query(models.TaskInstance).filter(
         models.TaskInstance.id == instance_id).first()
     if not instance:
         raise HTTPException(status_code=404, detail="Task instance not found")
 
-    instance.completion_photo_url = body.photo_url
+    if not file.content_type or not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="File must be an image")
+
+    # Generate a unique filename and save chunks
+    filename = file.filename or "unknown.jpg"
+    file_extension = filename.split(".")[-1] if "." in filename else "jpg"
+    unique_filename = f"{uuid.uuid4().hex}.{file_extension}"
+    file_path = os.path.join("uploads", unique_filename)
+
+    with open(file_path, "wb") as buffer:
+        while content := await file.read(1024 * 1024):  # Read 1MB chunks
+            buffer.write(content)
+
+    # Set completion_photo_url to the newly served path
+    instance.completion_photo_url = f"/uploads/{unique_filename}"
     db.commit()
     db.refresh(instance)
 

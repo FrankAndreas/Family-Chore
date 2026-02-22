@@ -365,3 +365,17 @@ This file captures accumulated knowledge from development sessions. The Libraria
 
 ### Gotchas
 - **Test Database Migrations**: When adding new columns to models (like `email` to `User`), persistent unmigrated test databases will fail with `sqlite3.OperationalError` (missing column). Tests should prefer completely in-memory `sqlite:///:memory:` databases constructed cleanly via `Base.metadata.create_all` before every run to avoid state contamination.
+
+## 📅 2026-02-22: Device Photo Upload & Multipart Forms
+
+### What We Learned
+- **Progressive Native Features**: The HTML5 `capture="environment"` attribute is a powerful, zero-dependency way to access a mobile device's camera natively. When combined with `<input type="file" accept="image/*">`, it seamlessly degrades to a file picker on desktops. This eliminates the need for complex PWA or Cordova wrappers for simple camera integration.
+- **FastAPI Uploads**: `UploadFile` handles `multipart/form-data` efficiently by spooling large files to disk, preventing memory bloat. Serving these files back requires manually mounting a `StaticFiles` route (e.g., `/uploads`), which must be configured carefully to avoid directory traversal vulnerabilities and ensure the storage directory persists across restarts.
+
+### Patterns Discovered
+- **Form Data vs JSON**: Transitioning an endpoint from JSON to `multipart/form-data` requires abandoning standard Pydantic body definitions (`BaseModel`) for the specific endpoint arguments (`file: UploadFile = File(...)`) because `multipart` cannot mix seamlessly with JSON bodies without complex extraction logic.
+- **Client-Side Blob Previews**: Using `URL.createObjectURL(file)` allows generating an immediate, lightweight preview of the selected image before it's uploaded to the server, greatly improving the user experience during verification.
+
+### Gotchas
+- **Mypy and UploadFile properties**: `file.content_type` and `file.filename` in FastAPI's `UploadFile` are typed as `Optional[str]`. Calling string methods (like `.startswith()` or `.split()`) without explicit `if file.filename:` None checks will fail strict mypy typing validations.
+- **Docker Persistent Volumes**: By moving from URL strings to local file storage (`backend/uploads/`), we introduced stateful data into the container. Deployments must explicitly bind mount this directory, or all verification photos will 404 after a container restart.

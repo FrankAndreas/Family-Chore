@@ -170,6 +170,14 @@ ChoreSpec is a family-oriented chore gamification system. It transforms househol
 - **Then** a notification is immediately dispatched to users with the "Admin" role
 - **And** the notification contains the task name and the user who completed it.
 
+### 4.3 BDD Scenarios (Device Photo Verification)
+**Scenario: User uploads photo from camera to complete task**
+- **Given** a user is completing a task that `requires_photo_verification`
+- **When** they tap the "Upload/Take Photo" button
+- **Then** the native device camera or file picker opens
+- **And** upon taking or selecting a photo, it is uploaded to the backend securely
+- **And** the task enters the `IN_REVIEW` queue with the uploaded photo evidence attached.
+
 ---
 
 ## 5. Current Implementation Delta (vs. MVP Spec)

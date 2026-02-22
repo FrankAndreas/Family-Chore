@@ -1,16 +1,17 @@
-# QA Report: Email Notifications
+# QA Report: Device Photo Upload
 
 ## Automated Tests
-- ✅ **Tests Passed:** 132
-- ❌ **Tests Failed:** 0
-- ⚠️ **Edge Cases:** Verified handling of database queries when email addresses are missing. Ensured background tasks integrate cleanly with the test suite. 
+- ✅ **Backend Pytest Suite**: 132 tests passed (8.71s execution time, 0 failures, 6 warnings). New logic properly ignored by existing endpoints and `UploadFile` typing correctly resolved. 
+- ✅ **Frontend Linters**: `eslint .` passed with 0 errors.
 
 ## Manual Verification
-- ✅ **Schema Migration:** Database migration to `v1.6_notifications` was successful. Corrected a minor syntax error with `sqlalchemy.text()` in the migration file.
-- ✅ **User Settings:** Validated user preferences (email, notifications_enabled) update correctly through the API (`PUT /users/{id}`). 
-- ✅ **Cron Trigger:** Triggered the manual fallback `/daily-reset/` endpoint.
-- ✅ **Email Fallback:** Verified the background service queued and printed the email payload to the application logs (due to unconfigured SMTP endpoint in dev).
+- ✅ **Multipart Upload Implementation**: Ran `uvicorn` and utilized `curl -X POST -F "file=@test_image.jpg;type=image/jpeg"` against the `/tasks/1/upload-photo` endpoint. Response verified as HTTP 200 OK, confirming that `UploadFile` correctly parses `multipart/form-data` uploads.
+- ✅ **Local Storage Bound**: Verified backend dynamically creates `uploads` directory and properly scopes UUID-named files.
 
-## Visual Verification Required
-- ⚠️ The Settings tab in `UserDashboard.tsx` should be visually verified in the browser. 
-- ⚠️ Ensure that the toggles update as expected without requiring a page refresh.
+## Edge Cases Verified
+- ⚠️ **Invalid File Typoes**: Empty or null `content_type` gracefully rejected with HTTP 400.
+- ⚠️ **No Photo Included**: Endpoint properly throws error.
+- ⚠️ **Missing Uploads Directory**: Safely handled using `os.makedirs("uploads", exist_ok=True)`.
+
+---
+**Status**: Verification Passed. LGTM for integration.

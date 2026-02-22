@@ -23,7 +23,7 @@ const UserDashboard: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'tasks' | 'history' | 'settings'>('tasks');
     const [completingId, setCompletingId] = useState<number | null>(null);
-    const [photoUrls, setPhotoUrls] = useState<Record<number, string>>({});
+    const [photoUrls, setPhotoUrls] = useState<Record<number, File | null>>({});
     const [email, setEmail] = useState('');
     const [notificationsEnabled, setNotificationsEnabled] = useState(true);
     const [isSavingSettings, setIsSavingSettings] = useState(false);
@@ -101,7 +101,7 @@ const UserDashboard: React.FC = () => {
 
             if (task?.requires_photo_verification && photoUrls[instance.id] && instance.status !== 'IN_REVIEW') {
                 // First upload photo, then call completeTask
-                await uploadTaskPhoto(instance.id, photoUrls[instance.id]);
+                await uploadTaskPhoto(instance.id, photoUrls[instance.id]!);
             }
 
             const res = await completeTask(instance.id);
@@ -222,16 +222,23 @@ const UserDashboard: React.FC = () => {
                                                         {task?.requires_photo_verification && !isInReview && (
                                                             <div className="photo-upload-section" style={{ marginTop: '10px' }}>
                                                                 <input
-                                                                    type="text"
-                                                                    placeholder="Enter Photo URL..."
-                                                                    value={photoUrls[instance.id] || ''}
-                                                                    onChange={(e) => setPhotoUrls(prev => ({ ...prev, [instance.id]: e.target.value }))}
+                                                                    type="file"
+                                                                    accept="image/*"
+                                                                    capture="environment"
+                                                                    onChange={(e) => {
+                                                                        const file = e.target.files ? e.target.files[0] : null;
+                                                                        setPhotoUrls(prev => ({ ...prev, [instance.id]: file }));
+                                                                    }}
                                                                     onFocus={() => setCompletingId(instance.id)}
-                                                                    defaultValue={undefined}
                                                                     className="filter-input"
-                                                                    style={{ width: '100%' }}
+                                                                    style={{ width: '100%', padding: '5px' }}
                                                                 />
-                                                                <small>This task requires a photo verification.</small>
+                                                                {photoUrls[instance.id] && (
+                                                                    <div style={{ marginTop: '5px', borderRadius: '4px', overflow: 'hidden', maxWidth: '100px', maxHeight: '100px' }}>
+                                                                        <img src={URL.createObjectURL(photoUrls[instance.id]!)} alt="Preview" style={{ width: '100%', height: 'auto', objectFit: 'cover' }} />
+                                                                    </div>
+                                                                )}
+                                                                <small style={{ display: 'block', marginTop: '5px' }}>This task requires a photo verification.</small>
                                                             </div>
                                                         )}
                                                     </div>

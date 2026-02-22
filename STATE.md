@@ -6,11 +6,10 @@
 ## 🧠 Global Context
 The project is a **Family Chore Gamification System** (Universal-GSD-Core). We have completed **System Polish & Hardening** (V1.4), implemented **Negative Points**, and just deployed **Email Notifications** (V1.6) for pending tasks and admin approvals.
 
-## 🔄 Recent Changes (2026-02-21 Email Notifications)
-- **Email Notifications**: Added `email` and `notifications_enabled` to `User` model with DB migrations.
-- **Background Mailer**: Implemented `send_email_background` using FastAPI `BackgroundTasks` with SMTP fallback to local terminal logging.
-- **Triggers**: Nightly cron job emails users with pending daily tasks. Admin gets email when a task is completed "IN_REVIEW" (e.g., photo upload).
-- **Settings UI**: Added Settings tab in `UserDashboard` for users to manage their email and notification toggle.
+## 🔄 Recent Changes (2026-02-22 Device Photo Upload)
+- **Photo Upload**: Migrated task photo verification from URL-pasting to true multipart/form-data device photo capture.
+- **Backend Storage**: Added a local `backend/uploads/` directory mapped via FastAPI's `StaticFiles` for serving uploaded images.
+- **Frontend Capture**: Replaced text input with `<input type="file" accept="image/*" capture="environment">` to natively open mobile cameras and support file selection.
 
 ## 📍 System State
 - **Backend**: Port 8000. 132 tests passed (including new notification background and API tests). Flake8 and Mypy clean.
@@ -23,9 +22,10 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We h
 
 ## ⚠️ Known Issues / Watchlist
 - **Security Check**: The app currently stores PINs in plaintext and lacks authentication middleware. This is the top priority for the next session.
+- **File Storage**: Uploads are stored locally. In a stateless containerized runtime, `backend/uploads/` must be mapped to a persistent volume bind to avoid breaking images on container restart.
 
 ---
 
 ## 🔜 Next Session Prompt
 > **Start a new conversation and say:**
-> "Review STATE.md — Email Notifications are complete. Let's proceed with the Security Phase to address plaintext PINs and authentication."
+> "Review STATE.md — Device Photo Upload is complete. Let's proceed with the Security Phase to address plaintext PINs and authentication."

@@ -21,8 +21,9 @@ class UserLanguageUpdate(BaseModel):
         None, pattern=r'^(en|de)?$', description="Language code: 'en', 'de', or null for default")
 
 
-class PhotoUploadRequest(BaseModel):
-    photo_url: str = Field(..., description="URL of the uploaded photo")
+# Deprecated: Replaced by multipart/form-dataUploadFile in main.py
+# class PhotoUploadRequest(BaseModel):
+#     photo_url: str = Field(..., description="URL of the uploaded photo")
 
 # --- Role Schemas ---
 
