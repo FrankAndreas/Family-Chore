@@ -85,7 +85,7 @@ def create_task(db: Session, task: schemas.TaskCreate) -> models.Task:
 def generate_instances_for_task(db: Session, task: models.Task) -> int:
     """Generate task instances for a single task (for today). Used when creating new tasks."""
     created_count = 0
-    today = datetime.now()
+    today = datetime.now(timezone.utc)
     today_weekday = today.strftime("%A")
 
     # Skip weekly tasks if today is not the scheduled day
@@ -195,7 +195,7 @@ def generate_daily_instances(db: Session):
     ).all()
 
     created_count = 0
-    today = datetime.now()
+    today = datetime.now(timezone.utc)
 
     today_weekday = today.strftime("%A")  # e.g., "Monday", "Tuesday"
 
@@ -286,7 +286,7 @@ def generate_daily_instances(db: Session):
 def get_user_daily_tasks(db: Session, user_id: int):
     # Get tasks for today (or all pending/overdue?)
     # Spec says "Daily Task View". Usually implies today's tasks.
-    start_of_day = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    start_of_day = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
     return db.query(models.TaskInstance).filter(
         models.TaskInstance.user_id == user_id,
         models.TaskInstance.due_time >= start_of_day,
@@ -296,7 +296,7 @@ def get_user_daily_tasks(db: Session, user_id: int):
 
 def get_all_pending_tasks(db: Session):
     """Get ALL pending tasks for the Family Dashboard."""
-    start_of_day = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    start_of_day = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
     return db.query(models.TaskInstance).filter(
         models.TaskInstance.due_time >= start_of_day,
         models.TaskInstance.status == "PENDING"
@@ -313,7 +313,7 @@ def _award_points_for_task(db: Session, instance: models.TaskInstance) -> models
     role = user.role
 
     # 1. Gamification: Streaks & Daily Bonus
-    today_date = datetime.now().date()
+    today_date = datetime.now(timezone.utc).date()
     is_first_task_today = user.last_task_date != today_date
     daily_bonus = 5 if is_first_task_today else 0
 
@@ -652,13 +652,14 @@ def apply_penalty(db: Session, user_id: int, penalty: schemas.PenaltyRequest) ->
 
 
 def get_user_transactions(db: Session, user_id: int, skip: int = 0, limit: int = 100,
-                          type: str = None, search: str = None, start_date: datetime = None, end_date: datetime = None):
+                          txn_type: str = None, search: str = None,
+                          start_date: datetime = None, end_date: datetime = None):
     """Get transaction history for a specific user with filters."""
     query = db.query(models.Transaction).filter(
         models.Transaction.user_id == user_id)
 
-    if type:
-        query = query.filter(models.Transaction.type == type)
+    if txn_type:
+        query = query.filter(models.Transaction.type == txn_type)
     if search:
         query = query.filter(
             models.Transaction.description.ilike(f"%{search}%"))
@@ -671,15 +672,15 @@ def get_user_transactions(db: Session, user_id: int, skip: int = 0, limit: int =
 
 
 def get_all_transactions(db: Session, skip: int = 0, limit: int = 100,
-                         user_id: int = None, type: str = None, search: str = None,
+                         user_id: int = None, txn_type: str = None, search: str = None,
                          start_date: datetime = None, end_date: datetime = None):
     """Get global transaction history with filters."""
     query = db.query(models.Transaction)
 
     if user_id:
         query = query.filter(models.Transaction.user_id == user_id)
-    if type:
-        query = query.filter(models.Transaction.type == type)
+    if txn_type:
+        query = query.filter(models.Transaction.type == txn_type)
     if search:
         query = query.filter(
             models.Transaction.description.ilike(f"%{search}%"))
@@ -764,7 +765,7 @@ def perform_daily_reset_if_needed(db: Session) -> int:
 
 def get_users_with_pending_daily_tasks(db: Session) -> List[models.User]:
     """Find all users who have opted-in to notifications and have pending daily tasks today."""
-    start_of_day = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    start_of_day = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
 
     # Query users with email and notifications enabled who have pending tasks today
     # Join User -> TaskInstance -> Task explicitly

@@ -20,7 +20,7 @@ from .database import engine, get_db, SessionLocal
 from .routers import analytics, notifications
 from .migrations.manager import MigrationManager
 from .backup import BackupManager
-from .notifications_service import send_email_background
+from .notifications_service import send_email_background, send_email_sync
 
 
 # Initialize Tables
@@ -70,31 +70,22 @@ def scheduled_daily_reset():
         if count > 0:
             logger.info(
                 f"Midnight scheduler: Generated {count} task instances")
-            # Create a mock BackgroundTasks for the scheduler
-            bg_tasks = BackgroundTasks()
+            # Send reminder emails directly (scheduler runs in its own thread)
             users_to_notify = crud.get_users_with_pending_daily_tasks(db)
             notified_count = 0
             for user in users_to_notify:
                 if user.email:
-                    send_email_background(
-                        bg_tasks,
-                        user.email,
+                    send_email_sync(
+                        str(user.email),
                         "Your Daily Chores Await!",
                         f"Hi {user.nickname},\n\n"
                         "You have uncompleted daily chores waiting for you. Let's get them done!"
                     )
                     notified_count += 1
 
-            # Since scheduler runs outside a request, we must await bg_tasks manually or run sync
-            # To be safe, let's just run them directly in a small event loop or use the sync version
-            # Because BackgroundTasks is meant for FastAPI endpoints, we can just run the sync version here
-            # But BackgroundTasks just stores functions and their args. Let's run them.
             if notified_count > 0:
                 logger.info(
-                    f"Midnight scheduler: Queued {notified_count} reminder emails.")
-                # Execute the queued tasks synchronously (this is running in a scheduler thread anyway)
-                for task in bg_tasks.tasks:
-                    task.func(*task.args, **task.kwargs)
+                    f"Midnight scheduler: Sent {notified_count} reminder emails.")
 
         else:
             logger.info("Midnight scheduler: No new instances needed")
@@ -722,6 +713,8 @@ async def complete_task(
 @app.post("/tasks/{instance_id}/upload-photo", response_model=schemas.TaskInstance)
 async def upload_task_photo(instance_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
     """Upload a photo for task verification using multipart/form-data."""
+    MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10 MB
+
     instance = db.query(models.TaskInstance).filter(
         models.TaskInstance.id == instance_id).first()
     if not instance:
@@ -730,14 +723,31 @@ async def upload_task_photo(instance_id: int, file: UploadFile = File(...), db: 
     if not file.content_type or not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="File must be an image")
 
-    # Generate a unique filename and save chunks
-    filename = file.filename or "unknown.jpg"
-    file_extension = filename.split(".")[-1] if "." in filename else "jpg"
+    # S4: Derive extension from validated content_type, not user-supplied filename
+    content_type_to_ext = {
+        "image/jpeg": "jpg",
+        "image/png": "png",
+        "image/gif": "gif",
+        "image/webp": "webp",
+        "image/heic": "heic",
+        "image/heif": "heif",
+    }
+    file_extension = content_type_to_ext.get(file.content_type, "jpg")
     unique_filename = f"{uuid.uuid4().hex}.{file_extension}"
     file_path = os.path.join("uploads", unique_filename)
 
+    # S3: Enforce max upload size while streaming chunks
+    total_size = 0
     with open(file_path, "wb") as buffer:
         while content := await file.read(1024 * 1024):  # Read 1MB chunks
+            total_size += len(content)
+            if total_size > MAX_UPLOAD_SIZE:
+                buffer.close()
+                os.remove(file_path)
+                raise HTTPException(
+                    status_code=413,
+                    detail=f"File too large. Maximum upload size is {MAX_UPLOAD_SIZE // (1024 * 1024)} MB."
+                )
             buffer.write(content)
 
     # Set completion_photo_url to the newly served path
@@ -892,7 +902,7 @@ def read_user_transactions(
     user_id: int,
     skip: int = 0,
     limit: int = 100,
-    type: Optional[str] = None,
+    txn_type: Optional[str] = None,
     search: Optional[str] = None,
     start_date: Optional[datetime.datetime] = None,
     end_date: Optional[datetime.datetime] = None,
@@ -901,7 +911,7 @@ def read_user_transactions(
     """Get history for a specific user."""
     return crud.get_user_transactions(
         db, user_id=user_id, skip=skip, limit=limit,
-        type=type, search=search, start_date=start_date, end_date=end_date
+        txn_type=txn_type, search=search, start_date=start_date, end_date=end_date
     )
 
 
@@ -910,7 +920,7 @@ def read_all_transactions(
     skip: int = 0,
     limit: int = 100,
     user_id: Optional[int] = None,
-    type: Optional[str] = None,
+    txn_type: Optional[str] = None,
     search: Optional[str] = None,
     start_date: Optional[datetime.datetime] = None,
     end_date: Optional[datetime.datetime] = None,
@@ -919,7 +929,7 @@ def read_all_transactions(
     """Get global history (for Admin/Family Dashboard)."""
     return crud.get_all_transactions(
         db, skip=skip, limit=limit,
-        user_id=user_id, type=type, search=search, start_date=start_date, end_date=end_date
+        user_id=user_id, txn_type=txn_type, search=search, start_date=start_date, end_date=end_date
     )
 
 
