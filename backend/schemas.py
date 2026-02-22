@@ -95,7 +95,7 @@ class User(UserBase):
     current_streak: int = 0
     last_task_date: Optional[date] = None
     email: Optional[str] = None
-    notifications_enabled: int = 1
+    notifications_enabled: bool = True
     role: Role
 
     model_config = ConfigDict(from_attributes=True)
@@ -441,7 +441,7 @@ class NotificationCreate(NotificationBase):
 class Notification(NotificationBase):
     id: int
     user_id: int
-    read: int  # Using int to match model default=0
+    read: bool = False
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

@@ -1,6 +1,6 @@
 import datetime
 from datetime import timezone
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Date, Text
+from sqlalchemy import Boolean, Column, Integer, String, Float, ForeignKey, DateTime, Date, Text
 from sqlalchemy.orm import relationship
 from .database import Base
 
@@ -48,7 +48,7 @@ class User(Base):
 
     # Notifications & Contact
     email = Column(String, unique=True, nullable=True)
-    notifications_enabled = Column(Integer, default=1)
+    notifications_enabled = Column(Boolean, default=True)
 
     # Language preference (null = use system default)
     # e.g., "de", "en", or null
@@ -101,7 +101,7 @@ class Task(Base):
     recurrence_max_days = Column(Integer, nullable=True)
 
     # V1.1 Fields
-    requires_photo_verification = Column(Integer, default=0)  # 0=false, 1=true
+    requires_photo_verification = Column(Boolean, default=False)
 
     # Relationships
     assigned_role = relationship("Role", back_populates="tasks")
@@ -167,7 +167,7 @@ class Notification(Base):
     title = Column(String, nullable=False)
     message = Column(String, nullable=False)
 
-    read = Column(Integer, default=0)
+    read = Column(Boolean, default=False)
 
     created_at = Column(DateTime, nullable=False,
                         default=lambda: datetime.datetime.now(timezone.utc))

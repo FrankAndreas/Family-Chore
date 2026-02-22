@@ -85,6 +85,53 @@ def test_delete_task_not_found(db_session):
     assert crud.delete_task(db_session, 9999) is False
 
 
+def test_delete_task_nulls_transaction_references(db_session, task_setup):
+    """B2: Verify deleting a task nulls Transaction.reference_instance_id
+    instead of leaving orphaned foreign keys."""
+    task = task_setup["task"]
+    user = task_setup["user"]
+    role = task_setup["role"]
+
+    # Create an instance
+    instance = models.TaskInstance(
+        task_id=task.id,
+        user_id=user.id,
+        due_time=datetime.now(),
+        status="COMPLETED"
+    )
+    db_session.add(instance)
+    db_session.commit()
+    db_session.refresh(instance)
+
+    # Create a transaction referencing this instance
+    txn = models.Transaction(
+        user_id=user.id,
+        type="EARN",
+        base_points_value=100,
+        multiplier_used=role.multiplier_value,
+        awarded_points=int(100 * role.multiplier_value),
+        description="Test Task",
+        reference_instance_id=instance.id
+    )
+    db_session.add(txn)
+    db_session.commit()
+    db_session.refresh(txn)
+    txn_id = txn.id
+
+    assert txn.reference_instance_id == instance.id
+
+    # Delete the task — should null-out the transaction reference
+    result = crud.delete_task(db_session, task.id)
+    assert result is True
+
+    # Transaction should still exist but with nulled reference
+    surviving_txn = db_session.query(models.Transaction).filter(
+        models.Transaction.id == txn_id).first()
+    assert surviving_txn is not None
+    assert surviving_txn.reference_instance_id is None
+    assert surviving_txn.awarded_points == int(100 * role.multiplier_value)
+
+
 def test_generate_instances_weekly_wrong_day(db_session, task_setup):
     # Create a weekly task for a day that is NOT today
     today_weekday = datetime.now().strftime("%A")

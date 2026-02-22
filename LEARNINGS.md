@@ -379,3 +379,20 @@ This file captures accumulated knowledge from development sessions. The Libraria
 ### Gotchas
 - **Mypy and UploadFile properties**: `file.content_type` and `file.filename` in FastAPI's `UploadFile` are typed as `Optional[str]`. Calling string methods (like `.startswith()` or `.split()`) without explicit `if file.filename:` None checks will fail strict mypy typing validations.
 - **Docker Persistent Volumes**: By moving from URL strings to local file storage (`backend/uploads/`), we introduced stateful data into the container. Deployments must explicitly bind mount this directory, or all verification photos will 404 after a container restart.
+
+---
+
+## 📅 2026-02-22: Code Review Fixes — Boolean Columns & Orphan Cleanup
+
+### What We Learned
+- **SQLAlchemy `Boolean` on SQLite**: `Column(Boolean)` maps to `INTEGER` under the hood in SQLite, but SQLAlchemy handles Python `True`/`False` coercion properly. This eliminates fragile `== 1`/`== 0` comparisons and makes Pydantic schema alignment trivial (`bool` vs `int`).
+- **Cascade Is Not Always the Answer**: For `delete_task` orphaning transactions, using `CASCADE` on the FK relationship would silently destroy audit records. Explicitly nulling `reference_instance_id` preserves transaction history while cleaning up the dangling reference — better for audit trails.
+- **Scheduler Resilience**: Background scheduler loops that send emails must wrap each iteration in `try/except`. A single SMTP failure (bad address, timeout) would otherwise halt notifications for all remaining users in the loop.
+
+### Patterns Discovered
+- **`.is_(True)` over `== True`**: SQLAlchemy's `.is_(True)` and `.is_(False)` are the idiomatic way to query Boolean columns. Using `== True` triggers PEP8 E712 warnings and can behave unexpectedly with SQL NULL values.
+- **Migration Validation**: For columns already stored as INTEGER but defined as `Column(Integer)`, switching to `Column(Boolean)` requires no data migration in SQLite — only a model/schema change. However, creating a validation migration script is good practice to document the intent and handle edge cases in other databases.
+
+### Gotchas
+- **Bulk `.update()` with Booleans**: SQLAlchemy's `.update({"read": True})` works correctly with Boolean columns, but you must use `synchronize_session="fetch"` (or `"evaluate"`) when combining `.filter().update()` using `.in_()` clauses, otherwise the session cache can become stale.
+

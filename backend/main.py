@@ -75,13 +75,18 @@ def scheduled_daily_reset():
             notified_count = 0
             for user in users_to_notify:
                 if user.email:
-                    send_email_sync(
-                        str(user.email),
-                        "Your Daily Chores Await!",
-                        f"Hi {user.nickname},\n\n"
-                        "You have uncompleted daily chores waiting for you. Let's get them done!"
-                    )
-                    notified_count += 1
+                    try:
+                        send_email_sync(
+                            str(user.email),
+                            "Your Daily Chores Await!",
+                            f"Hi {user.nickname},\n\n"
+                            "You have uncompleted daily chores waiting for you. Let's get them done!"
+                        )
+                        notified_count += 1
+                    except Exception as email_err:
+                        logger.error(
+                            f"Midnight scheduler: Failed to send email to {user.nickname}: {email_err}"
+                        )
 
             if notified_count > 0:
                 logger.info(
@@ -519,7 +524,7 @@ def export_tasks(db: Session = Depends(get_db)):
             default_due_time=task.default_due_time,
             recurrence_min_days=task.recurrence_min_days,
             recurrence_max_days=task.recurrence_max_days,
-            requires_photo_verification=bool(task.requires_photo_verification),
+            requires_photo_verification=task.requires_photo_verification,
         ))
 
     logger.info(f"Exported {len(export_items)} tasks")
@@ -592,7 +597,7 @@ async def import_tasks(import_data: schemas.TasksImport, db: Session = Depends(g
                 default_due_time=task_item.default_due_time,
                 recurrence_min_days=task_item.recurrence_min_days,
                 recurrence_max_days=task_item.recurrence_max_days,
-                requires_photo_verification=task_item.requires_photo_verification is True,
+                requires_photo_verification=task_item.requires_photo_verification,
             )
             new_task = crud.create_task(db=db, task=task_create)
             created.append(new_task.name)

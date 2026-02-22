@@ -176,7 +176,20 @@ def delete_task(db: Session, task_id: int) -> bool:
     if not db_task:
         return False
 
-    # Delete related task instances first (cascade)
+    # Get IDs of instances that will be deleted
+    instance_ids = [
+        inst.id for inst in db.query(models.TaskInstance.id).filter(
+            models.TaskInstance.task_id == task_id
+        ).all()
+    ]
+
+    # B2: Null-out Transaction references to prevent orphaned foreign keys
+    if instance_ids:
+        db.query(models.Transaction).filter(
+            models.Transaction.reference_instance_id.in_(instance_ids)
+        ).update({"reference_instance_id": None}, synchronize_session="fetch")
+
+    # Delete related task instances
     db.query(models.TaskInstance).filter(
         models.TaskInstance.task_id == task_id).delete()
 
@@ -774,7 +787,7 @@ def get_users_with_pending_daily_tasks(db: Session) -> List[models.User]:
     ).join(
         models.Task, models.TaskInstance.task_id == models.Task.id
     ).filter(
-        models.User.notifications_enabled == 1,
+        models.User.notifications_enabled.is_(True),
         models.User.email.isnot(None),
         models.TaskInstance.status == "PENDING",
         models.TaskInstance.due_time >= start_of_day,
@@ -789,7 +802,7 @@ def get_notifiable_admins(db: Session) -> List[models.User]:
     # Find all users with "Admin" role, email, and notifications enabled
     users = db.query(models.User).join(models.Role).filter(
         models.Role.name == "Admin",
-        models.User.notifications_enabled == 1,
+        models.User.notifications_enabled.is_(True),
         models.User.email.isnot(None)
     ).all()
 
@@ -811,7 +824,7 @@ def get_user_notifications(db: Session, user_id: int, skip: int = 0, limit: int 
     query = db.query(models.Notification).filter(
         models.Notification.user_id == user_id)
     if unread_only:
-        query = query.filter(models.Notification.read == 0)
+        query = query.filter(models.Notification.read.is_(False))
     return query.order_by(models.Notification.created_at.desc()).offset(skip).limit(limit).all()
 
 
@@ -822,7 +835,7 @@ def mark_notification_read(db: Session, notification_id: int, user_id: int):
         models.Notification.user_id == user_id
     ).first()
     if notification:
-        notification.read = 1
+        notification.read = True
         db.commit()
         db.refresh(notification)
     return notification
@@ -832,7 +845,7 @@ def mark_all_notifications_read(db: Session, user_id: int):
     # Update all unread notifications for this user
     db.query(models.Notification).filter(
         models.Notification.user_id == user_id,
-        models.Notification.read == 0
-    ).update({"read": 1})
+        models.Notification.read.is_(False)
+    ).update({"read": True})
     db.commit()
     return True

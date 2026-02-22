@@ -4,10 +4,11 @@ from backend.crud import get_system_setting, set_system_setting
 from backend.migrations.consolidated_migration import run_consolidated_migration
 from backend.migrations.v1_5_bool_column import run_v1_5_migration
 from backend.migrations.v1_6_notifications import run_v1_6_migration
+from backend.migrations.v1_7_bool_columns import run_v1_7_migration
 
 logger = logging.getLogger(__name__)
 
-CURRENT_TARGET_VERSION = "1.6"
+CURRENT_TARGET_VERSION = "1.7"
 
 
 class MigrationManager:
@@ -50,6 +51,9 @@ class MigrationManager:
 
                     # Run v1.6 migration (notifications)
                     run_v1_6_migration(conn)
+
+                    # Run v1.7 migration (boolean column validation)
+                    run_v1_7_migration(conn)
 
                     # Update the version in system_settings
                     set_system_setting(
