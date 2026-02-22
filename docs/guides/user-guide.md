@@ -82,7 +82,14 @@ The **Dashboard** features a **Global Activity Log** where you can see all famil
   - **Type**: Filter by "Earned" or "Redeemed".
   - **Search**: Find specific tasks or rewards.
 
-### 7. Automated Backups
+### 7. Applying Penalties
+Sometimes points need to be deducted (e.g., missed chores, misbehavior):
+1. Go to the **Users** page and select a family member.
+2. Click **"Deduct Points"**.
+3. Enter the **amount** and a **reason** (required for transparency).
+4. The points are deducted from the user's **spendable balance** but their **lifetime points** remain unchanged (so they keep any unlocked reward tiers).
+
+### 8. Automated Backups
 **Data Protection**
 - The system automatically backs up the database every night at **02:00 AM**.
 - Backups are stored in the `backups/` folder.
@@ -157,10 +164,11 @@ The system refreshes every night at midnight.
 
 ### 📸 Photo Verification Tasks
 Some tasks require photo proof:
-1. Enter a **Photo URL** in the input field on the task card.
-2. Click **"Mark Complete"** — your task goes to **"In Review"** status.
-3. An Admin will approve or reject it from the **Review Queue** on the Admin Dashboard.
-4. If approved, points are awarded. If rejected, you'll get a notification explaining why.
+1. Tap the **"Upload / Take Photo"** button on the task card.
+2. Your device will open the **camera** or **file picker** — take a photo or select one from your gallery.
+3. A small preview of the photo will appear. Click **"Mark Complete"** — your task goes to **"In Review"** status.
+4. An Admin will approve or reject it from the **Review Queue** on the Admin Dashboard.
+5. If approved, points are awarded. If rejected, you'll get a notification explaining why.
 
 ---
 
@@ -179,4 +187,4 @@ A: Go to the **Settings** page and select "Deutsch". You can set it as your pers
 A: This usually means the server is restarting or you lost internet connection. It should disappear automatically once connected.
 
 ---
-*Generated for ChoreSpec v1.5*
+*Generated for ChoreSpec v1.7*

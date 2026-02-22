@@ -89,7 +89,7 @@ ChoreSpec is a family-oriented chore gamification system. It transforms househol
 - **UI/UX Consistency**: Ensure consistent styling across all views, specifically focusing on mobile responsiveness, accessible form controls, robust generic empty states, and standardizing error handling.
 
 ### 2.7 Notifications & Reminders (V1.5)
-- **Channels**: Web Push notifications (using service workers + VAPID) or lightweight Email integration (e.g., SMTP or Resend).
+- **Channels**: Lightweight Email integration via SMTP (V1.5). Web Push notifications (service workers + VAPID) are deferred to a future release.
 - **Triggers**:
   - **Daily Reminders**: Sent to users with pending daily tasks at a configurable time.
   - **Approval Requests**: Sent to admins when a photo-verification task enters the `IN_REVIEW` queue.
@@ -130,7 +130,7 @@ ChoreSpec is a family-oriented chore gamification system. It transforms househol
 - `GET /tasks/daily/{user_id}`: Personalized task list.
 - `GET /tasks/pending`: Global view of all uncompleted chores.
 - `GET /tasks/review-queue`: Admin view of tasks pending photo verification.
-- `POST /tasks/{id}/upload-photo`: Provide evidence for verification.
+- `POST /tasks/{id}/upload-photo`: Upload photo evidence via `multipart/form-data` (device camera or file picker).
 - `POST /tasks/{id}/complete`: The core "payday" endpoint. (Transitions to IN_REVIEW if photo required).
 - `POST /tasks/{id}/review`: Admin approval/rejection of verified tasks.
 
