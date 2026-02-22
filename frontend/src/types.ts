@@ -77,7 +77,7 @@ export interface Transaction {
 
 export interface TransactionFilters {
     user_id?: number;
-    type?: string;
+    txn_type?: string;
     search?: string;
     limit?: number;
     offset?: number;

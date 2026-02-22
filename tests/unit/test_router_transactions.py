@@ -29,7 +29,7 @@ def test_get_user_transactions_api(client, db_session, seeded_db):
     assert resp.json()[0]["type"] == "EARN"
 
     # Filter by type
-    resp_filter = client.get(f"/users/{u.id}/transactions?type=REDEEM")
+    resp_filter = client.get(f"/users/{u.id}/transactions?txn_type=REDEEM")
     assert len(resp_filter.json()) == 0
 
 

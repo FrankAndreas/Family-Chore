@@ -265,9 +265,9 @@ const UserDashboard: React.FC = () => {
                             {/* Filters */}
                             <div className="filters-bar">
                                 <select
-                                    onChange={(e) => setFilters((prev: TransactionFilters) => ({ ...prev, type: e.target.value as 'EARN' | 'REDEEM' | undefined || undefined }))}
+                                    onChange={(e) => setFilters((prev: TransactionFilters) => ({ ...prev, txn_type: e.target.value as 'EARN' | 'REDEEM' | undefined || undefined }))}
                                     className="filter-select"
-                                    value={filters.type || ''}
+                                    value={filters.txn_type || ''}
                                 >
                                     <option value="">All Activity</option>
                                     <option value="EARN">Earned</option>

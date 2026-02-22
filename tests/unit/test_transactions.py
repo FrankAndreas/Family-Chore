@@ -171,12 +171,12 @@ class TestTransactionHistory:
         # Act & Assert
 
         # Filter by Type
-        earn_txs = crud.get_user_transactions(seeded_db, user.id, type="EARN")
+        earn_txs = crud.get_user_transactions(seeded_db, user.id, txn_type="EARN")
         assert len(earn_txs) == 1
         assert earn_txs[0].description == "Clean Room"
 
         redeem_txs = crud.get_user_transactions(
-            seeded_db, user.id, type="REDEEM")
+            seeded_db, user.id, txn_type="REDEEM")
         assert len(redeem_txs) == 1
         assert redeem_txs[0].description == "Ice Cream"
 

@@ -516,7 +516,7 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
                             </select>
 
                             <select
-                                onChange={(e) => refreshTransactions({ type: e.target.value || undefined })}
+                                onChange={(e) => refreshTransactions({ txn_type: e.target.value || undefined })}
                                 className="filter-select"
                             >
                                 <option value="">All Activity</option>

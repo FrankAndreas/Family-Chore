@@ -177,7 +177,7 @@ export const redeemRewardSplit = (reward_id: number, contributions: SplitContrib
 export interface TransactionHeader {
     skip?: number;
     limit?: number;
-    type?: string;
+    txn_type?: string;
     search?: string;
     start_date?: string;
     end_date?: string;

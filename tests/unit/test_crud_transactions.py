@@ -27,7 +27,7 @@ def test_get_user_transactions(db_session, seeded_db):
     assert len(txs) == 2
 
     # Filter by type
-    txs_earn = crud.get_user_transactions(db_session, user.id, type="EARN")
+    txs_earn = crud.get_user_transactions(db_session, user.id, txn_type="EARN")
     assert len(txs_earn) == 1
     assert txs_earn[0].type == "EARN"
 

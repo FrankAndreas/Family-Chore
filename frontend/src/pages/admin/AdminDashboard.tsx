@@ -264,9 +264,9 @@ const AdminDashboard: React.FC = () => {
                     </select>
 
                     <select
-                        onChange={(e) => setFilters((prev: TransactionFilters) => ({ ...prev, type: e.target.value || undefined }))}
+                        onChange={(e) => setFilters((prev: TransactionFilters) => ({ ...prev, txn_type: e.target.value || undefined }))}
                         className="filter-select"
-                        value={filters.type || ''}
+                        value={filters.txn_type || ''}
                     >
                         <option value="">All Activity</option>
                         <option value="EARN">Earned</option>
