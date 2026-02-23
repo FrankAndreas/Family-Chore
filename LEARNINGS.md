@@ -401,3 +401,16 @@ This file captures accumulated knowledge from development sessions. The Libraria
 - When splitting a monolithic FastAPI app into routers, extract shared state (like `EventBroadcaster`) into a separate module (e.g. `events.py`) *before* extracting the routes. This prevents circular imports where routers need the broadcaster, but `main.py` needs the routers.
 - Running Pytest against a project that was previously monolithic may require forcing `PYTHONPATH=.` so imports like `backend.database` resolve correctly outside of the app container.
 - When creating pytest fixtures, avoid importing `app` and `get_db` together if it causes circular dependencies during load. Isolate the dependency overrides.
+
+---
+
+## 📅 2026-02-23: Return-Type Annotations & Mypy Casts
+
+### What We Learned
+- **SQLAlchemy to Pydantic Typing**: Pydantic schemas are usually flexible at runtime, but Mypy triggers errors when directly mapping SQLAlchemy `Column[T]` types to literal python types like `str` or `int` in manually constructed dictionaries or lists. 
+
+### Patterns Discovered
+- **Explicit Type Casting**: When extracting `Column` attributes to pass into strictly typed objects (like `TaskExportItem(name=...)`), wrapping the attributes in `str()`, `int()`, or `bool()` explicitly prevents Mypy `[arg-type]` errors and guarantees runtime stability.
+
+### Gotchas
+- **Mypy and Dictionary Lookups**: `roles.get(Column[int])` causes a Mypy `[call-overload]` error because it expects standard hashable primitives. We must look it up safely without casting the lookup key dynamically if Mypy doesn't understand the Column type resolution.

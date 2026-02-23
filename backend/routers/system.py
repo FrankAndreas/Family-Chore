@@ -27,16 +27,16 @@ def export_tasks(db: Session = Depends(get_db)):
     export_items = []
     for task in tasks:
         export_items.append(schemas.TaskExportItem(
-            name=task.name,
-            description=task.description,
-            base_points=task.base_points,
-            assigned_role=roles.get(
-                task.assigned_role_id) if task.assigned_role_id else None,
-            schedule_type=task.schedule_type,
-            default_due_time=task.default_due_time,
-            recurrence_min_days=task.recurrence_min_days,
-            recurrence_max_days=task.recurrence_max_days,
-            requires_photo_verification=task.requires_photo_verification,
+            name=str(task.name),
+            description=str(task.description) if task.description else "",
+            base_points=int(str(task.base_points)),
+            assigned_role=str(roles.get(task.assigned_role_id))
+            if task.assigned_role_id and roles.get(task.assigned_role_id) else None,
+            schedule_type=str(task.schedule_type),
+            default_due_time=str(task.default_due_time) if task.default_due_time else "",
+            recurrence_min_days=int(str(task.recurrence_min_days)) if task.recurrence_min_days is not None else None,
+            recurrence_max_days=int(str(task.recurrence_max_days)) if task.recurrence_max_days is not None else None,
+            requires_photo_verification=bool(task.requires_photo_verification),
         ))
 
     logger.info(f"Exported {len(export_items)} tasks")
@@ -104,7 +104,7 @@ async def import_tasks(import_data: schemas.TasksImport, db: Session = Depends(g
                 name=task_item.name,
                 description=task_item.description,
                 base_points=task_item.base_points,
-                assigned_role_id=assigned_role_id,
+                assigned_role_id=int(assigned_role_id) if assigned_role_id else None,
                 schedule_type=task_item.schedule_type,
                 default_due_time=task_item.default_due_time,
                 recurrence_min_days=task_item.recurrence_min_days,

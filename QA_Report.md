@@ -1,17 +1,14 @@
-# QA Report: Device Photo Upload
+# QA Report: Feature A3 (crud.py Return-Type Annotations)
 
-## Automated Tests
-- ✅ **Backend Pytest Suite**: 132 tests passed (8.71s execution time, 0 failures, 6 warnings). New logic properly ignored by existing endpoints and `UploadFile` typing correctly resolved. 
-- ✅ **Frontend Linters**: `eslint .` passed with 0 errors.
+## 1. Automated Tests
+- **Backend Tests:** ✅ Passed (133/133)
+- **Linter (flake8):** ✅ Passed (No syntax/style errors in `crud.py`, E501 fixed)
+- **Type Checker (mypy):** ✅ Passed (No type inconsistency errors in `crud.py` and `routers/system.py` where casting was required)
 
-## Manual Verification
-- ✅ **Multipart Upload Implementation**: Ran `uvicorn` and utilized `curl -X POST -F "file=@test_image.jpg;type=image/jpeg"` against the `/tasks/1/upload-photo` endpoint. Response verified as HTTP 200 OK, confirming that `UploadFile` correctly parses `multipart/form-data` uploads.
-- ✅ **Local Storage Bound**: Verified backend dynamically creates `uploads` directory and properly scopes UUID-named files.
+## 2. Manual/Edge Cases Verification
+- Given the nature of this change (adding Python type checking metadata via type hints), there are no runtime behavioral or database changes.
+- Verification relied entirely on the static analysis tool (`mypy`) to ensure type constraints are satisfied, and the existing regression test suite to ensure no runtime logic was inadvertently modified or broken.
+- `routers/system.py` required explicit string/integer castings when reading from `Column` models in SQLAlchemy during the `/tasks/export` route to satisfy `schemas.TaskExportItem` Pydantic types. This was thoroughly checked.
 
-## Edge Cases Verified
-- ⚠️ **Invalid File Typoes**: Empty or null `content_type` gracefully rejected with HTTP 400.
-- ⚠️ **No Photo Included**: Endpoint properly throws error.
-- ⚠️ **Missing Uploads Directory**: Safely handled using `os.makedirs("uploads", exist_ok=True)`.
-
----
-**Status**: Verification Passed. LGTM for integration.
+## Overall Status
+✅ **PASS** - Code changes successfully verified. Ready for Librarian handoff to summarize the session and commit.

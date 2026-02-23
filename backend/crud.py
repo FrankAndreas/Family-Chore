@@ -51,15 +51,15 @@ def update_user(db: Session, user_id: int, user_update: schemas.UserUpdate) -> O
 # --- Role CRUD ---
 
 
-def get_roles(db: Session, skip: int = 0, limit: int = 100):
+def get_roles(db: Session, skip: int = 0, limit: int = 100) -> List[models.Role]:
     return db.query(models.Role).offset(skip).limit(limit).all()
 
 
-def get_role(db: Session, role_id: int):
+def get_role(db: Session, role_id: int) -> Optional[models.Role]:
     return db.query(models.Role).filter(models.Role.id == role_id).first()
 
 
-def update_role_multiplier(db: Session, role_id: int, multiplier: float):
+def update_role_multiplier(db: Session, role_id: int, multiplier: float) -> Optional[models.Role]:
     db_role = db.query(models.Role).filter(models.Role.id == role_id).first()
     if db_role:
         db_role.multiplier_value = multiplier
@@ -150,11 +150,11 @@ def generate_instances_for_task(db: Session, task: models.Task) -> int:
     return created_count
 
 
-def get_tasks(db: Session, skip: int = 0, limit: int = 100):
+def get_tasks(db: Session, skip: int = 0, limit: int = 100) -> List[models.Task]:
     return db.query(models.Task).offset(skip).limit(limit).all()
 
 
-def update_task(db: Session, task_id: int, task_update: schemas.TaskUpdate):
+def update_task(db: Session, task_id: int, task_update: schemas.TaskUpdate) -> Optional[models.Task]:
     """Update an existing task."""
     db_task = db.query(models.Task).filter(models.Task.id == task_id).first()
     if not db_task:
@@ -200,7 +200,7 @@ def delete_task(db: Session, task_id: int) -> bool:
 
 
 # --- Daily Logic ---
-def generate_daily_instances(db: Session):
+def generate_daily_instances(db: Session) -> int:
     """Generate task instances for daily, weekly, and recurring tasks."""
     # Get all tasks (daily, weekly, and recurring)
     tasks = db.query(models.Task).filter(
@@ -296,7 +296,7 @@ def generate_daily_instances(db: Session):
     return created_count
 
 
-def get_user_daily_tasks(db: Session, user_id: int):
+def get_user_daily_tasks(db: Session, user_id: int) -> List[models.TaskInstance]:
     # Get tasks for today (or all pending/overdue?)
     # Spec says "Daily Task View". Usually implies today's tasks.
     start_of_day = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
@@ -307,7 +307,7 @@ def get_user_daily_tasks(db: Session, user_id: int):
     ).all()
 
 
-def get_all_pending_tasks(db: Session):
+def get_all_pending_tasks(db: Session) -> List[models.TaskInstance]:
     """Get ALL pending tasks for the Family Dashboard."""
     start_of_day = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
     return db.query(models.TaskInstance).filter(
@@ -456,14 +456,14 @@ def review_task_instance(
     return _award_points_for_task(db, instance)
 
 
-def get_review_queue(db: Session):
+def get_review_queue(db: Session) -> List[models.TaskInstance]:
     """Get all tasks currently waiting for admin review."""
     return db.query(models.TaskInstance).filter(models.TaskInstance.status == "IN_REVIEW").all()
 
 # --- Reward CRUD ---
 
 
-def create_reward(db: Session, reward: schemas.RewardCreate):
+def create_reward(db: Session, reward: schemas.RewardCreate) -> models.Reward:
     db_reward = models.Reward(**reward.model_dump())
     db.add(db_reward)
     db.commit()
@@ -471,11 +471,11 @@ def create_reward(db: Session, reward: schemas.RewardCreate):
     return db_reward
 
 
-def get_rewards(db: Session, skip: int = 0, limit: int = 100):
+def get_rewards(db: Session, skip: int = 0, limit: int = 100) -> List[models.Reward]:
     return db.query(models.Reward).offset(skip).limit(limit).all()
 
 
-def set_user_goal(db: Session, user_id: int, reward_id: int):
+def set_user_goal(db: Session, user_id: int, reward_id: int) -> Optional[models.User]:
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if user:
         user.current_goal_reward_id = reward_id
@@ -484,7 +484,7 @@ def set_user_goal(db: Session, user_id: int, reward_id: int):
     return user
 
 
-def get_reward(db: Session, reward_id: int):
+def get_reward(db: Session, reward_id: int) -> Optional[models.Reward]:
     """Get a reward by ID."""
     return db.query(models.Reward).filter(models.Reward.id == reward_id).first()
 
@@ -666,7 +666,7 @@ def apply_penalty(db: Session, user_id: int, penalty: schemas.PenaltyRequest) ->
 
 def get_user_transactions(db: Session, user_id: int, skip: int = 0, limit: int = 100,
                           txn_type: str = None, search: str = None,
-                          start_date: datetime = None, end_date: datetime = None):
+                          start_date: datetime = None, end_date: datetime = None) -> List[models.Transaction]:
     """Get transaction history for a specific user with filters."""
     query = db.query(models.Transaction).filter(
         models.Transaction.user_id == user_id)
@@ -686,7 +686,7 @@ def get_user_transactions(db: Session, user_id: int, skip: int = 0, limit: int =
 
 def get_all_transactions(db: Session, skip: int = 0, limit: int = 100,
                          user_id: int = None, txn_type: str = None, search: str = None,
-                         start_date: datetime = None, end_date: datetime = None):
+                         start_date: datetime = None, end_date: datetime = None) -> List[models.Transaction]:
     """Get global transaction history with filters."""
     query = db.query(models.Transaction)
 
@@ -708,11 +708,11 @@ def get_all_transactions(db: Session, skip: int = 0, limit: int = 100,
 # --- Settings & Language ---
 
 
-def get_system_setting(db: Session, key: str):
+def get_system_setting(db: Session, key: str) -> Optional[models.SystemSettings]:
     return db.query(models.SystemSettings).filter(models.SystemSettings.key == key).first()
 
 
-def set_system_setting(db: Session, key: str, value: str, description: str = None):
+def set_system_setting(db: Session, key: str, value: str, description: str = None) -> models.SystemSettings:
     setting = get_system_setting(db, key)
     if setting:
         setting.value = value
@@ -727,7 +727,7 @@ def set_system_setting(db: Session, key: str, value: str, description: str = Non
     return setting
 
 
-def update_user_language(db: Session, user_id: int, language: str):
+def update_user_language(db: Session, user_id: int, language: str) -> Optional[models.User]:
     """Update user's preferred language."""
     user = get_user(db, user_id)
     if user:
@@ -744,7 +744,7 @@ def get_last_reset_date(db: Session) -> date | None:
     setting = get_system_setting(db, "last_daily_reset")
     if setting:
         try:
-            return datetime.strptime(setting.value, "%Y-%m-%d").date()
+            return datetime.strptime(str(setting.value), "%Y-%m-%d").date()
         except ValueError:
             return None
     return None
@@ -812,7 +812,7 @@ def get_notifiable_admins(db: Session) -> List[models.User]:
 # --- Notification CRUD ---
 
 
-def create_notification(db: Session, notification: schemas.NotificationCreate):
+def create_notification(db: Session, notification: schemas.NotificationCreate) -> models.Notification:
     db_notification = models.Notification(**notification.model_dump())
     db.add(db_notification)
     db.commit()
@@ -820,7 +820,9 @@ def create_notification(db: Session, notification: schemas.NotificationCreate):
     return db_notification
 
 
-def get_user_notifications(db: Session, user_id: int, skip: int = 0, limit: int = 50, unread_only: bool = False):
+def get_user_notifications(
+    db: Session, user_id: int, skip: int = 0, limit: int = 50, unread_only: bool = False
+) -> List[models.Notification]:
     query = db.query(models.Notification).filter(
         models.Notification.user_id == user_id)
     if unread_only:
@@ -829,7 +831,7 @@ def get_user_notifications(db: Session, user_id: int, skip: int = 0, limit: int 
 
 
 # user_id for security check
-def mark_notification_read(db: Session, notification_id: int, user_id: int):
+def mark_notification_read(db: Session, notification_id: int, user_id: int) -> Optional[models.Notification]:
     notification = db.query(models.Notification).filter(
         models.Notification.id == notification_id,
         models.Notification.user_id == user_id
@@ -841,7 +843,7 @@ def mark_notification_read(db: Session, notification_id: int, user_id: int):
     return notification
 
 
-def mark_all_notifications_read(db: Session, user_id: int):
+def mark_all_notifications_read(db: Session, user_id: int) -> bool:
     # Update all unread notifications for this user
     db.query(models.Notification).filter(
         models.Notification.user_id == user_id,
