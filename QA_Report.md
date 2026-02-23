@@ -1,33 +1,23 @@
-# QA Report: M1, M3, M4 Features
+# M3 Frontend Integration - QA Report
 
 ## Overview
-This report documents the verification of the CORS configuration, Reward CRUD endpoints, and SplitRedemptionResponse typing updates.
+This report verifies the successful integration of the M3 (Reward Editing and Deletion) feature into the React frontend. Both features were tested against the running backend server to ensure data integrity and user experience.
 
-## Automated Tests
-- ✅ **Flake8**: Passed (0 formatting errors in backend).
-- ✅ **Mypy**: Passed (Types match the new `SplitTransactionDetail` schema).
-- ✅ **Pytest**: Passed (`133 passed, 6 warnings in 17.67s`, all routes functioning normally).
+## Verification Steps Performed
 
-## Manual Verification (Live Server Test)
-Tested via `backend_test.sh` against an instance of Uvicorn answering on port 8000.
+### 1. Code Quality & Compilation
+- ✅ `eslint .` passed successfully (minor dependency warning noted but no code errors).
+- ✅ `tsc -b && vite build` completed successfully, ensuring type safety matches the API contract.
 
-### 1. M1: CORS Environment Config
-- **Test**: Sent pre-flight `OPTIONS /rewards/` with an arbitrary explicitly-allowed Origin (`http://test.com`).
-- **Result**: ✅ Server responded correctly (`200 OK`) acknowledging the `Origin`.
+### 2. Backend Endpoint Validation (cURL)
+- ✅ `POST /rewards/` successfully creates a reward.
+- ✅ `PUT /rewards/{id}` successfully updates partial and full payload on rewards.
+- ✅ `DELETE /rewards/{id}` successfully deletes rewards, returning the expected `204 No Content`.
 
-### 2. M3: Reward Create / Update / Delete Endpoints
-- **Create Test**: `POST /rewards/` with dummy data.
-  - **Result**: ✅ Created successfully (Assigned ID 5).
-- **Update Test**: `PUT /rewards/5` payload updating name to "Temp Updated" and cost to 150.
-  - **Result**: ✅ Server returned `200 OK` with correctly modified JSON entity.
-- **Delete Test**: `DELETE /rewards/5`.
-  - **Result**: ✅ Server returned `204 No Content`. Follow-ups confirm the item is deleted and user goals are cleared.
-
-### 3. M4: Typed SplitRedemptionResponse
-- **Verification**: Verified via Static Code Analysis (Mypy). The `SplitRedemptionResponse` specifically uses the new `list[SplitTransactionDetail]` instead of an opaque `list[dict]`, resolving any downstream frontend TS-generation parsing ambiguities.
-
-## Edge Cases Evaluated
-- ⚠️ **M3 Foreign Key Violations on Delete**: The `delete_reward` correctly drops `current_goal_reward_id` constraints from Users who have set the target reward as their active goal before deleting the reward row. No DB integrity faults found.
+### 3. UI/UX Verification
+- ✅ **Admin Restrictions**: Edit and Delete actions are conditionally rendered only for Users with the "Admin" role in `RewardHub.tsx`. 
+- ✅ **Edit Modal**: A dedicated modal form appears populated with the selected reward's state, preventing accidental full-page navigation. Form submission behaves identically to creation with immediate state updates.
+- ✅ **Delete Confirmation**: A browser native `window.confirm` is used to prevent accidental deletion of rewards.
 
 ---
-**Verdict:** Verification Passed. Ready for Librarian sync.
+**Status**: Ready to proceed. The frontend now has complete CRUD management parity with the backend.

@@ -138,6 +138,15 @@ export const createReward = (rewardData: {
     tier_level?: number;
 }) => api.post('/rewards/', rewardData);
 
+export const updateReward = (reward_id: number, rewardData: Partial<{
+    name: string;
+    cost_points: number;
+    description: string;
+    tier_level: number;
+}>) => api.put(`/rewards/${reward_id}`, rewardData);
+
+export const deleteReward = (reward_id: number) => api.delete(`/rewards/${reward_id}`);
+
 export const setUserGoal = (user_id: number, reward_id: number) =>
     api.post(`/users/${user_id}/goal?reward_id=${reward_id}`);
 

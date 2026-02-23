@@ -440,3 +440,16 @@ This file captures accumulated knowledge from development sessions. The Libraria
 
 ### Gotchas
 - **Pydantic Model Updates**: Adding partial update schemas (`RewardUpdate` where fields are `Optional`) simplifies Router logic directly because you can iterate over `.model_dump(exclude_unset=True)` effectively building an atomic SQLAlchemy patch update without manual null-checks.
+
+## 📅 2026-02-23: Frontend React State & Deletion UX
+
+### What We Learned
+- **Destructive Action UX**: When a user clicks "Delete" on an item (like a Reward), the native `window.confirm` is the fastest, most reliable way to prevent accidental clicks before fetching to the backend.
+- **Conditional Admin Rendering**: Complex state management for role-based UI (e.g., showing Edit buttons only if User is Admin) works securely only if the backend also matches the constraint. Our UI uses `currentUser.role.name === 'Admin'`, but the backend currently lacks that middleware constraint (noted in S2).
+
+### Patterns Discovered
+- **Form Reuse**: Reusing `formData` state alongside an `editingReward` state allows the same component to render a "Create" layout and an "Edit Modal" layout without duplicating handlers excessively, keeping the file lean.
+- **Icon Buttons vs Text**: Using standard emojis (✏️, 🗑️) instead of full text buttons on cards keeps the UI uncluttered while still providing functionality, especially when paired with `title="Edit Reward"` for accessibility/tooltips.
+
+### Gotchas
+- **State Stagnation**: After a successful `update` or `delete`, `window.location.reload()` is a jarring UX. Simply calling `fetchRewards()` again and clearing the modal state (`setEditingReward(null)`) allows React to smoothly reconcile the DOM, preserving any CSS animations or current view state.

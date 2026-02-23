@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { useTranslation, Trans } from 'react-i18next';
-import { getRewards, createReward, setUserGoal, redeemReward } from '../../api';
+import { getRewards, createReward, setUserGoal, redeemReward, updateReward, deleteReward } from '../../api';
 import type { Reward, User } from '../../types';
 import { TIER_THRESHOLDS } from '../../constants';
 import { triggerConfetti } from '../../utils/confetti';
@@ -30,6 +30,8 @@ const RewardHub: React.FC = () => {
         cost_points: 0,
         tier_level: 1,
     });
+
+    const [editingReward, setEditingReward] = useState<Reward | null>(null);
 
     // Redemption modal state
     const [redeemConfirm, setRedeemConfirm] = useState<{ reward: Reward; show: boolean } | null>(null);
@@ -68,6 +70,53 @@ const RewardHub: React.FC = () => {
         } finally {
             setSubmitting(false);
         }
+    };
+
+    const handleEditReward = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingReward) return;
+        setSubmitting(true);
+
+        try {
+            await updateReward(editingReward.id, {
+                name: formData.name,
+                description: formData.description,
+                cost_points: formData.cost_points,
+                tier_level: formData.tier_level
+            });
+            success(t('rewards.toasts.update_success', 'Reward updated successfully!'));
+            setEditingReward(null);
+            setFormData({ name: '', description: '', cost_points: 0, tier_level: 1 });
+            fetchRewards();
+        } catch (err) {
+            error(t('rewards.toasts.update_error', 'Failed to update reward'));
+            console.error('Failed to update reward', err);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleDeleteReward = async (reward: Reward) => {
+        if (!window.confirm(t('rewards.confirm_delete', `Are you sure you want to delete ${reward.name}? This will remove it as a goal for anyone tracking it.`))) return;
+
+        try {
+            await deleteReward(reward.id);
+            success(t('rewards.toasts.delete_success', 'Reward deleted!'));
+            fetchRewards();
+        } catch (err) {
+            error(t('rewards.toasts.delete_error', 'Failed to delete reward.'));
+            console.error('Failed to delete reward', err);
+        }
+    };
+
+    const openEditForm = (reward: Reward) => {
+        setFormData({
+            name: reward.name,
+            description: reward.description || '',
+            cost_points: reward.cost_points,
+            tier_level: reward.tier_level
+        });
+        setEditingReward(reward);
     };
 
     const handleSetGoal = async (rewardId: number) => {
@@ -409,7 +458,27 @@ const RewardHub: React.FC = () => {
 
                                         <div className="reward-header">
                                             <h3>{reward.name}</h3>
-                                            {getTierBadge(reward.tier_level)}
+                                            <div className="reward-header-actions">
+                                                {getTierBadge(reward.tier_level)}
+                                                {isAdmin && (
+                                                    <div className="admin-actions">
+                                                        <button
+                                                            className="icon-btn edit-btn"
+                                                            onClick={() => openEditForm(reward)}
+                                                            title="Edit Reward"
+                                                        >
+                                                            ✏️
+                                                        </button>
+                                                        <button
+                                                            className="icon-btn delete-btn"
+                                                            onClick={() => handleDeleteReward(reward)}
+                                                            title="Delete Reward"
+                                                        >
+                                                            🗑️
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
 
                                         <p className="reward-description">{reward.description || t('rewards.card.no_description')}</p>
@@ -457,6 +526,69 @@ const RewardHub: React.FC = () => {
                     </div>
                 );
             })}
+
+            {/* Edit Reward Form Modal */}
+            {editingReward && (
+                <div className="modal-overlay" onClick={() => setEditingReward(null)}>
+                    <div className="modal-content glass-panel" onClick={e => e.stopPropagation()}>
+                        <h2>{t('rewards.edit_form.title', 'Edit Reward')}</h2>
+                        <form onSubmit={handleEditReward} className="create-reward-form">
+                            <div className="form-grid">
+                                <div className="form-group">
+                                    <label>{t('rewards.create_form.name_label')}</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={formData.name}
+                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label>{t('rewards.create_form.cost_label')}</label>
+                                    <input
+                                        type="number"
+                                        required
+                                        min="1"
+                                        value={formData.cost_points}
+                                        onChange={(e) => setFormData({ ...formData, cost_points: parseInt(e.target.value) })}
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label>{t('rewards.create_form.tier_label')}</label>
+                                    <select
+                                        value={formData.tier_level}
+                                        onChange={(e) => setFormData({ ...formData, tier_level: parseInt(e.target.value) })}
+                                    >
+                                        <option value={1}>{t('rewards.create_form.tiers.bronze')}</option>
+                                        <option value={2}>{t('rewards.create_form.tiers.silver')}</option>
+                                        <option value={3}>{t('rewards.create_form.tiers.gold')}</option>
+                                    </select>
+                                </div>
+
+                                <div className="form-group full-width">
+                                    <label>{t('rewards.create_form.description_label')}</label>
+                                    <textarea
+                                        value={formData.description}
+                                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                        rows={3}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="form-actions mt-lg">
+                                <button type="button" className="btn btn-secondary" onClick={() => setEditingReward(null)} disabled={submitting}>
+                                    {t('rewards.cancel_button')}
+                                </button>
+                                <button type="submit" className="btn btn-primary" disabled={submitting}>
+                                    {submitting ? t('common.loading', 'Loading...') : t('common.save', 'Save')}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             {/* Redemption Confirmation Modal */}
             {redeemConfirm && redeemConfirm.show && (
