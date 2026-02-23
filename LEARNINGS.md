@@ -396,3 +396,8 @@ This file captures accumulated knowledge from development sessions. The Libraria
 ### Gotchas
 - **Bulk `.update()` with Booleans**: SQLAlchemy's `.update({"read": True})` works correctly with Boolean columns, but you must use `synchronize_session="fetch"` (or `"evaluate"`) when combining `.filter().update()` using `.in_()` clauses, otherwise the session cache can become stale.
 
+
+### A1: APIRouter Refactoring & Circular Imports
+- When splitting a monolithic FastAPI app into routers, extract shared state (like `EventBroadcaster`) into a separate module (e.g. `events.py`) *before* extracting the routes. This prevents circular imports where routers need the broadcaster, but `main.py` needs the routers.
+- Running Pytest against a project that was previously monolithic may require forcing `PYTHONPATH=.` so imports like `backend.database` resolve correctly outside of the app container.
+- When creating pytest fixtures, avoid importing `app` and `get_db` together if it causes circular dependencies during load. Isolate the dependency overrides.

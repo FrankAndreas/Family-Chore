@@ -7,8 +7,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from backend.database import Base
-from backend.main import app, get_db
+from backend.database import Base, get_db
+from backend.main import app
 from backend import models
 
 # Use in-memory SQLite for testing
