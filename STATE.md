@@ -7,11 +7,10 @@
 The project is a **Family Chore Gamification System** (Universal-GSD-Core). We have completed **System Polish & Hardening** (V1.4), **Negative Points**, **Email Notifications** (V1.6), **Device Photo Upload**, and a full **Code & Spec Review** fixing doc drift, bugs, upload safety, and code quality issues. Schema version is now **1.7**.
 
 ## 🔄 Recent Changes (2026-02-23 Backend Polish)
+- **M1/M3/M4**: Added CORS environment configuration (`CORS_ORIGINS`), built full CRUD endpoints for Rewards (`PUT` and `DELETE`), and provided strict Pydantic typing for `SplitRedemptionResponse` (`SplitTransactionDetail`).
 - **A2/M2: DRY Task Generation** — Extracted shared `_generate_instances_for_task` helper, fixing same-day deduplication bugs.
-- **A1: Monolithic main.py** — Split `backend/main.py` into 7 modular APIRouters (`auth`, `users`, `roles`, `tasks`, `rewards`, `transactions`, `system`).
-- **A1 Extracted components** — `EventBroadcaster` moved to `backend/events.py`.
-- **A3: Return-Type Annotations** — Added return types to `backend/crud.py` functions, fixing downstream typing errors in system routers via explicit casts.
-- **Testing environment** — Verified that 133 tests pass unchanged via PYTHONPATH mapping.
+- **A1: Monolithic main.py** — Split `backend/main.py` into 7 modular APIRouters (`auth`, `users`, `roles`, `tasks`, `rewards`, `transactions`, `system`), extracting `EventBroadcaster`.
+- **A3: Return-Type Annotations** — Added return types to `backend/crud.py` functions, fixing downstream typing errors.
 - **Prior Session** — B1 (Boolean Columns) and B2 (Orphaned Transactions) fixes.
 
 ## 📍 System State
@@ -20,9 +19,9 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We h
 - **Docker**: Secure configuration operational.
 
 ## 🚧 Active Tasks (Next Priority)
-1. **M4**: Typed `SplitRedemptionResponse`
-2. **M3**: Reward update/delete endpoints
-3. **M1**: CORS env-configurable origins
+1. **S1**: Authentication & PINs (hash plaintext PINs)
+2. **S2**: Auth Middleware (secure API endpoints matching frontend auth state)
+3. **Frontend Integration**: Hook up the new Reward edit/delete UI to the new M3 endpoints.
 
 ## ⚠️ Known Issues / Watchlist
 - **Security (Deferred Sprint)**: PINs stored in plaintext (S1) and no auth middleware (S2). These are the highest priority but require a dedicated sprint.
@@ -32,4 +31,4 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We h
 
 ## 🔜 Next Session Prompt
 > **Start a new conversation and say:**
-> "Review STATE.md — A3 is complete. Let's continue with A2/M2 (DRY instance-generation), the remaining M1-M4 minor features, or jump to the Security Phase (S1/S2)."
+> "Review STATE.md — The M1, M3, and M4 backend tasks are complete. Let's either hook up the frontend Reward UI to use the new M3 endpoints, or jump into the Security Phase (S1/S2)."

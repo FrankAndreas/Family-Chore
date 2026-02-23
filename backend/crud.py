@@ -406,6 +406,39 @@ def get_rewards(db: Session, skip: int = 0, limit: int = 100) -> List[models.Rew
     return db.query(models.Reward).offset(skip).limit(limit).all()
 
 
+def update_reward(db: Session, reward_id: int, reward_update: schemas.RewardUpdate) -> Optional[models.Reward]:
+    """Update an existing reward."""
+    db_reward = db.query(models.Reward).filter(models.Reward.id == reward_id).first()
+    if not db_reward:
+        return None
+
+    # Update only provided fields
+    update_data = reward_update.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(db_reward, field, value)
+
+    db.commit()
+    db.refresh(db_reward)
+    return db_reward
+
+
+def delete_reward(db: Session, reward_id: int) -> bool:
+    """Delete a reward and clear it from any user goals."""
+    db_reward = db.query(models.Reward).filter(models.Reward.id == reward_id).first()
+    if not db_reward:
+        return False
+
+    # Clear goal from any users that have this reward set as their current goal
+    db.query(models.User).filter(
+        models.User.current_goal_reward_id == reward_id
+    ).update({"current_goal_reward_id": None}, synchronize_session="fetch")
+
+    # Delete the reward
+    db.delete(db_reward)
+    db.commit()
+    return True
+
+
 def set_user_goal(db: Session, user_id: int, reward_id: int) -> Optional[models.User]:
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if user:

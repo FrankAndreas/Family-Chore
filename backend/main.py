@@ -169,14 +169,21 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="ChoreSpec MVP", lifespan=lifespan)
 
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
+# M1: Retrieve CORS internal network origins from environment or default to local Vite/React servers
+cors_origins_env = os.environ.get("CORS_ORIGINS", "")
+if cors_origins_env:
+    allow_origins = [origin.strip() for origin in cors_origins_env.split(",") if origin.strip()]
+else:
+    allow_origins = [
         "http://localhost:5173",  # Vite dev server
         "http://localhost:5174",  # Vite dev server (alt)
         "http://localhost:3000",  # Alternative React dev server
-    ],
+    ]
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

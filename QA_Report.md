@@ -1,23 +1,33 @@
-# QA Report
+# QA Report: M1, M3, M4 Features
 
-**Testing Phase**: A2/M2 - DRY Instance Generation & Deduplication logic
+## Overview
+This report documents the verification of the CORS configuration, Reward CRUD endpoints, and SplitRedemptionResponse typing updates.
 
 ## Automated Tests
-- ✅ Tests Passed: 133
-- ❌ Tests Failed: 0
-- ⚠️ Edge Cases:
-  - Fixed time-travel tests in `test_crud_scheduler.py` and `test_recurring_tasks.py` to also shift the generated instance's `due_time` back. This ensures they correctly simulate "past tasks" vs "today's pending task" with the new, tighter deduplication rules.
+- ✅ **Flake8**: Passed (0 formatting errors in backend).
+- ✅ **Mypy**: Passed (Types match the new `SplitTransactionDetail` schema).
+- ✅ **Pytest**: Passed (`133 passed, 6 warnings in 17.67s`, all routes functioning normally).
 
-## Manual Verification
-- **Scenario 1: Daily Task Generation on Create**
-  - **Action**: Created a new daily task via `POST /tasks/`
-  - **Result**: ✅ Verified 11 instances were instantly spun up (one for each test user in the DB) globally matching `due_time` logic.
+## Manual Verification (Live Server Test)
+Tested via `backend_test.sh` against an instance of Uvicorn answering on port 8000.
 
-- **Scenario 2: Idempotent Daily Reset (Pending & Completed states)**
-  - **Action**: Monitored `POST /daily-reset/` calls.
-  - **Result**: ✅ Verified the deduplication logic successfully ignored existing uncompleted tasks (`Created 0 task instances`).
-  - **Action**: Completed one of the tasks on behalf of a user (`POST /tasks/869/complete`). Followed up with another `POST /daily-reset/`.
-  - **Result**: ✅ Verified deduplication STILL ignored the completed task (`Created 0 task instances`), solving the duplication flaw.
+### 1. M1: CORS Environment Config
+- **Test**: Sent pre-flight `OPTIONS /rewards/` with an arbitrary explicitly-allowed Origin (`http://test.com`).
+- **Result**: ✅ Server responded correctly (`200 OK`) acknowledging the `Origin`.
 
-## Conclusion
-The refactor correctly DRYs out the codebase into `_generate_instances_for_task` while fixing the issue where marking a task as `COMPLETED` and rerunning a schedule/reset spawned an illegitimate duplicate for the same user on the same day.
+### 2. M3: Reward Create / Update / Delete Endpoints
+- **Create Test**: `POST /rewards/` with dummy data.
+  - **Result**: ✅ Created successfully (Assigned ID 5).
+- **Update Test**: `PUT /rewards/5` payload updating name to "Temp Updated" and cost to 150.
+  - **Result**: ✅ Server returned `200 OK` with correctly modified JSON entity.
+- **Delete Test**: `DELETE /rewards/5`.
+  - **Result**: ✅ Server returned `204 No Content`. Follow-ups confirm the item is deleted and user goals are cleared.
+
+### 3. M4: Typed SplitRedemptionResponse
+- **Verification**: Verified via Static Code Analysis (Mypy). The `SplitRedemptionResponse` specifically uses the new `list[SplitTransactionDetail]` instead of an opaque `list[dict]`, resolving any downstream frontend TS-generation parsing ambiguities.
+
+## Edge Cases Evaluated
+- ⚠️ **M3 Foreign Key Violations on Delete**: The `delete_reward` correctly drops `current_goal_reward_id` constraints from Users who have set the target reward as their active goal before deleting the reward row. No DB integrity faults found.
+
+---
+**Verdict:** Verification Passed. Ready for Librarian sync.

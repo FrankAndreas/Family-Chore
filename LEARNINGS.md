@@ -428,3 +428,15 @@ This file captures accumulated knowledge from development sessions. The Libraria
 
 ### Gotchas
 - **Pytest Side Effects**: Modifying timestamps directly in the database during Pytest BDD scenarios requires immediate `db_session.commit()` calls, otherwise subsequent API calls within the same test step won't see the shifted time context.
+
+## 📅 2026-02-23: Backend CRUD & Type Enforcement
+
+### What We Learned
+- **CORS Best Practices**: Environment-driven CORS definitions are critical before moving from local dev to a containerized production environment across bridges/proxies.
+- **Foreign Key Safeties**: Deleting items referenced dynamically (like a `Reward` referenced by a User's `current_goal_reward_id`) requires explicit pre-delete `NULL`ing across relationships to prevent constraint violations, as implicit CASCADE might behave unpredictably without strict DB migration coordination.
+
+### Patterns Discovered
+- **Progressive Typing**: Moving from `list[dict]` to strictly typed `list[SplitTransactionDetail]` payloads instantly guarantees frontend parsing stability, particularly when automated schema generators convert the OpenAPI JSON into TS interfaces.
+
+### Gotchas
+- **Pydantic Model Updates**: Adding partial update schemas (`RewardUpdate` where fields are `Optional`) simplifies Router logic directly because you can iterate over `.model_dump(exclude_unset=True)` effectively building an atomic SQLAlchemy patch update without manual null-checks.

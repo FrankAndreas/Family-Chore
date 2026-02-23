@@ -23,6 +23,24 @@ def read_rewards(skip: int = 0, limit: int = 100, db: Session = Depends(get_db))
     return rewards
 
 
+@router.put("/rewards/{reward_id}", response_model=schemas.Reward)
+def update_reward(reward_id: int, reward: schemas.RewardUpdate, db: Session = Depends(get_db)):
+    """Update an existing reward."""
+    updated_reward = crud.update_reward(db, reward_id=reward_id, reward_update=reward)
+    if not updated_reward:
+        raise HTTPException(status_code=404, detail="Reward not found")
+    return updated_reward
+
+
+@router.delete("/rewards/{reward_id}", status_code=204)
+def delete_reward(reward_id: int, db: Session = Depends(get_db)):
+    """Delete a reward."""
+    success = crud.delete_reward(db, reward_id=reward_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Reward not found")
+    return None
+
+
 @router.post("/users/{user_id}/goal", response_model=schemas.User)
 def set_user_goal(user_id: int, reward_id: int, db: Session = Depends(get_db)):
     user = crud.set_user_goal(db, user_id=user_id, reward_id=reward_id)

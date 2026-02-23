@@ -249,6 +249,14 @@ class RewardCreate(RewardBase):
     pass
 
 
+class RewardUpdate(BaseModel):
+    """Schema for updating a reward. All fields are optional."""
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    cost_points: Optional[int] = Field(None, gt=0, le=10000)
+    description: Optional[str] = Field(None, max_length=500)
+    tier_level: Optional[int] = Field(None, ge=0, le=10)
+
+
 class Reward(RewardBase):
     id: int
 
@@ -277,13 +285,21 @@ class SplitRedemptionRequest(BaseModel):
     contributions: list[SplitContribution] = Field(..., min_length=1)
 
 
+class SplitTransactionDetail(BaseModel):
+    """Details of a single transaction within a split redemption."""
+    user_id: int
+    user_name: Optional[str] = None
+    points: int
+    transaction_id: Optional[int] = None
+
+
 class SplitRedemptionResponse(BaseModel):
     """Response from split redemption endpoint."""
     success: bool
     reward_name: Optional[str] = None
     total_points: Optional[int] = None
     # List of {user_id, user_name, points, transaction_id}
-    transactions: Optional[list[dict]] = None
+    transactions: Optional[list[SplitTransactionDetail]] = None
     error: Optional[str] = None
 
 
