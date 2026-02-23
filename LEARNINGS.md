@@ -414,3 +414,17 @@ This file captures accumulated knowledge from development sessions. The Libraria
 
 ### Gotchas
 - **Mypy and Dictionary Lookups**: `roles.get(Column[int])` causes a Mypy `[call-overload]` error because it expects standard hashable primitives. We must look it up safely without casting the lookup key dynamically if Mypy doesn't understand the Column type resolution.
+
+---
+
+## 📅 2026-02-23: DRY Logic & Time-Travel Testing
+
+### What We Learned
+- **Deduplication vs. State**: Checking for duplicates during a daily reset based solely on `status == "PENDING"` is fragile. If a user completes a task early (STATUS -> COMPLETED) and the reset runs again, it spawns a duplicate. Checking only against `due_time >= start_of_day` regardless of status is much safer.
+- **Time-Travel Testing**: When writing BDD tests that "advance time" by modifying a completed task's `completed_at` timestamp in the database, you must also shift the `due_time` (or creation time) backwards as well. Otherwise, stricter deduplication logic that filters on `due_time >= start_of_day` will see the task as belonging to *today*, creating contradictions.
+
+### Patterns Discovered
+- **Shared Helpers**: Extracting `_generate_instances_for_task` into a single function taking `(db, task, today)` ensures that ad-hoc task creation (`POST /tasks/`) and broad task creation (`POST /daily-reset/`) share the exact same cooldown, scheduling, and duplication rules.
+
+### Gotchas
+- **Pytest Side Effects**: Modifying timestamps directly in the database during Pytest BDD scenarios requires immediate `db_session.commit()` calls, otherwise subsequent API calls within the same test step won't see the shifted time context.

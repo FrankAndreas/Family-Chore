@@ -106,6 +106,7 @@ def test_generate_daily_instances_recurring(db_session, scheduler_setup):
 
     # 4. Modify completion date to 3 days ago
     instance.completed_at = datetime.now() - timedelta(days=3)
+    instance.due_time = instance.due_time - timedelta(days=3)
     db_session.commit()
 
     # Note: `generate_daily_instances` also checks for EXISTING pending instances for today.

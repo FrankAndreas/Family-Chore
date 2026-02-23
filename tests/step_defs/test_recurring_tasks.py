@@ -274,9 +274,10 @@ def advance_time_and_reset(seeded_db, client, context, days):
         ).first()
 
         if instance and instance.completed_at:
-            # Move completion time back by the specified days
-            instance.completed_at = instance.completed_at - \
-                timedelta(days=days)
+            # Move completion time and due_time back by the specified days
+            instance.completed_at = instance.completed_at - timedelta(days=days)
+            if instance.due_time:
+                instance.due_time = instance.due_time - timedelta(days=days)
             seeded_db.commit()
 
     # Trigger daily reset

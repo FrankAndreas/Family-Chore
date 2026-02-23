@@ -82,10 +82,9 @@ def create_task(db: Session, task: schemas.TaskCreate) -> models.Task:
     return db_task
 
 
-def generate_instances_for_task(db: Session, task: models.Task) -> int:
-    """Generate task instances for a single task (for today). Used when creating new tasks."""
+def _generate_instances_for_task(db: Session, task: models.Task, today: datetime) -> int:
+    """Shared helper to generate instances for a single task for a given day."""
     created_count = 0
-    today = datetime.now(timezone.utc)
     today_weekday = today.strftime("%A")
 
     # Skip weekly tasks if today is not the scheduled day
@@ -95,6 +94,7 @@ def generate_instances_for_task(db: Session, task: models.Task) -> int:
 
     # For recurring tasks, check if cooldown period has elapsed
     if task.schedule_type == "recurring":
+        # Find the most recent completion of this task by ANY user
         last_completion = db.query(models.TaskInstance).filter(
             models.TaskInstance.task_id == task.id,
             models.TaskInstance.status == "COMPLETED"
@@ -114,6 +114,8 @@ def generate_instances_for_task(db: Session, task: models.Task) -> int:
     else:
         target_users = db.query(models.User).all()
 
+    start_of_day = today.replace(hour=0, minute=0, second=0, microsecond=0)
+
     for user in target_users:
         # Construct due_time for today
         if task.schedule_type == "daily":
@@ -128,8 +130,9 @@ def generate_instances_for_task(db: Session, task: models.Task) -> int:
             due_time = today.replace(
                 hour=23, minute=59, second=0, microsecond=0)
 
-        # Check for existing instance today
-        start_of_day = today.replace(hour=0, minute=0, second=0, microsecond=0)
+        # Check for existing instance today (start of day to end of day)
+        # Deduplication behavior: check regardless of status so we don't duplicate
+        # if they completed it and we run a reset again.
         existing = db.query(models.TaskInstance).filter(
             models.TaskInstance.task_id == task.id,
             models.TaskInstance.user_id == user.id,
@@ -146,8 +149,15 @@ def generate_instances_for_task(db: Session, task: models.Task) -> int:
             db.add(instance)
             created_count += 1
 
-    db.commit()
     return created_count
+
+
+def generate_instances_for_task(db: Session, task: models.Task) -> int:
+    """Generate task instances for a single task (for today). Used when creating new tasks."""
+    today = datetime.now(timezone.utc)
+    count = _generate_instances_for_task(db, task, today)
+    db.commit()
+    return count
 
 
 def get_tasks(db: Session, skip: int = 0, limit: int = 100) -> List[models.Task]:
@@ -210,87 +220,8 @@ def generate_daily_instances(db: Session) -> int:
     created_count = 0
     today = datetime.now(timezone.utc)
 
-    today_weekday = today.strftime("%A")  # e.g., "Monday", "Tuesday"
-
     for task in tasks:
-        # Skip weekly tasks if today is not the scheduled day
-        if task.schedule_type == "weekly":
-            if task.default_due_time != today_weekday:
-                continue  # Not the right day for this weekly task
-
-        # For recurring tasks, check if cooldown period has elapsed
-        if task.schedule_type == "recurring":
-            # Find the most recent completion of this task by ANY user
-            last_completion = db.query(models.TaskInstance).filter(
-                models.TaskInstance.task_id == task.id,
-                models.TaskInstance.status == "COMPLETED"
-            ).order_by(models.TaskInstance.completed_at.desc()).first()
-
-            if last_completion and last_completion.completed_at:
-                # Check if enough days have passed since the last completion
-                # Compare dates, not datetimes, to avoid time-of-day issues
-                completion_date = last_completion.completed_at.date()
-                today_date = today.date()
-                days_since_completion = (today_date - completion_date).days
-                if days_since_completion < task.recurrence_min_days:
-                    # Still in cooldown period - skip this task
-                    continue
-
-        # 2. Find target users
-        target_users = []
-        if task.assigned_role_id:
-            # Task assigned to specific role
-            target_users = db.query(models.User).filter(
-                models.User.role_id == task.assigned_role_id).all()
-        else:
-            # Task not assigned to any role - assign to ALL users (any family member can do it)
-            target_users = db.query(models.User).all()
-
-        for user in target_users:
-            # 3. Check if instance already exists for today (prevent duplicates)
-            # We check if there is an instance for this task/user with due_time today
-            # Simple check: due_time is DateTime.
-
-            # Construct due_time for today
-            if task.schedule_type == "daily":
-                # For daily tasks, parse HH:MM time
-                try:
-                    hour, minute = map(int, task.default_due_time.split(":"))
-                    due_time = today.replace(
-                        hour=hour, minute=minute, second=0, microsecond=0)
-                except ValueError:
-                    # Fallback if time format is bad
-                    due_time = today.replace(
-                        hour=17, minute=0, second=0, microsecond=0)
-            elif task.schedule_type == "weekly":
-                # For weekly tasks, set due time to end of day (23:59)
-                due_time = today.replace(
-                    hour=23, minute=59, second=0, microsecond=0)
-            else:  # recurring
-                # For recurring tasks, set due time to end of day (23:59)
-                due_time = today.replace(
-                    hour=23, minute=59, second=0, microsecond=0)
-
-            # Check for existing instance today (start of day to end of day)
-            # Only check for PENDING instances - completed ones shouldn't block new ones
-            start_of_day = today.replace(
-                hour=0, minute=0, second=0, microsecond=0)
-            existing = db.query(models.TaskInstance).filter(
-                models.TaskInstance.task_id == task.id,
-                models.TaskInstance.user_id == user.id,
-                models.TaskInstance.due_time >= start_of_day,
-                models.TaskInstance.status == "PENDING"
-            ).first()
-
-            if not existing:
-                instance = models.TaskInstance(
-                    task_id=task.id,
-                    user_id=user.id,
-                    due_time=due_time,
-                    status="PENDING"
-                )
-                db.add(instance)
-                created_count += 1
+        created_count += _generate_instances_for_task(db, task, today)
 
     db.commit()
     return created_count

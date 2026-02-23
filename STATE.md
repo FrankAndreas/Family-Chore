@@ -6,7 +6,8 @@
 ## 🧠 Global Context
 The project is a **Family Chore Gamification System** (Universal-GSD-Core). We have completed **System Polish & Hardening** (V1.4), **Negative Points**, **Email Notifications** (V1.6), **Device Photo Upload**, and a full **Code & Spec Review** fixing doc drift, bugs, upload safety, and code quality issues. Schema version is now **1.7**.
 
-## 🔄 Recent Changes (2026-02-23 Router Refactor)
+## 🔄 Recent Changes (2026-02-23 Backend Polish)
+- **A2/M2: DRY Task Generation** — Extracted shared `_generate_instances_for_task` helper, fixing same-day deduplication bugs.
 - **A1: Monolithic main.py** — Split `backend/main.py` into 7 modular APIRouters (`auth`, `users`, `roles`, `tasks`, `rewards`, `transactions`, `system`).
 - **A1 Extracted components** — `EventBroadcaster` moved to `backend/events.py`.
 - **A3: Return-Type Annotations** — Added return types to `backend/crud.py` functions, fixing downstream typing errors in system routers via explicit casts.
@@ -19,10 +20,9 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We h
 - **Docker**: Secure configuration operational.
 
 ## 🚧 Active Tasks (Next Priority)
-1. **A2/M2**: DRY instance-generation logic + align dedup
-2. **M4**: Typed `SplitRedemptionResponse`
-3. **M3**: Reward update/delete endpoints
-4. **M1**: CORS env-configurable origins
+1. **M4**: Typed `SplitRedemptionResponse`
+2. **M3**: Reward update/delete endpoints
+3. **M1**: CORS env-configurable origins
 
 ## ⚠️ Known Issues / Watchlist
 - **Security (Deferred Sprint)**: PINs stored in plaintext (S1) and no auth middleware (S2). These are the highest priority but require a dedicated sprint.

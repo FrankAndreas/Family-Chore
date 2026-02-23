@@ -1,14 +1,23 @@
-# QA Report: Feature A3 (crud.py Return-Type Annotations)
+# QA Report
 
-## 1. Automated Tests
-- **Backend Tests:** ✅ Passed (133/133)
-- **Linter (flake8):** ✅ Passed (No syntax/style errors in `crud.py`, E501 fixed)
-- **Type Checker (mypy):** ✅ Passed (No type inconsistency errors in `crud.py` and `routers/system.py` where casting was required)
+**Testing Phase**: A2/M2 - DRY Instance Generation & Deduplication logic
 
-## 2. Manual/Edge Cases Verification
-- Given the nature of this change (adding Python type checking metadata via type hints), there are no runtime behavioral or database changes.
-- Verification relied entirely on the static analysis tool (`mypy`) to ensure type constraints are satisfied, and the existing regression test suite to ensure no runtime logic was inadvertently modified or broken.
-- `routers/system.py` required explicit string/integer castings when reading from `Column` models in SQLAlchemy during the `/tasks/export` route to satisfy `schemas.TaskExportItem` Pydantic types. This was thoroughly checked.
+## Automated Tests
+- ✅ Tests Passed: 133
+- ❌ Tests Failed: 0
+- ⚠️ Edge Cases:
+  - Fixed time-travel tests in `test_crud_scheduler.py` and `test_recurring_tasks.py` to also shift the generated instance's `due_time` back. This ensures they correctly simulate "past tasks" vs "today's pending task" with the new, tighter deduplication rules.
 
-## Overall Status
-✅ **PASS** - Code changes successfully verified. Ready for Librarian handoff to summarize the session and commit.
+## Manual Verification
+- **Scenario 1: Daily Task Generation on Create**
+  - **Action**: Created a new daily task via `POST /tasks/`
+  - **Result**: ✅ Verified 11 instances were instantly spun up (one for each test user in the DB) globally matching `due_time` logic.
+
+- **Scenario 2: Idempotent Daily Reset (Pending & Completed states)**
+  - **Action**: Monitored `POST /daily-reset/` calls.
+  - **Result**: ✅ Verified the deduplication logic successfully ignored existing uncompleted tasks (`Created 0 task instances`).
+  - **Action**: Completed one of the tasks on behalf of a user (`POST /tasks/869/complete`). Followed up with another `POST /daily-reset/`.
+  - **Result**: ✅ Verified deduplication STILL ignored the completed task (`Created 0 task instances`), solving the duplication flaw.
+
+## Conclusion
+The refactor correctly DRYs out the codebase into `_generate_instances_for_task` while fixing the issue where marking a task as `COMPLETED` and rerunning a schedule/reset spawned an illegitimate duplicate for the same user on the same day.
