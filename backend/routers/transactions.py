@@ -7,13 +7,16 @@ from sqlalchemy.orm import Session
 
 from .. import schemas, crud
 from ..database import get_db
+from ..dependencies import get_current_user
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["Transactions"])
 
 
-@router.get("/users/{user_id}/transactions", response_model=List[schemas.Transaction])
+@router.get("/users/{user_id}/transactions",
+            response_model=List[schemas.Transaction],
+            dependencies=[Depends(get_current_user)])
 def read_user_transactions(
     user_id: int,
     skip: int = 0,
@@ -31,7 +34,7 @@ def read_user_transactions(
     )
 
 
-@router.get("/transactions", response_model=List[schemas.Transaction])
+@router.get("/transactions", response_model=List[schemas.Transaction], dependencies=[Depends(get_current_user)])
 def read_all_transactions(
     skip: int = 0,
     limit: int = 100,

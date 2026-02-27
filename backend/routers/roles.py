@@ -5,13 +5,14 @@ import logging
 
 from .. import schemas, crud, models
 from ..database import get_db
+from ..dependencies import get_current_user, get_current_admin_user
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["Roles"])
 
 
-@router.post("/roles/", response_model=schemas.Role)
+@router.post("/roles/", response_model=schemas.Role, dependencies=[Depends(get_current_admin_user)])
 def create_role(role: schemas.RoleCreate, db: Session = Depends(get_db)):
     """Create a new role."""
     logger.info(
@@ -36,20 +37,20 @@ def create_role(role: schemas.RoleCreate, db: Session = Depends(get_db)):
     return db_role
 
 
-@router.get("/roles/", response_model=List[schemas.Role])
+@router.get("/roles/", response_model=List[schemas.Role], dependencies=[Depends(get_current_user)])
 def read_roles(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     roles = crud.get_roles(db, skip=skip, limit=limit)
     return roles
 
 
-@router.get("/roles/{role_id}/users")
+@router.get("/roles/{role_id}/users", dependencies=[Depends(get_current_user)])
 def get_role_users(role_id: int, db: Session = Depends(get_db)):
     """Get count of users assigned to a role."""
     users = db.query(models.User).filter(models.User.role_id == role_id).all()
     return {"count": len(users), "users": [{"id": u.id, "nickname": u.nickname} for u in users]}
 
 
-@router.put("/roles/{role_id}", response_model=schemas.Role)
+@router.put("/roles/{role_id}", response_model=schemas.Role, dependencies=[Depends(get_current_admin_user)])
 def update_role(role_id: int, role_update: schemas.RoleUpdate, db: Session = Depends(get_db)):
     db_role = crud.get_role(db, role_id=role_id)
     if not db_role:
@@ -63,7 +64,7 @@ def update_role(role_id: int, role_update: schemas.RoleUpdate, db: Session = Dep
     return crud.update_role_multiplier(db, role_id=role_id, multiplier=role_update.multiplier_value)
 
 
-@router.delete("/roles/{role_id}")
+@router.delete("/roles/{role_id}", dependencies=[Depends(get_current_admin_user)])
 def delete_role(role_id: int, reassign_to_role_id: int = None, db: Session = Depends(get_db)):
     """Delete a role. If users are assigned, reassign_to_role_id must be provided."""
     logger.info(

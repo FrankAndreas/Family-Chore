@@ -5,6 +5,7 @@ import logging
 
 from .. import schemas, crud
 from ..database import get_db
+from ..dependencies import get_current_user, get_current_admin_user
 from ..events import broadcaster
 
 logger = logging.getLogger(__name__)
@@ -12,18 +13,18 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["Rewards"])
 
 
-@router.post("/rewards/", response_model=schemas.Reward)
+@router.post("/rewards/", response_model=schemas.Reward, dependencies=[Depends(get_current_admin_user)])
 def create_reward(reward: schemas.RewardCreate, db: Session = Depends(get_db)):
     return crud.create_reward(db=db, reward=reward)
 
 
-@router.get("/rewards/", response_model=List[schemas.Reward])
+@router.get("/rewards/", response_model=List[schemas.Reward], dependencies=[Depends(get_current_user)])
 def read_rewards(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     rewards = crud.get_rewards(db, skip=skip, limit=limit)
     return rewards
 
 
-@router.put("/rewards/{reward_id}", response_model=schemas.Reward)
+@router.put("/rewards/{reward_id}", response_model=schemas.Reward, dependencies=[Depends(get_current_admin_user)])
 def update_reward(reward_id: int, reward: schemas.RewardUpdate, db: Session = Depends(get_db)):
     """Update an existing reward."""
     updated_reward = crud.update_reward(db, reward_id=reward_id, reward_update=reward)
@@ -32,7 +33,7 @@ def update_reward(reward_id: int, reward: schemas.RewardUpdate, db: Session = De
     return updated_reward
 
 
-@router.delete("/rewards/{reward_id}", status_code=204)
+@router.delete("/rewards/{reward_id}", status_code=204, dependencies=[Depends(get_current_admin_user)])
 def delete_reward(reward_id: int, db: Session = Depends(get_db)):
     """Delete a reward."""
     success = crud.delete_reward(db, reward_id=reward_id)
@@ -41,7 +42,7 @@ def delete_reward(reward_id: int, db: Session = Depends(get_db)):
     return None
 
 
-@router.post("/users/{user_id}/goal", response_model=schemas.User)
+@router.post("/users/{user_id}/goal", response_model=schemas.User, dependencies=[Depends(get_current_user)])
 def set_user_goal(user_id: int, reward_id: int, db: Session = Depends(get_db)):
     user = crud.set_user_goal(db, user_id=user_id, reward_id=reward_id)
     if not user:
@@ -49,7 +50,9 @@ def set_user_goal(user_id: int, reward_id: int, db: Session = Depends(get_db)):
     return user
 
 
-@router.post("/rewards/{reward_id}/redeem", response_model=schemas.RedemptionResponse)
+@router.post("/rewards/{reward_id}/redeem",
+             response_model=schemas.RedemptionResponse,
+             dependencies=[Depends(get_current_user)])
 async def redeem_reward(reward_id: int, user_id: int, db: Session = Depends(get_db)):
     """
     Redeem a reward for a user.
@@ -86,7 +89,9 @@ async def redeem_reward(reward_id: int, user_id: int, db: Session = Depends(get_
     return result
 
 
-@router.post("/rewards/{reward_id}/redeem-split", response_model=schemas.SplitRedemptionResponse)
+@router.post("/rewards/{reward_id}/redeem-split",
+             response_model=schemas.SplitRedemptionResponse,
+             dependencies=[Depends(get_current_user)])
 async def redeem_reward_split(
     reward_id: int,
     request: schemas.SplitRedemptionRequest,

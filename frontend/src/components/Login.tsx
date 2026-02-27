@@ -26,7 +26,8 @@ export default function Login({ onLogin }: LoginProps) {
 
         try {
             const response = await login(nickname, pin);
-            onLogin(response.data);
+            localStorage.setItem('auth_token', response.data.access_token);
+            onLogin(response.data.user);
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
             setError(err.response?.data?.detail || 'Login failed. Please try again.');

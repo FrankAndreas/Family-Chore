@@ -1,5 +1,7 @@
 import axios from 'axios';
 
+import type { LoginResponse } from './types';
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 const api = axios.create({
@@ -9,9 +11,35 @@ const api = axios.create({
     },
 });
 
+// Add request interceptor to inject JWT
+api.interceptors.request.use((config) => {
+    const token = localStorage.getItem('auth_token');
+    if (token && config.headers) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+}, (error) => {
+    return Promise.reject(error);
+});
+
+// Add response interceptor to handle 401s
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response && error.response.status === 401) {
+            if (!error.config.url?.includes('/login')) {
+                localStorage.removeItem('user');
+                localStorage.removeItem('auth_token');
+                window.location.href = '/login';
+            }
+        }
+        return Promise.reject(error);
+    }
+);
+
 // User APIs
 export const login = (nickname: string, login_pin: string) =>
-    api.post('/login/', { nickname, login_pin });
+    api.post<LoginResponse>('/login/', { nickname, login_pin });
 
 export const getUsers = () => api.get('/users/');
 

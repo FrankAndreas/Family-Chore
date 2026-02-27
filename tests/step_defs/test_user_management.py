@@ -104,7 +104,7 @@ def user_created_successfully(context):
 @then(parsers.parse('the user should have role "{role_name}"'))
 def user_has_role(seeded_db, context, role_name):
     """Verify user has the specified role."""
-    user = context.get('created_user') or context.get('login_response').json()
+    user = context.get('created_user') or context.get('login_response').json().get('user')
     role = seeded_db.query(models.Role).filter(
         models.Role.id == user['role_id']).first()
     assert role.name == role_name
@@ -122,7 +122,7 @@ def user_assigned_to_role(seeded_db, context, role_name):
 @then(parsers.parse('the user should have multiplier value {multiplier:f}'))
 def user_has_multiplier(seeded_db, context, multiplier):
     """Verify user's role has correct multiplier."""
-    user = context.get('created_user') or context.get('login_response').json()
+    user = context.get('created_user') or context.get('login_response').json().get('user')
     role = seeded_db.query(models.Role).filter(
         models.Role.id == user['role_id']).first()
     assert role.multiplier_value == multiplier
@@ -137,7 +137,10 @@ def login_successful(context):
 @then("I should receive user details")
 def receive_user_details(context):
     """Verify user details are returned."""
-    user = context['login_response'].json()
+    response_data = context['login_response'].json()
+    assert 'access_token' in response_data
+    user = response_data.get('user')
+    assert user is not None
     assert 'id' in user
     assert 'nickname' in user
     assert 'current_points' in user

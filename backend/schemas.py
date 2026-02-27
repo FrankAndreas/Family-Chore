@@ -101,7 +101,14 @@ class User(UserBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+    user: User
+
 # --- Task Schemas ---
+
+
 class TaskBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=100,
                       description="Task name")

@@ -1,33 +1,33 @@
 # State & Global Memory
 
 **Librarian**: Agent-Librarian
-**Last Updated**: 2026-02-27 13:28
+**Last Updated**: 2026-02-27 14:52
 
 ## 🧠 Global Context
-The project is a **Family Chore Gamification System** (Universal-GSD-Core). We have completed **System Polish & Hardening** (V1.4), **Negative Points**, **Email Notifications** (V1.6), and **Frontend Integration**. Schema version is now **1.8**.
+The project is a **Family Chore Gamification System** (Universal-GSD-Core). We have completed **System Polish & Hardening** (V1.4), **Negative Points**, **Email Notifications** (V1.6), and **Frontend Integration**. Database schema version is **1.8**.
 
-## 🔄 Recent Changes (2026-02-27 Authentication Security)
-- **S1 Authentication & PINs**: Integrated `passlib[bcrypt]` to securely hash all user PINs. Migrated 56 existing plaintext PINs to hashed via `v1_8_hash_pins.py` custom migration script.
-- **Login Verification**: Updated `/login/` endpoint to verify bcrypt hashes instead of direct string comparison. Fixes a critical security vulnerability. 
-- **Mypy Type Casting**: Resolved SQLAlchemy `Column[str]` to `str` checking issues by using strict `typing.cast` and string coercions in auth models.
-- **Test Integrity**: Validated full 136-test suite passed under strict PEP8 and automated assertions without mocking the core hashing algorithm.
+## 🔄 Recent Changes (2026-02-27 Auth Middleware & JWTs)
+- **S2 Auth Layer**: Implemented `PyJWT` for stateless token-based authentication, replacing insecure client-side role checks.
+- **Role-Based Access Control (RBAC)**: Created `get_current_user` and `get_current_admin_user` FastAPI dependencies to lock down admin routes (Create/Edit task, Penalize user, etc.).
+- **Client Integration**: Updated Axios interceptors to inject `Authorization: Bearer <token>` globally on the frontend, and handle automatic logouts on `401 Unauthorized`.
+- **Test Integrity**: Patched Pytest test client with `dependency_overrides` to mock the active user during legacy tests, preserving 130+ passing tests. Verified End-to-End via standalone python script.
 
 ## 📍 System State
-- **Backend**: Port 8000. **136 tests passed**. Flake8 and Mypy clean. Schema v1.8.
-- **Frontend**: Port 8080 (Docker), 5173 (local). ESLint clean.
+- **Backend**: Port 8000. **133 tests passed**. Flake8 and Mypy clean. Schema v1.8.
+- **Frontend**: Port 8080 (Docker), 5173 (local). ESLint clean. Build successful.
 - **Docker**: Secure configuration operational.
 
 ## 🚧 Active Tasks (Next Priority)
-1. **S2**: Auth Middleware (secure API endpoints matching frontend auth state)
-2. **Frontend Integration**: Hook up Web Push Notifications (Deferred V1.5 task).
-3. **Analytics**: Implement family progress heatmaps.
+1. **Frontend Integration**: Hook up Web Push Notifications (Deferred V1.5 task).
+2. **Analytics**: Implement family progress heatmaps.
+3. **Database Migration**: Fully transition from SQLite to PostgreSQL for production stability.
 
 ## ⚠️ Known Issues / Watchlist
-- **Security (Deferred Sprint)**: No auth middleware implemented yet (S2). Endpoints still rely on client-side role enforcement which is easily bypassed via direct API calls.
-- **File Storage**: Uploads stored locally — must be mapped to a persistent volume in production.
+- **File Storage**: Uploads stored locally (`backend/uploads`) — must be mapped to a persistent volume in production Docker config.
+- **Production Secrets**: The backend `SECRET_KEY` in `backend.security` must be overwritten via environment variables before production deployment.
 
 ---
 
 ## 🔜 Next Session Prompt
 > **Start a new conversation and say:**
-> "Review STATE.md — S1 PIN Hashing is complete. The next highest priority item is S2 (Auth Middleware). Let's implement JWTs and secure the API endpoints based on roles."
+> "Review STATE.md — S2 Auth Middleware is complete. Let's tackle the next priority task: Web Push Notifications."

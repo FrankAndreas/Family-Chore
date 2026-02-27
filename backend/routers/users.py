@@ -5,6 +5,7 @@ import logging
 
 from .. import schemas, crud
 from ..database import get_db
+from ..dependencies import get_current_user, get_current_admin_user
 from ..events import broadcaster
 
 logger = logging.getLogger(__name__)
@@ -12,7 +13,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["Users"])
 
 
-@router.post("/users/", response_model=schemas.User)
+@router.post("/users/", response_model=schemas.User, dependencies=[Depends(get_current_admin_user)])
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db_user = crud.get_user_by_nickname(db, nickname=user.nickname)
     if db_user:
@@ -21,13 +22,13 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     return crud.create_user(db=db, user=user)
 
 
-@router.get("/users/", response_model=List[schemas.User])
+@router.get("/users/", response_model=List[schemas.User], dependencies=[Depends(get_current_user)])
 def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     users = crud.get_users(db, skip=skip, limit=limit)
     return users
 
 
-@router.put("/users/{user_id}", response_model=schemas.User)
+@router.put("/users/{user_id}", response_model=schemas.User, dependencies=[Depends(get_current_user)])
 def update_user(user_id: int, user_update: schemas.UserUpdate, db: Session = Depends(get_db)):
     """Update user settings (e.g. email, notifications_enabled)."""
     user = crud.update_user(db, user_id=user_id, user_update=user_update)
@@ -36,7 +37,7 @@ def update_user(user_id: int, user_update: schemas.UserUpdate, db: Session = Dep
     return user
 
 
-@router.post("/users/{user_id}/penalize")
+@router.post("/users/{user_id}/penalize", dependencies=[Depends(get_current_admin_user)])
 async def penalize_user(user_id: int, penalty: schemas.PenaltyRequest, db: Session = Depends(get_db)):
     """Admin endpoint to deduct points from a user."""
     logger.info(

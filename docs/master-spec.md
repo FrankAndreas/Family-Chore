@@ -189,13 +189,30 @@ ChoreSpec is a family-oriented chore gamification system. It transforms househol
 - **Then** a notification is immediately dispatched to users with the "Admin" role
 - **And** the notification contains the task name and the user who completed it.
 
-### 4.3 BDD Scenarios (Device Photo Verification)
+### 4.4 BDD Scenarios (Device Photo Verification)
 **Scenario: User uploads photo from camera to complete task**
 - **Given** a user is completing a task that `requires_photo_verification`
 - **When** they tap the "Upload/Take Photo" button
 - **Then** the native device camera or file picker opens
 - **And** upon taking or selecting a photo, it is uploaded to the backend securely
 - **And** the task enters the `IN_REVIEW` queue with the uploaded photo evidence attached.
+
+### 4.5 BDD Scenarios (S2: Auth Middleware & Role-Based Access Control)
+**Scenario: Unauthorized access to secure API**
+- **Given** an unauthenticated client session
+- **When** the client attempts to access a protected endpoint (e.g., getting tasks)
+- **Then** the system rejects the request with a 401 Unauthorized error.
+
+**Scenario: Role-based access control restriction**
+- **Given** a user is authenticated with a non-admin role (e.g., "Child")
+- **When** the user attempts to perform an admin-only action (e.g., approving a task, modifying rewards, or deducting points)
+- **Then** the system rejects the request with a 403 Forbidden error.
+
+**Scenario: Session expiration enforcement**
+- **Given** a user's API authorization token has expired
+- **When** the user attempts to access a protected endpoint
+- **Then** the system rejects the request with a 401 Unauthorized error
+- **And** the frontend prompts the user to log in again.
 
 ---
 

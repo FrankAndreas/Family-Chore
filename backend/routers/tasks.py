@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from .. import schemas, crud, models
 from ..database import get_db
+from ..dependencies import get_current_user, get_current_admin_user
 from ..events import broadcaster
 from ..notifications_service import send_email_background
 
@@ -17,7 +18,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["Tasks"])
 
 
-@router.post("/tasks/", response_model=schemas.Task)
+@router.post("/tasks/", response_model=schemas.Task, dependencies=[Depends(get_current_admin_user)])
 async def create_task(task: schemas.TaskCreate, db: Session = Depends(get_db)):
     logger.info(
         f"Creating task: {task.name} with {task.base_points} base points")
@@ -31,13 +32,13 @@ async def create_task(task: schemas.TaskCreate, db: Session = Depends(get_db)):
     return created_task
 
 
-@router.get("/tasks/", response_model=List[schemas.Task])
+@router.get("/tasks/", response_model=List[schemas.Task], dependencies=[Depends(get_current_user)])
 def read_tasks(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     tasks = crud.get_tasks(db, skip=skip, limit=limit)
     return tasks
 
 
-@router.put("/tasks/{task_id}", response_model=schemas.Task)
+@router.put("/tasks/{task_id}", response_model=schemas.Task, dependencies=[Depends(get_current_admin_user)])
 def update_task(task_id: int, task_update: schemas.TaskUpdate, db: Session = Depends(get_db)):
     """Update an existing task."""
     logger.info(f"Updating task: {task_id}")
@@ -51,7 +52,7 @@ def update_task(task_id: int, task_update: schemas.TaskUpdate, db: Session = Dep
     return updated_task
 
 
-@router.delete("/tasks/{task_id}")
+@router.delete("/tasks/{task_id}", dependencies=[Depends(get_current_admin_user)])
 async def delete_task(task_id: int, db: Session = Depends(get_db)):
     """Delete a task and all its instances."""
     logger.info(f"Deleting task: {task_id}")
@@ -67,17 +68,21 @@ async def delete_task(task_id: int, db: Session = Depends(get_db)):
     return {"message": f"Task {task_id} deleted successfully"}
 
 
-@router.get("/tasks/daily/{user_id}", response_model=List[schemas.TaskInstance])
+@router.get("/tasks/daily/{user_id}",
+            response_model=List[schemas.TaskInstance],
+            dependencies=[Depends(get_current_user)])
 def read_user_daily_tasks(user_id: int, db: Session = Depends(get_db)):
     return crud.get_user_daily_tasks(db, user_id=user_id)
 
 
-@router.get("/tasks/pending", response_model=List[schemas.TaskInstance])
+@router.get("/tasks/pending", response_model=List[schemas.TaskInstance], dependencies=[Depends(get_current_user)])
 def read_all_pending_tasks(db: Session = Depends(get_db)):
     return crud.get_all_pending_tasks(db)
 
 
-@router.post("/tasks/{instance_id}/complete", response_model=schemas.TaskInstance)
+@router.post("/tasks/{instance_id}/complete",
+             response_model=schemas.TaskInstance,
+             dependencies=[Depends(get_current_user)])
 async def complete_task(
     instance_id: int,
     background_tasks: BackgroundTasks,
@@ -135,7 +140,9 @@ async def complete_task(
     return instance
 
 
-@router.post("/tasks/{instance_id}/upload-photo", response_model=schemas.TaskInstance)
+@router.post("/tasks/{instance_id}/upload-photo",
+             response_model=schemas.TaskInstance,
+             dependencies=[Depends(get_current_user)])
 async def upload_task_photo(instance_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
     """Upload a photo for task verification using multipart/form-data."""
     MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10 MB
@@ -183,13 +190,17 @@ async def upload_task_photo(instance_id: int, file: UploadFile = File(...), db: 
     return instance
 
 
-@router.get("/tasks/review-queue", response_model=List[schemas.TaskInstance])
+@router.get("/tasks/review-queue",
+            response_model=List[schemas.TaskInstance],
+            dependencies=[Depends(get_current_admin_user)])
 def get_review_queue(db: Session = Depends(get_db)):
     """Get all tasks currently waiting for admin review."""
     return crud.get_review_queue(db)
 
 
-@router.post("/tasks/{instance_id}/review", response_model=schemas.TaskInstance)
+@router.post("/tasks/{instance_id}/review",
+             response_model=schemas.TaskInstance,
+             dependencies=[Depends(get_current_admin_user)])
 async def review_task(instance_id: int, review: schemas.TaskReviewRequest, db: Session = Depends(get_db)):
     """Admin endpoint to approve or reject a task."""
     logger.info(

@@ -468,3 +468,20 @@ This file captures accumulated knowledge from development sessions. The Libraria
 
 ### Gotchas
 - **Mypy and Passlib returns**: Functions from `CryptContext` like `.hash()` and `.verify()` are typed loosely or seen as `Any` by mypy strict mode. We added `typing.cast(str, ...)` to explicitly define their return contracts in `security.py`.
+
+---
+
+## 📅 2026-02-27: JWT Auth Middleware & Axios Interceptors
+
+### What We Learned
+- **FastAPI Dependency Injection**: `Depends()` is extremely powerful for RBAC. By stacking dependencies (`get_current_admin_user` calls `get_current_user` inside its own definition), we keep route signatures clean while ensuring 401s (Unauthenticated) and 403s (Forbidden) are handled beautifully.
+- **Testing Dependency Overrides**: Re-writing large test suites for Auth can take days. FastAPI's `app.dependency_overrides` allows swapping out the `get_current_user` auth function entirely with a dummy fixture in `conftest.py`, instantly passing 95% of existing tests while still allowing targeted E2E checks on auth.
+- **Axios Global Interceptors**: Handling global 401s via an Axios response interceptor (`api.interceptors.response.use`) is the cleanest way to clear expired local tokens and redirect to `/login` universally on the frontend without altering individual components.
+
+### Patterns Discovered
+- **Token Injection**: Attaching `Authorization: Bearer <token>` automatically in the frontend via an Axios *request interceptor* guarantees you don't forget to pass auth tokens to new API components.
+- **Login Response Structure**: Rather than separating `/login` (which returns a token) and `/me` (which returns the user object), structuring `/login` to return `{ "access_token": "...", "user": { ... } }` saves a roundtrip and simplifies React Context initialization.
+
+### Gotchas
+- **Infinite Redirect Loops**: When setting up the 401 response interceptor, you MUST exclude the `/login` endpoint URL from triggering the logout action. Otherwise, an incorrect password attempt triggers a 401, which fires the interceptor, which drops state and reloads the page before the UI can show the error.
+- **Type Aliasing for Verification**: In BDD tests, unpacking `resp.json()["nickname"]` will break immediately when transitioning from a direct User response to a structured Token response. Ensure all test coverage is updated to access `resp.json()["user"]["nickname"]` contextually.

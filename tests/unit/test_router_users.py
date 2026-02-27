@@ -53,7 +53,7 @@ def test_login_flow(client, db_session, seeded_db):
     resp = client.post(
         "/login/", json={"nickname": "LoginUser", "login_pin": "9999"})
     assert resp.status_code == 200
-    assert resp.json()["nickname"] == "LoginUser"
+    assert resp.json()["user"]["nickname"] == "LoginUser"
 
     # Wrong PIN
     resp = client.post(
@@ -138,8 +138,7 @@ def test_delete_role_with_users_reassign(client, db_session, seeded_db):
     assert resp.status_code == 200
 
     # Verify User is now in Role 2
-    # We don't have get_user endpoints that show role_id easily?
     # Login again to check role_id
     login_resp = client.post(
         "/login/", json={"nickname": "R1User", "login_pin": "1234"})
-    assert login_resp.json()["role_id"] == r2["id"]
+    assert login_resp.json()["user"]["role_id"] == r2["id"]

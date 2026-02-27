@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from .. import schemas, crud
 from ..database import get_db
+from ..dependencies import get_current_user, get_current_admin_user
 from ..notifications_service import send_email_background
 from ..events import broadcaster
 
@@ -15,7 +16,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["System"])
 
 
-@router.get("/tasks/export", response_model=schemas.TasksExport)
+@router.get("/tasks/export", response_model=schemas.TasksExport, dependencies=[Depends(get_current_admin_user)])
 def export_tasks(db: Session = Depends(get_db)):
     """Export all tasks in a human-readable format for backup or AI generation."""
     logger.info("Exporting all tasks...")
@@ -47,7 +48,7 @@ def export_tasks(db: Session = Depends(get_db)):
     )
 
 
-@router.post("/tasks/import")
+@router.post("/tasks/import", dependencies=[Depends(get_current_admin_user)])
 async def import_tasks(import_data: schemas.TasksImport, db: Session = Depends(get_db)):
     """Import tasks from a structured format. Uses role names instead of IDs."""
     logger.info(f"Importing {len(import_data.tasks)} tasks...")
@@ -136,7 +137,7 @@ async def import_tasks(import_data: schemas.TasksImport, db: Session = Depends(g
     }
 
 
-@router.post("/daily-reset/")
+@router.post("/daily-reset/", dependencies=[Depends(get_current_admin_user)])
 def trigger_daily_reset(background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     logger.info("Triggering daily reset...")
     count = crud.generate_daily_instances(db)
@@ -159,7 +160,9 @@ def trigger_daily_reset(background_tasks: BackgroundTasks, db: Session = Depends
     return {"message": f"Daily reset complete. Created {count} task instances. Queued {notified_count} emails."}
 
 
-@router.get("/settings/language/default", response_model=schemas.SystemSettings)
+@router.get("/settings/language/default",
+            response_model=schemas.SystemSettings,
+            dependencies=[Depends(get_current_user)])
 def get_default_language(db: Session = Depends(get_db)):
     setting = crud.get_system_setting(db, "default_language")
     if not setting:
@@ -169,12 +172,14 @@ def get_default_language(db: Session = Depends(get_db)):
     return setting
 
 
-@router.put("/settings/language/default", response_model=schemas.SystemSettings)
+@router.put("/settings/language/default",
+            response_model=schemas.SystemSettings,
+            dependencies=[Depends(get_current_admin_user)])
 def set_default_language(setting: schemas.SystemSettingsBase, db: Session = Depends(get_db)):
     return crud.set_system_setting(db, "default_language", setting.value, setting.description)
 
 
-@router.put("/users/{user_id}/language", response_model=schemas.User)
+@router.put("/users/{user_id}/language", response_model=schemas.User, dependencies=[Depends(get_current_user)])
 def update_user_language(user_id: int, lang_update: schemas.UserLanguageUpdate, db: Session = Depends(get_db)):
     user = crud.update_user_language(
         db, user_id=user_id, language=lang_update.preferred_language or "")

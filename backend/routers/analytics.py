@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from ..database import get_db
+from ..dependencies import get_current_user
 from ..models import User, TaskInstance
 
 
@@ -15,7 +16,7 @@ router = APIRouter(
 )
 
 
-@router.get("/weekly", response_model=List[Dict[str, Any]])
+@router.get("/weekly", response_model=List[Dict[str, Any]], dependencies=[Depends(get_current_user)])
 def get_weekly_activity(db: Session = Depends(get_db)):
     """
     Returns task completion counts for the last 7 days, grouped by user.
@@ -74,7 +75,7 @@ def get_weekly_activity(db: Session = Depends(get_db)):
     return formatted_data
 
 
-@router.get("/distribution", response_model=List[Dict[str, Any]])
+@router.get("/distribution", response_model=List[Dict[str, Any]], dependencies=[Depends(get_current_user)])
 def get_points_distribution(db: Session = Depends(get_db)):
     """
     Returns the distribution of lifetime points among all users.

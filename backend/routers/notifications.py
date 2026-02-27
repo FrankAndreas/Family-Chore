@@ -4,6 +4,7 @@ from typing import List
 
 from .. import crud, schemas
 from ..database import get_db
+from ..dependencies import get_current_user
 
 router = APIRouter(
     prefix="/notifications",
@@ -12,7 +13,7 @@ router = APIRouter(
 )
 
 
-@router.get("/{user_id}", response_model=List[schemas.Notification])
+@router.get("/{user_id}", response_model=List[schemas.Notification], dependencies=[Depends(get_current_user)])
 def read_user_notifications(
     user_id: int,
     skip: int = 0,
@@ -26,7 +27,7 @@ def read_user_notifications(
     )
 
 
-@router.post("/{notification_id}/read", response_model=schemas.Notification)
+@router.post("/{notification_id}/read", response_model=schemas.Notification, dependencies=[Depends(get_current_user)])
 def mark_notification_read(notification_id: int, user_id: int, db: Session = Depends(get_db)):
     """Mark a notification as read."""
     notification = crud.mark_notification_read(
@@ -36,7 +37,7 @@ def mark_notification_read(notification_id: int, user_id: int, db: Session = Dep
     return notification
 
 
-@router.post("/read-all", response_model=bool)
+@router.post("/read-all", response_model=bool, dependencies=[Depends(get_current_user)])
 def mark_all_read(user_id: int, db: Session = Depends(get_db)):
     """Mark all notifications for a user as read."""
     return crud.mark_all_notifications_read(db, user_id=user_id)
