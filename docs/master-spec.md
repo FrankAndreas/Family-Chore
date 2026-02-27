@@ -89,11 +89,16 @@ ChoreSpec is a family-oriented chore gamification system. It transforms househol
 - **UI/UX Consistency**: Ensure consistent styling across all views, specifically focusing on mobile responsiveness, accessible form controls, robust generic empty states, and standardizing error handling.
 
 ### 2.7 Notifications & Reminders (V1.5)
-- **Channels**: Lightweight Email integration via SMTP (V1.5). Web Push notifications (service workers + VAPID) are deferred to a future release.
+- **Channels**: Web Push notifications (service workers + VAPID) for browser and mobile delivery. Lightweight Email integration via SMTP (legacy).
 - **Triggers**:
   - **Daily Reminders**: Sent to users with pending daily tasks at a configurable time.
   - **Approval Requests**: Sent to admins when a photo-verification task enters the `IN_REVIEW` queue.
-- **Opt-in/Opt-out**: Users can configure their notification preferences in their profile settings.
+  - **Task Reviewed**: Sent to the task owner when an admin approves or rejects their photo-verified task.
+  - **Penalty Applied**: Sent to a user when an admin deducts points from their account.
+- **Opt-in/Opt-out**: 
+  - Users are prompted to allow push notifications via a UI banner in the app.
+  - Users can subscribe multiple devices (e.g., phone and laptop) to their profile.
+  - Users can unregister devices from their profile settings.
 
 ---
 
@@ -177,17 +182,31 @@ ChoreSpec is a family-oriented chore gamification system. It transforms househol
 - **And** authentication fails with a 401 Unauthorized error.
 
 ### 4.3 BDD Scenarios (Push Notifications / Reminders)
-**Scenario: Daily Chore Reminder**
-- **Given** a user has incomplete "Daily" tasks assigned for today
-- **When** the configured daily reminder time is reached
-- **Then** a push notification or email is dispatched to the user's configured contact method
-- **And** the notification lists the number of pending tasks.
+**Scenario: User subscribes to push notifications**
+- **Given** an authenticated user is on the dashboard
+- **When** the user clicks "Enable Notifications"
+- **Then** the browser prompts for notification permissions
+- **And** upon granting permission, the device's PushSubscription is generated and saved to the backend
+- **And** the UI reflects that the current device is subscribed.
 
-**Scenario: Task Approval Notification**
-- **Given** a user completes a task that `requires_photo_verification`
-- **When** the task transitions to `IN_REVIEW`
-- **Then** a notification is immediately dispatched to users with the "Admin" role
-- **And** the notification contains the task name and the user who completed it.
+**Scenario: Push notification dispatched for task approval**
+- **Given** User A completes a task requiring photo verification
+- **When** the task enters the `IN_REVIEW` state
+- **Then** the backend queries all active push subscriptions for Admin users
+- **And** dispatches a Web Push notification to those subscriptions
+- **And** Admin users receive an alert "Task requires approval: [Task Name] by [User A]".
+
+**Scenario: Push notification dispatched for task review outcome**
+- **Given** an Admin approves (or rejects) User A's task
+- **When** the task state changes to `COMPLETED` (or `PENDING`)
+- **Then** the backend dispatches a push notification to User A's subscribed devices
+- **And** User A receives an alert "[Task Name] was [approved/rejected]!"
+
+**Scenario: Background daily reminder**
+- **Given** a user has incomplete "Daily" tasks assigned for today
+- **When** the backend cron scheduler triggers the daily reminder check
+- **Then** a push notification is dispatched to the user's registered devices if they have pending tasks
+- **And** the notification indicates how many tasks are remaining.
 
 ### 4.4 BDD Scenarios (Device Photo Verification)
 **Scenario: User uploads photo from camera to complete task**

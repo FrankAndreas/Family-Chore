@@ -15,7 +15,7 @@ from .database import engine, SessionLocal
 from .routers import analytics, notifications, auth, users, roles, tasks, rewards, transactions, system
 from .migrations.manager import MigrationManager
 from .backup import BackupManager
-from .notifications_service import send_email_sync
+from .notifications_service import send_email_sync, send_push_to_user_sync
 from .events import broadcaster
 
 
@@ -43,6 +43,16 @@ def scheduled_daily_reset():
             users_to_notify = crud.get_users_with_pending_daily_tasks(db)
             notified_count = 0
             for user in users_to_notify:
+                # Always attempt to send a push notification
+                try:
+                    send_push_to_user_sync(
+                        user.id,
+                        "Your Daily Chores Await!",
+                        f"Hi {user.nickname}, you have uncompleted daily chores waiting for you."
+                    )
+                except Exception as push_err:
+                    logger.error(f"Midnight scheduler: Failed to send push to {user.nickname}: {push_err}")
+
                 if user.email:
                     try:
                         send_email_sync(
@@ -176,6 +186,7 @@ if cors_origins_env:
 else:
     allow_origins = [
         "http://localhost:5173",  # Vite dev server
+        "http://127.0.0.1:5173",  # Vite dev server via IP
         "http://localhost:5174",  # Vite dev server (alt)
         "http://localhost:3000",  # Alternative React dev server
     ]

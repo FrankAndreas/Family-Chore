@@ -485,3 +485,16 @@ This file captures accumulated knowledge from development sessions. The Libraria
 ### Gotchas
 - **Infinite Redirect Loops**: When setting up the 401 response interceptor, you MUST exclude the `/login` endpoint URL from triggering the logout action. Otherwise, an incorrect password attempt triggers a 401, which fires the interceptor, which drops state and reloads the page before the UI can show the error.
 - **Type Aliasing for Verification**: In BDD tests, unpacking `resp.json()["nickname"]` will break immediately when transitioning from a direct User response to a structured Token response. Ensure all test coverage is updated to access `resp.json()["user"]["nickname"]` contextually.
+
+## 📅 2026-02-27: Web Push Notifications & Environment Loading
+
+### What We Learned
+- **FastAPI Environment Variables**: Uvicorn's `--env-file` flag requires the `python-dotenv` package to be installed. Without it, the server crashes ungracefully when the flag is passed, or silently fails to load the variables if expected implicitly.
+- **VAPID Key Handling**: Web Push API `subscribe()` fails instantly with `InvalidAccessError` (applicationServerKey is not valid) if the VAPID public key fetched from the backend is an empty string due to configuration misses.
+- **PyJWT Silent Failures**: Uncaught `PyJWTError` exceptions in FastApi sub-dependencies (e.g. `jwt.decode`) will raise `401 Unauthorized` without context. Wrapping them with `logger.error` accelerates debugging when tokens fail unexpectedly.
+
+### Patterns Discovered
+- **Browser Subagent E2E Verification**: The `browser_subagent` handles popup permissions (like Web Push `Notification.requestPermission()`) extremely well when explicitly instructed to allow or run custom JS, making it great for testing browser APIs.
+
+### Gotchas
+- **Database Passwords Migration**: When changing the underlying Database password hashing strategy (like seeding plain text pins but shifting to bcrypt), explicit background migration (`python -c "update loop"`) is necessary instantly; otherwise, valid users lose access and get 500 server errors on the login endpoint due to `UnknownHashError`.

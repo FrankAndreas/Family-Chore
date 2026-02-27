@@ -254,5 +254,14 @@ export const markNotificationRead = (notification_id: number, user_id: number) =
 export const markAllNotificationsRead = (user_id: number) =>
     api.post<boolean>('/notifications/read-all', null, { params: { user_id } });
 
+export const getVapidPublicKey = () =>
+    api.get<{ public_key: string }>('/notifications/push/vapid-public-key');
+
+export const subscribePush = (subscription: { endpoint: string; p256dh: string; auth: string }) =>
+    api.post('/notifications/push/subscribe', subscription);
+
+export const unsubscribePush = (endpoint: string) =>
+    api.delete('/notifications/push/unsubscribe', { data: { endpoint } });
+
 export default api;
 

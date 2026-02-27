@@ -468,3 +468,24 @@ class Notification(NotificationBase):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# --- Push Subscription Schemas ---
+
+
+class PushSubscriptionBase(BaseModel):
+    endpoint: str = Field(..., description="The endpoint URL of the push service")
+    p256dh: str = Field(..., description="The P-256 elliptic curve Diffie-Hellman public key")
+    auth: str = Field(..., description="The authentication secret")
+
+
+class PushSubscriptionCreate(PushSubscriptionBase):
+    pass
+
+
+class PushSubscription(PushSubscriptionBase):
+    id: int
+    user_id: int
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)

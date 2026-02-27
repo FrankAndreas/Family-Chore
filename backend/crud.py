@@ -815,3 +815,47 @@ def mark_all_notifications_read(db: Session, user_id: int) -> bool:
     ).update({"read": True})
     db.commit()
     return True
+
+
+# --- Push Subscription CRUD ---
+
+
+def get_push_subscriptions_by_user(db: Session, user_id: int) -> List[models.PushSubscription]:
+    return db.query(models.PushSubscription).filter(
+        models.PushSubscription.user_id == user_id).all()
+
+
+def create_push_subscription(
+    db: Session, user_id: int, sub_in: schemas.PushSubscriptionCreate
+) -> models.PushSubscription:
+    # First, check if endpoint already exists (we can just return it or update it)
+    existing = db.query(models.PushSubscription).filter(
+        models.PushSubscription.endpoint == sub_in.endpoint).first()
+
+    if existing:
+        if existing.user_id != user_id:
+            existing.user_id = user_id
+            db.commit()
+            db.refresh(existing)
+        return existing
+
+    db_sub = models.PushSubscription(
+        user_id=user_id,
+        endpoint=sub_in.endpoint,
+        p256dh=sub_in.p256dh,
+        auth=sub_in.auth
+    )
+    db.add(db_sub)
+    db.commit()
+    db.refresh(db_sub)
+    return db_sub
+
+
+def delete_push_subscription(db: Session, endpoint: str):
+    db_sub = db.query(models.PushSubscription).filter(
+        models.PushSubscription.endpoint == endpoint).first()
+    if db_sub:
+        db.delete(db_sub)
+        db.commit()
+        return True
+    return False

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List
 import logging
@@ -7,6 +7,7 @@ from .. import schemas, crud
 from ..database import get_db
 from ..dependencies import get_current_user, get_current_admin_user
 from ..events import broadcaster
+from ..notifications_service import send_push_to_user_background
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +39,12 @@ def update_user(user_id: int, user_update: schemas.UserUpdate, db: Session = Dep
 
 
 @router.post("/users/{user_id}/penalize", dependencies=[Depends(get_current_admin_user)])
-async def penalize_user(user_id: int, penalty: schemas.PenaltyRequest, db: Session = Depends(get_db)):
+async def penalize_user(
+    user_id: int,
+    penalty: schemas.PenaltyRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db)
+):
     """Admin endpoint to deduct points from a user."""
     logger.info(
         f"Penalizing user {user_id} for {penalty.points} points: {penalty.reason}")
@@ -47,13 +53,21 @@ async def penalize_user(user_id: int, penalty: schemas.PenaltyRequest, db: Sessi
     if not result["success"]:
         raise HTTPException(status_code=404, detail=result["error"])
 
-    # Notify User
+    # Notify User in-app
     crud.create_notification(db, schemas.NotificationCreate(
         user_id=user_id,
         type="SYSTEM",
         title="Points Deducted",
         message=f"You lost {result['points_deducted']} points. Reason: {penalty.reason}"
     ))
+
+    # Send Push Notification
+    send_push_to_user_background(
+        background_tasks,
+        user_id,
+        "Points Deducted",
+        f"You lost {result['points_deducted']} points. Reason: {penalty.reason}"
+    )
 
     # Broadcast SSE events
     await broadcaster.broadcast("user_penalized", {

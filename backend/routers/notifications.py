@@ -1,16 +1,47 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
 from typing import List
 
-from .. import crud, schemas
+from .. import crud, schemas, models
 from ..database import get_db
 from ..dependencies import get_current_user
+from ..notifications_service import VAPID_PUBLIC_KEY
 
 router = APIRouter(
     prefix="/notifications",
     tags=["notifications"],
     responses={404: {"description": "Not found"}},
 )
+
+
+@router.get("/push/vapid-public-key", dependencies=[Depends(get_current_user)])
+def get_vapid_public_key():
+    """Return the VAPID public key for frontend subscription."""
+    return {"public_key": VAPID_PUBLIC_KEY}
+
+
+@router.post("/push/subscribe", response_model=schemas.PushSubscription, dependencies=[Depends(get_current_user)])
+def subscribe_push(
+    subscription: schemas.PushSubscriptionCreate,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Save a user's push subscription."""
+    sub = crud.create_push_subscription(db, user_id=int(current_user.id), sub_in=subscription)
+    return sub
+
+
+@router.delete("/push/unsubscribe", dependencies=[Depends(get_current_user)])
+def unsubscribe_push(
+    endpoint: str = Body(..., embed=True),
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Remove a user's push subscription."""
+    success = crud.delete_push_subscription(db, endpoint=endpoint)
+    if not success:
+        raise HTTPException(status_code=404, detail="Subscription not found")
+    return {"success": True}
 
 
 @router.get("/{user_id}", response_model=List[schemas.Notification], dependencies=[Depends(get_current_user)])

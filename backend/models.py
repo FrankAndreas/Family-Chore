@@ -65,6 +65,7 @@ class User(Base):
     task_instances = relationship("TaskInstance", back_populates="user")
     transactions = relationship("Transaction", back_populates="user")
     notifications = relationship("Notification", back_populates="user")
+    push_subscriptions = relationship("PushSubscription", back_populates="user", cascade="all, delete-orphan")
 
 
 # 1.5 Rewards (Reward Hub Catalog)
@@ -176,3 +177,20 @@ class Notification(Base):
 
     # Relationships
     user = relationship("User", back_populates="notifications")
+
+
+# 3.1 Web Push Subscriptions
+class PushSubscription(Base):
+    __tablename__ = "push_subscriptions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+    endpoint = Column(String, unique=True, nullable=False)
+    p256dh = Column(String, nullable=False)
+    auth = Column(String, nullable=False)
+
+    created_at = Column(DateTime, nullable=False, default=lambda: datetime.datetime.now(timezone.utc))
+
+    # Relationships
+    user = relationship("User", back_populates="push_subscriptions")

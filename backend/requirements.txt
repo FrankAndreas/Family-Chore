@@ -15,3 +15,4 @@ flake8>=6.0.0
 mypy>=1.0.0
 apscheduler
 PyJWT>=2.8.0
+pywebpush==1.14.0

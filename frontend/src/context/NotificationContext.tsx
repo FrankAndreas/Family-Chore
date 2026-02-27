@@ -1,7 +1,22 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
-import { getUserNotifications, markNotificationRead, markAllNotificationsRead } from '../api';
+import {
+    getUserNotifications, markNotificationRead, markAllNotificationsRead,
+    getVapidPublicKey, subscribePush, unsubscribePush
+} from '../api';
 import type { Notification, User } from '../types';
 import { useToast } from './ToastContext';
+
+// Helper to convert VAPID key
+function urlBase64ToUint8Array(base64String: string) {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+}
 
 interface NotificationContextType {
     notifications: Notification[];
@@ -9,6 +24,10 @@ interface NotificationContextType {
     markAsRead: (id: number) => Promise<void>;
     markAllAsRead: () => Promise<void>;
     refreshNotifications: () => Promise<void>;
+    isPushSupported: boolean;
+    pushSubscribed: boolean;
+    subscribeToPush: () => Promise<boolean>;
+    unsubscribeFromPush: () => Promise<boolean>;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -22,6 +41,8 @@ interface NotificationProviderProps {
 
 export const NotificationProvider: React.FC<NotificationProviderProps> = ({ children, currentUser }) => {
     const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [isPushSupported, setIsPushSupported] = useState(false);
+    const [pushSubscribed, setPushSubscribed] = useState(false);
     const { showToast } = useToast();
 
     const refreshNotifications = useCallback(async () => {
@@ -33,6 +54,18 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
             console.error("Failed to fetch notifications", error);
         }
     }, [currentUser]);
+
+    // Check Push support & existing subscription
+    useEffect(() => {
+        if ('serviceWorker' in navigator && 'PushManager' in window) {
+            setIsPushSupported(true);
+            navigator.serviceWorker.register('/sw.js').then((registration) => {
+                registration.pushManager.getSubscription().then((sub) => {
+                    setPushSubscribed(!!sub);
+                });
+            });
+        }
+    }, []);
 
     // Initial load
     useEffect(() => {
@@ -89,8 +122,67 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
 
     const unreadCount = notifications.filter(n => n.read === 0).length;
 
+    // Push Notification Logic
+    const subscribeToPush = async () => {
+        if (!isPushSupported) return false;
+        try {
+            const registration = await navigator.serviceWorker.ready;
+            // Get public key from backend
+            const { data } = await getVapidPublicKey();
+
+            const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(data.public_key)
+            });
+
+            // Send to backend
+            const subData = JSON.parse(JSON.stringify(subscription));
+            await subscribePush({
+                endpoint: subData.endpoint,
+                p256dh: subData.keys.p256dh,
+                auth: subData.keys.auth
+            });
+
+            setPushSubscribed(true);
+            showToast("Successfully subscribed to notifications!", "success");
+            return true;
+        } catch (error) {
+            console.error("Push subscription failed", error);
+            showToast("Failed to enable push notifications", "error");
+            return false;
+        }
+    };
+
+    const unsubscribeFromPush = async () => {
+        if (!isPushSupported) return false;
+        try {
+            const registration = await navigator.serviceWorker.ready;
+            const subscription = await registration.pushManager.getSubscription();
+            if (subscription) {
+                await subscription.unsubscribe();
+                await unsubscribePush(subscription.endpoint);
+            }
+            setPushSubscribed(false);
+            showToast("Notifications disabled", "info");
+            return true;
+        } catch (error) {
+            console.error("Push unsubscription failed", error);
+            return false;
+        }
+    };
+
     return (
-        <NotificationContext.Provider value={{ notifications, unreadCount, markAsRead, markAllAsRead, refreshNotifications }}>
+        <NotificationContext.Provider value={{
+            notifications,
+            unreadCount,
+            markAsRead,
+            markAllAsRead,
+            refreshNotifications,
+            isPushSupported,
+            pushSubscribed,
+            subscribeToPush,
+            unsubscribeFromPush
+        }}>
             {children}
         </NotificationContext.Provider>
     );

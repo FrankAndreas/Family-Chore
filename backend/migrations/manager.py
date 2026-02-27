@@ -5,10 +5,11 @@ from backend.migrations.consolidated_migration import run_consolidated_migration
 from backend.migrations.v1_5_bool_column import run_v1_5_migration
 from backend.migrations.v1_7_bool_columns import run_v1_7_migration
 from backend.migrations.v1_8_hash_pins import run_v1_8_migration
+from backend.migrations.v1_9_push_subscriptions import run_v1_9_migration
 
 logger = logging.getLogger(__name__)
 
-CURRENT_TARGET_VERSION = "1.8"
+CURRENT_TARGET_VERSION = "1.9"
 
 
 class MigrationManager:
@@ -54,6 +55,9 @@ class MigrationManager:
 
                     # Run v1.8 migration (hash existing PINs)
                     run_v1_8_migration(conn)
+
+                    # Run v1.9 migration (push subscriptions)
+                    run_v1_9_migration(conn)
 
                 # Update the version in system_settings using the Session
                 set_system_setting(

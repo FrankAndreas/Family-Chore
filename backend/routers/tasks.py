@@ -11,7 +11,7 @@ from .. import schemas, crud, models
 from ..database import get_db
 from ..dependencies import get_current_user, get_current_admin_user
 from ..events import broadcaster
-from ..notifications_service import send_email_background
+from ..notifications_service import send_email_background, send_push_to_user_background
 
 logger = logging.getLogger(__name__)
 
@@ -117,9 +117,15 @@ async def complete_task(
             title="Task In Review",
             message=f"Your photo for '{instance.task.name}' is pending admin review."
         ))
-        # Send Email to Admins
+        # Send notifications to Admins
         admins = crud.get_notifiable_admins(db)
         for admin in admins:
+            send_push_to_user_background(
+                background_tasks,
+                int(admin.id),
+                f"Approval Required: {instance.task.name}",
+                f"A photo for '{instance.task.name}' requires your approval."
+            )
             if admin.email:
                 send_email_background(
                     background_tasks,
@@ -201,7 +207,12 @@ def get_review_queue(db: Session = Depends(get_db)):
 @router.post("/tasks/{instance_id}/review",
              response_model=schemas.TaskInstance,
              dependencies=[Depends(get_current_admin_user)])
-async def review_task(instance_id: int, review: schemas.TaskReviewRequest, db: Session = Depends(get_db)):
+async def review_task(
+    instance_id: int,
+    review: schemas.TaskReviewRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db)
+):
     """Admin endpoint to approve or reject a task."""
     logger.info(
         f"Reviewing task instance {instance_id}: approved={review.is_approved}")
@@ -218,5 +229,14 @@ async def review_task(instance_id: int, review: schemas.TaskReviewRequest, db: S
         "is_approved": review.is_approved
     })
     await broadcaster.broadcast("notification", {"user_id": instance.user_id})
+
+    # Send push notification for review outcome
+    outcome = "approved" if review.is_approved else "rejected"
+    send_push_to_user_background(
+        background_tasks,
+        int(instance.user_id),
+        f"Task {outcome.title()}",
+        f"Your task '{instance.task.name}' was {outcome}."
+    )
 
     return instance
