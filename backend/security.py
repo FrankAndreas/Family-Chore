@@ -1,3 +1,4 @@
+import os
 from passlib.context import CryptContext
 from typing import cast, Optional, Dict, Any
 import jwt
@@ -8,7 +9,10 @@ logger = logging.getLogger(__name__)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-SECRET_KEY = "a-very-secret-string-that-should-be-environment-variable-in-production"
+_DEFAULT_SECRET = "dev-only-secret-CHANGE-ME-in-production"
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", _DEFAULT_SECRET)
+if SECRET_KEY == _DEFAULT_SECRET:
+    logger.warning("JWT_SECRET_KEY not set! Using insecure default. Set JWT_SECRET_KEY env var in production.")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_DAYS = 7
 

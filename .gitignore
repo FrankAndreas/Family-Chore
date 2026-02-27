@@ -26,6 +26,10 @@ build/
 .env
 .env.*
 
+# Private keys and secrets
+*.pem
+*.key
+
 # IDEs
 .idea/
 .vscode/

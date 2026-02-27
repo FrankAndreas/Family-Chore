@@ -2,6 +2,8 @@ import os
 import smtplib
 import logging
 import json
+import base64
+from pathlib import Path
 from email.message import EmailMessage
 from fastapi import BackgroundTasks
 from .database import SessionLocal
@@ -22,9 +24,79 @@ SMTP_USERNAME = os.getenv("SMTP_USERNAME", "")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "chorespec@example.com")
 
-VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY", "")
-VAPID_PUBLIC_KEY = os.getenv("VAPID_PUBLIC_KEY", "")
 VAPID_CLAIMS_EMAIL = os.getenv("VAPID_CLAIMS_EMAIL", "mailto:admin@example.com")
+
+# Resolve the backend directory (where .env and private_key.pem live)
+_BACKEND_DIR = Path(__file__).resolve().parent
+_PEM_PATH = _BACKEND_DIR / "private_key.pem"
+_ENV_PATH = _BACKEND_DIR / ".env"
+
+
+def _generate_vapid_keys() -> tuple[str, str]:
+    """Generate a new VAPID key pair, save the PEM, and return (pem_path, public_key)."""
+    try:
+        from py_vapid import Vapid
+        from cryptography.hazmat.primitives.serialization import Encoding
+        from cryptography.hazmat.primitives.serialization import PublicFormat
+    except ImportError:
+        logger.error("py_vapid / cryptography not installed. Cannot generate VAPID keys.")
+        return "", ""
+
+    v = Vapid()
+    v.generate_keys()
+
+    # Write private key PEM
+    pem_bytes = v.private_pem()
+    _PEM_PATH.write_bytes(pem_bytes)
+    logger.info(f"Generated new VAPID private key at {_PEM_PATH}")
+
+    # Derive the applicationServerKey (URL-safe base64, unpadded)
+    raw_pub = v.public_key.public_bytes(
+        encoding=Encoding.X962,
+        format=PublicFormat.UncompressedPoint,
+    )
+    app_server_key = base64.urlsafe_b64encode(raw_pub).decode().rstrip("=")
+
+    # Persist to .env so the keys survive restarts
+    env_lines = []
+    if _ENV_PATH.exists():
+        env_lines = _ENV_PATH.read_text().splitlines()
+
+    # Remove old VAPID entries if present
+    env_lines = [
+        ln for ln in env_lines
+        if not ln.startswith("VAPID_PRIVATE_KEY=") and not ln.startswith("VAPID_PUBLIC_KEY=")
+    ]
+    env_lines.append(f"VAPID_PRIVATE_KEY={_PEM_PATH}")
+    env_lines.append(f"VAPID_PUBLIC_KEY={app_server_key}")
+    _ENV_PATH.write_text("\n".join(env_lines) + "\n")
+    logger.info("VAPID keys written to .env")
+
+    return str(_PEM_PATH), app_server_key
+
+
+def _load_vapid_keys() -> tuple[str, str]:
+    """Load VAPID keys from env vars, or auto-generate if missing."""
+    private_key = os.getenv("VAPID_PRIVATE_KEY", "")
+    public_key = os.getenv("VAPID_PUBLIC_KEY", "")
+
+    if private_key and public_key:
+        return private_key, public_key
+
+    # Check if a PEM file already exists on disk (env just not loaded)
+    if _PEM_PATH.exists() and not private_key:
+        logger.warning(
+            f"VAPID_PRIVATE_KEY env var not set, but {_PEM_PATH} exists. "
+            "Set VAPID_PRIVATE_KEY and VAPID_PUBLIC_KEY in your environment."
+        )
+        return str(_PEM_PATH), public_key
+
+    # Nothing configured — auto-generate
+    logger.info("No VAPID keys configured. Auto-generating a new key pair...")
+    return _generate_vapid_keys()
+
+
+VAPID_PRIVATE_KEY, VAPID_PUBLIC_KEY = _load_vapid_keys()
 
 
 def send_email_sync(to_email: str, subject: str, body: str):
