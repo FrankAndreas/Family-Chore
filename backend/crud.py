@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from datetime import datetime, date, timedelta, timezone
 from typing import Optional, List
-from . import models, schemas
+from . import models, schemas, security
 
 # --- User CRUD ---
 
@@ -19,10 +19,10 @@ def get_users(db: Session, skip: int = 0, limit: int = 100) -> List[models.User]
 
 
 def create_user(db: Session, user: schemas.UserCreate) -> models.User:
-    # Note: In a real app, hash the PIN here.
+    hashed_pin = security.get_password_hash(user.login_pin)
     db_user = models.User(
         nickname=user.nickname,
-        login_pin=user.login_pin,
+        login_pin=hashed_pin,
         role_id=user.role_id
     )
     db.add(db_user)

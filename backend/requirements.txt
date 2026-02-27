@@ -3,6 +3,7 @@ uvicorn
 sqlalchemy
 pydantic
 python-multipart
+passlib[bcrypt]>=1.7.4
 
 # Testing dependencies
 pytest==7.4.3

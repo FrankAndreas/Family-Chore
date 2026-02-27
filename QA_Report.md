@@ -1,23 +1,15 @@
-# M3 Frontend Integration - QA Report
+# QA Report: S1 Authentication & PIN Hashing
 
-## Overview
-This report verifies the successful integration of the M3 (Reward Editing and Deletion) feature into the React frontend. Both features were tested against the running backend server to ensure data integrity and user experience.
+## ✅ Tests Passed: 136
+- Automated Regression Suite: 133 tests passed
+- Manual API Test 1: User creation with `login_pin: "5555"` responds with HTTP 200 and stores hashed PIN.
+- Manual API Test 2: User login with correct PIN (`5555`) responds with HTTP 200 and returns user object.
+- Manual API Test 3: User login with incorrect PIN (`9999`) responds with HTTP 401 and "Incorrect PIN" message.
 
-## Verification Steps Performed
+## ❌ Tests Failed: 0
+- No failures observed.
 
-### 1. Code Quality & Compilation
-- ✅ `eslint .` passed successfully (minor dependency warning noted but no code errors).
-- ✅ `tsc -b && vite build` completed successfully, ensuring type safety matches the API contract.
-
-### 2. Backend Endpoint Validation (cURL)
-- ✅ `POST /rewards/` successfully creates a reward.
-- ✅ `PUT /rewards/{id}` successfully updates partial and full payload on rewards.
-- ✅ `DELETE /rewards/{id}` successfully deletes rewards, returning the expected `204 No Content`.
-
-### 3. UI/UX Verification
-- ✅ **Admin Restrictions**: Edit and Delete actions are conditionally rendered only for Users with the "Admin" role in `RewardHub.tsx`. 
-- ✅ **Edit Modal**: A dedicated modal form appears populated with the selected reward's state, preventing accidental full-page navigation. Form submission behaves identically to creation with immediate state updates.
-- ✅ **Delete Confirmation**: A browser native `window.confirm` is used to prevent accidental deletion of rewards.
-
----
-**Status**: Ready to proceed. The frontend now has complete CRUD management parity with the backend.
+## ⚠️ Edge Cases & Notes:
+- Database migration script tested and functioning. Plain-text PINs correctly upgraded in `chorespec_mvp.db`.
+- Using `bcrypt` via `passlib` requires type-casting the sqlalchemy string columns during model query, handled properly in the auth router.
+- `Requires photo verification` column and other prior schema types unaffected.

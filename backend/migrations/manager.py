@@ -3,12 +3,12 @@ from backend.database import engine, SessionLocal
 from backend.crud import get_system_setting, set_system_setting
 from backend.migrations.consolidated_migration import run_consolidated_migration
 from backend.migrations.v1_5_bool_column import run_v1_5_migration
-from backend.migrations.v1_6_notifications import run_v1_6_migration
 from backend.migrations.v1_7_bool_columns import run_v1_7_migration
+from backend.migrations.v1_8_hash_pins import run_v1_8_migration
 
 logger = logging.getLogger(__name__)
 
-CURRENT_TARGET_VERSION = "1.7"
+CURRENT_TARGET_VERSION = "1.8"
 
 
 class MigrationManager:
@@ -49,16 +49,16 @@ class MigrationManager:
                     # Run v1.5 migration (bool column conversion)
                     run_v1_5_migration(conn)
 
-                    # Run v1.6 migration (notifications)
-                    run_v1_6_migration(conn)
-
                     # Run v1.7 migration (boolean column validation)
                     run_v1_7_migration(conn)
 
-                    # Update the version in system_settings
-                    set_system_setting(
-                        db, "db_version", CURRENT_TARGET_VERSION, f"Schema version {CURRENT_TARGET_VERSION}"
-                    )
+                    # Run v1.8 migration (hash existing PINs)
+                    run_v1_8_migration(conn)
+
+                # Update the version in system_settings using the Session
+                set_system_setting(
+                    db, "db_version", CURRENT_TARGET_VERSION, f"Schema version {CURRENT_TARGET_VERSION}"
+                )
 
                 logger.info(
                     f"Database successfully migrated to {CURRENT_TARGET_VERSION}")

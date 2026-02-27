@@ -20,7 +20,7 @@ ChoreSpec is a family-oriented chore gamification system. It transforms househol
 ## 2. Functional Architecture
 
 ### 2.1 User & Identity Management
-- **Authentication**: Lightweight PIN-based login (Nickname + 4-digit PIN).
+- **Authentication**: Lightweight PIN-based login (Nickname + 4-digit PIN). PINs are securely hashed in the database (bcrypt).
 - **Roles**: Users are assigned exactly one role.
 - **Stats**: Individual tracking of `current_points` (spendable) and `lifetime_points` (cumulative effort).
 - **Localization**: User-level `preferred_language` support (overrides system default).
@@ -157,7 +157,26 @@ ChoreSpec is a family-oriented chore gamification system. It transforms househol
 - **When** the Admin applies a penalty of 20 points
 - **Then** the user's `current_points` becomes 0 (assuming floor is 0) *or* -10 (depending on Architect's plan, let's leave it up to Architect or state it explicitly: balance can go negative). Let's specify: The user's `current_points` can become negative (e.g., -10) to reflect a point debt.
 
-### 4.2 BDD Scenarios (Push Notifications / Reminders)
+### 4.2 BDD Scenarios (Authentication & PIN Hashing)
+**Scenario: User registers or updates PIN**
+- **Given** an admin creates a new user or updates a user's PIN to "1234"
+- **When** the payload is sent to the backend
+- **Then** the backend hashes the PIN using bcrypt
+- **And** stores the hash, NOT the plaintext "1234", in the database.
+
+**Scenario: User logs in with correct PIN**
+- **Given** a user has the PIN "1234" (stored as a hash)
+- **When** the user attempts to log in with "1234"
+- **Then** the backend hashes the provided PIN and compares it to the stored hash
+- **And** authentication succeeds.
+
+**Scenario: User logs in with incorrect PIN**
+- **Given** a user has the PIN "1234" (stored as a hash)
+- **When** the user attempts to log in with "9999"
+- **Then** the backend hashes the provided PIN and compares it to the stored hash
+- **And** authentication fails with a 401 Unauthorized error.
+
+### 4.3 BDD Scenarios (Push Notifications / Reminders)
 **Scenario: Daily Chore Reminder**
 - **Given** a user has incomplete "Daily" tasks assigned for today
 - **When** the configured daily reminder time is reached

@@ -453,3 +453,18 @@ This file captures accumulated knowledge from development sessions. The Libraria
 
 ### Gotchas
 - **State Stagnation**: After a successful `update` or `delete`, `window.location.reload()` is a jarring UX. Simply calling `fetchRewards()` again and clearing the modal state (`setEditingReward(null)`) allows React to smoothly reconcile the DOM, preserving any CSS animations or current view state.
+
+---
+
+## 📅 2026-02-27: PIN Hashing & Passlib Troubleshooting
+
+### What We Learned
+- **Bcrypt Version Drift**: The `passlib` library has a known compatibility issue with `bcrypt>=4.1.0` (it relies on an old `__about__` attribute). To resolve this cleanly in legacy environments without dropping `passlib`, downgrade/pin `bcrypt==4.0.1`.
+- **SQLite Locking During Migrations**: Attempting to execute `conn.execute()` updates using a SQLAlchemy raw `Connection` while the parent script holds an active `Session` bound to the same database file will cause `(sqlite3.OperationalError) database is locked`. The `Session` must update the settings inside the correct scope or the context manager must yield cleanly.
+
+### Patterns Discovered
+- **Type Casting SQLAlchemy Properties**: When applying strict typing (like `passlib` or custom models expecting Python primitives), SQLAlchemy declarative model objects (like `user.login_pin`) are seen by Mypy as `Column[str]` or `Any`. Wrapping these variables in `str()` explicitly satisfies type checkers without heavy schema alterations.
+- **Live DB Migration Pattern**: We created an unmanaged custom migration script (`v1_8_hash_pins.py`) using `conn.execute(text("..."))` to fetch existing users, apply the new `bcrypt` hashing tool programmatically in python, and save back the hashed value seamlessly scaling over old plain text pins.
+
+### Gotchas
+- **Mypy and Passlib returns**: Functions from `CryptContext` like `.hash()` and `.verify()` are typed loosely or seen as `Any` by mypy strict mode. We added `typing.cast(str, ...)` to explicitly define their return contracts in `security.py`.
