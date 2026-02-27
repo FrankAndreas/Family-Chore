@@ -1,4 +1,6 @@
 import os
+import secrets
+from pathlib import Path
 from passlib.context import CryptContext
 from typing import cast, Optional, Dict, Any
 import jwt
@@ -9,10 +11,35 @@ logger = logging.getLogger(__name__)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-_DEFAULT_SECRET = "dev-only-secret-CHANGE-ME-in-production"
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", _DEFAULT_SECRET)
-if SECRET_KEY == _DEFAULT_SECRET:
-    logger.warning("JWT_SECRET_KEY not set! Using insecure default. Set JWT_SECRET_KEY env var in production.")
+_BACKEND_DIR = Path(__file__).resolve().parent
+_ENV_PATH = _BACKEND_DIR / ".env"
+
+
+def _load_jwt_secret() -> str:
+    """Load JWT secret from env, or auto-generate and persist if missing."""
+    secret = os.getenv("JWT_SECRET_KEY", "")
+    if secret:
+        return secret
+
+    # Auto-generate a cryptographically secure secret
+    secret = secrets.token_hex(32)  # 64-char hex string (256 bits)
+    logger.info("JWT_SECRET_KEY not set. Auto-generated a new secret key.")
+
+    # Persist to .env so the key survives restarts
+    env_lines = []
+    if _ENV_PATH.exists():
+        env_lines = _ENV_PATH.read_text().splitlines()
+
+    # Remove old JWT_SECRET_KEY entry if present
+    env_lines = [ln for ln in env_lines if not ln.startswith("JWT_SECRET_KEY=")]
+    env_lines.append(f"JWT_SECRET_KEY={secret}")
+    _ENV_PATH.write_text("\n".join(env_lines) + "\n")
+    logger.info("JWT_SECRET_KEY written to .env")
+
+    return secret
+
+
+SECRET_KEY = _load_jwt_secret()
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_DAYS = 7
 
