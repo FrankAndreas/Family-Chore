@@ -21,6 +21,7 @@ ChoreSpec is a family-oriented chore gamification system. It transforms househol
 
 ### 2.1 User & Identity Management
 - **Authentication**: Lightweight PIN-based login (Nickname + 4-digit PIN). PINs are securely hashed in the database (bcrypt).
+  - *Seamless Migration*: If an older account has a plaintext PIN, the system automatically detects, verifies, and upgrades it to a bcrypt hash upon the next successful login.
 - **Roles**: Users are assigned exactly one role.
 - **Stats**: Individual tracking of `current_points` (spendable) and `lifetime_points` (cumulative effort).
 - **Localization**: User-level `preferred_language` support (overrides system default).

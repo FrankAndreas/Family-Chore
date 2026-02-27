@@ -498,3 +498,5 @@ This file captures accumulated knowledge from development sessions. The Libraria
 
 ### Gotchas
 - **Database Passwords Migration**: When changing the underlying Database password hashing strategy (like seeding plain text pins but shifting to bcrypt), explicit background migration (`python -c "update loop"`) is necessary instantly; otherwise, valid users lose access and get 500 server errors on the login endpoint due to `UnknownHashError`.
+## Background Auto-Migration
+- **Smooth Transitions**: Instead of forcing a hard migration script for something like plaintext passwords, intercepting the login flow to hash unencrypted secrets dynamically creates a zero-friction upgrade path for users while keeping the database clean moving forward.

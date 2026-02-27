@@ -180,6 +180,9 @@ A: Currently, task completion is final for the day. Ask an Admin to adjust your 
 **Q: Why can't I see a Recurring Task?**
 A: Someone else might have done it recently, so it's in "Cooldown". Wait a few days!
 
+**Q: Are my PINs secure?**
+A: Yes! Previously, PINs were stored in plain text, but they are now securely hashed using bcrypt. If you have an older account, your PIN will be automatically and seamlessly upgraded to a secure hash the next time you log in.
+
 **Q: How do I change the language to German?**
 A: Go to the **Settings** page and select "Deutsch". You can set it as your personal preference or the family default.
 

@@ -48,6 +48,14 @@ def update_user(db: Session, user_id: int, user_update: schemas.UserUpdate) -> O
     db.refresh(db_user)
     return db_user
 
+
+def update_user_pin(db: Session, user_id: int, hashed_pin: str) -> None:
+    """Update a user's PIN to a new hash (used for auto-migration)."""
+    db_user = db.query(models.User).filter(models.User.id == user_id).first()
+    if db_user:
+        db_user.login_pin = hashed_pin
+        db.commit()
+
 # --- Role CRUD ---
 
 

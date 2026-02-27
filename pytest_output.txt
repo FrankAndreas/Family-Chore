@@ -1,0 +1,167 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-7.4.3, pluggy-1.6.0 -- /home/andreas/work/family-chore/venv/bin/python
+cachedir: .pytest_cache
+rootdir: /home/andreas/work/family-chore
+configfile: pytest.ini
+plugins: anyio-4.11.0, cov-4.1.0, asyncio-0.21.1, bdd-7.0.1
+asyncio: mode=Mode.STRICT
+collecting ... collected 2 items
+
+tests/unit/test_auth_migration.py::test_login_auto_migrates_plaintext_pin FAILED [ 50%]
+tests/unit/test_auth_migration.py::test_login_rejects_incorrect_plaintext_pin FAILED [100%]
+
+=================================== FAILURES ===================================
+____________________ test_login_auto_migrates_plaintext_pin ____________________
+tests/unit/test_auth_migration.py:30: in test_login_auto_migrates_plaintext_pin
+    assert response.status_code == 200, response.text
+E   AssertionError: {"detail":"Not Found"}
+E   assert 404 == 200
+E    +  where 404 = <Response [404 Not Found]>.status_code
+---------------------------- Captured stderr setup -----------------------------
+2026-02-27 22:38:34,816 - backend.migrations.manager - INFO - Database version check: current=1.9, target=1.9
+2026-02-27 22:38:34,817 - backend.migrations.manager - INFO - Database version is up to date.
+2026-02-27 22:38:34,827 - backend.seed_data - INFO - Role Admin already exists.
+2026-02-27 22:38:34,828 - backend.seed_data - INFO - Role Contributor already exists.
+2026-02-27 22:38:34,829 - backend.seed_data - INFO - Role Teenager already exists.
+2026-02-27 22:38:34,830 - backend.seed_data - INFO - Role Child already exists.
+2026-02-27 22:38:34,840 - backend.seed_data - INFO - Admin user already exists.
+2026-02-27 22:38:34,847 - backend.main - INFO - Startup: Daily reset already performed today, skipping
+2026-02-27 22:38:34,850 - backend.main - INFO - Configuring scheduler with timezone: Europe/Berlin
+2026-02-27 22:38:34,853 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-02-27 22:38:34,854 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-02-27 22:38:34,857 - apscheduler.scheduler - INFO - Added job "scheduled_daily_reset" to job store "default"
+2026-02-27 22:38:34,857 - apscheduler.scheduler - INFO - Added job "run_backup_job" to job store "default"
+2026-02-27 22:38:34,857 - apscheduler.scheduler - INFO - Scheduler started
+2026-02-27 22:38:34,858 - backend.main - INFO - Midnight scheduler started - daily reset will run at 00:00, backups at 02:00
+------------------------------ Captured log setup ------------------------------
+INFO     backend.migrations.manager:manager.py:36 Database version check: current=1.9, target=1.9
+INFO     backend.migrations.manager:manager.py:70 Database version is up to date.
+INFO     backend.seed_data:seed_data.py:28 Role Admin already exists.
+INFO     backend.seed_data:seed_data.py:28 Role Contributor already exists.
+INFO     backend.seed_data:seed_data.py:28 Role Teenager already exists.
+INFO     backend.seed_data:seed_data.py:28 Role Child already exists.
+INFO     backend.seed_data:seed_data.py:50 Admin user already exists.
+INFO     backend.main:main.py:119 Startup: Daily reset already performed today, skipping
+INFO     backend.main:main.py:140 Configuring scheduler with timezone: Europe/Berlin
+INFO     apscheduler.scheduler:base.py:507 Adding job tentatively -- it will be properly scheduled when the scheduler starts
+INFO     apscheduler.scheduler:base.py:507 Adding job tentatively -- it will be properly scheduled when the scheduler starts
+INFO     apscheduler.scheduler:base.py:1090 Added job "scheduled_daily_reset" to job store "default"
+INFO     apscheduler.scheduler:base.py:1090 Added job "run_backup_job" to job store "default"
+INFO     apscheduler.scheduler:base.py:214 Scheduler started
+INFO     backend.main:main.py:161 Midnight scheduler started - daily reset will run at 00:00, backups at 02:00
+----------------------------- Captured stderr call -----------------------------
+2026-02-27 22:38:34,876 - httpx - INFO - HTTP Request: POST http://testserver/api/auth/login/ "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1013 HTTP Request: POST http://testserver/api/auth/login/ "HTTP/1.1 404 Not Found"
+--------------------------- Captured stderr teardown ---------------------------
+2026-02-27 22:38:34,994 - backend.main - INFO - Initiating application shutdown...
+2026-02-27 22:38:34,995 - backend.main - INFO - Shutting down scheduler (waiting for active jobs)...
+2026-02-27 22:38:34,995 - apscheduler.scheduler - INFO - Scheduler has been shut down
+2026-02-27 22:38:34,995 - backend.main - INFO - Scheduler shut down successfully.
+2026-02-27 22:38:34,995 - backend.main - INFO - Application shutdown complete.
+---------------------------- Captured log teardown -----------------------------
+INFO     backend.main:main.py:167 Initiating application shutdown...
+INFO     backend.main:main.py:170 Shutting down scheduler (waiting for active jobs)...
+INFO     apscheduler.scheduler:base.py:245 Scheduler has been shut down
+INFO     backend.main:main.py:172 Scheduler shut down successfully.
+INFO     backend.main:main.py:177 Application shutdown complete.
+__________________ test_login_rejects_incorrect_plaintext_pin __________________
+tests/unit/test_auth_migration.py:64: in test_login_rejects_incorrect_plaintext_pin
+    assert response.status_code == 401, response.text
+E   AssertionError: {"detail":"Not Found"}
+E   assert 404 == 401
+E    +  where 404 = <Response [404 Not Found]>.status_code
+---------------------------- Captured stderr setup -----------------------------
+2026-02-27 22:38:35,041 - backend.migrations.manager - INFO - Database version check: current=1.9, target=1.9
+2026-02-27 22:38:35,041 - backend.migrations.manager - INFO - Database version is up to date.
+2026-02-27 22:38:35,045 - backend.seed_data - INFO - Role Admin already exists.
+2026-02-27 22:38:35,046 - backend.seed_data - INFO - Role Contributor already exists.
+2026-02-27 22:38:35,047 - backend.seed_data - INFO - Role Teenager already exists.
+2026-02-27 22:38:35,048 - backend.seed_data - INFO - Role Child already exists.
+2026-02-27 22:38:35,055 - backend.seed_data - INFO - Admin user already exists.
+2026-02-27 22:38:35,058 - backend.main - INFO - Startup: Daily reset already performed today, skipping
+2026-02-27 22:38:35,060 - backend.main - INFO - Configuring scheduler with timezone: Europe/Berlin
+2026-02-27 22:38:35,060 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-02-27 22:38:35,061 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-02-27 22:38:35,061 - apscheduler.scheduler - INFO - Added job "scheduled_daily_reset" to job store "default"
+2026-02-27 22:38:35,062 - apscheduler.scheduler - INFO - Added job "run_backup_job" to job store "default"
+2026-02-27 22:38:35,062 - apscheduler.scheduler - INFO - Scheduler started
+2026-02-27 22:38:35,062 - backend.main - INFO - Midnight scheduler started - daily reset will run at 00:00, backups at 02:00
+------------------------------ Captured log setup ------------------------------
+INFO     backend.migrations.manager:manager.py:36 Database version check: current=1.9, target=1.9
+INFO     backend.migrations.manager:manager.py:70 Database version is up to date.
+INFO     backend.seed_data:seed_data.py:28 Role Admin already exists.
+INFO     backend.seed_data:seed_data.py:28 Role Contributor already exists.
+INFO     backend.seed_data:seed_data.py:28 Role Teenager already exists.
+INFO     backend.seed_data:seed_data.py:28 Role Child already exists.
+INFO     backend.seed_data:seed_data.py:50 Admin user already exists.
+INFO     backend.main:main.py:119 Startup: Daily reset already performed today, skipping
+INFO     backend.main:main.py:140 Configuring scheduler with timezone: Europe/Berlin
+INFO     apscheduler.scheduler:base.py:507 Adding job tentatively -- it will be properly scheduled when the scheduler starts
+INFO     apscheduler.scheduler:base.py:507 Adding job tentatively -- it will be properly scheduled when the scheduler starts
+INFO     apscheduler.scheduler:base.py:1090 Added job "scheduled_daily_reset" to job store "default"
+INFO     apscheduler.scheduler:base.py:1090 Added job "run_backup_job" to job store "default"
+INFO     apscheduler.scheduler:base.py:214 Scheduler started
+INFO     backend.main:main.py:161 Midnight scheduler started - daily reset will run at 00:00, backups at 02:00
+----------------------------- Captured stderr call -----------------------------
+2026-02-27 22:38:35,076 - httpx - INFO - HTTP Request: POST http://testserver/api/auth/login/ "HTTP/1.1 404 Not Found"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1013 HTTP Request: POST http://testserver/api/auth/login/ "HTTP/1.1 404 Not Found"
+--------------------------- Captured stderr teardown ---------------------------
+2026-02-27 22:38:35,087 - backend.main - INFO - Initiating application shutdown...
+2026-02-27 22:38:35,088 - backend.main - INFO - Shutting down scheduler (waiting for active jobs)...
+2026-02-27 22:38:35,089 - apscheduler.scheduler - INFO - Scheduler has been shut down
+2026-02-27 22:38:35,090 - backend.main - INFO - Scheduler shut down successfully.
+2026-02-27 22:38:35,090 - backend.main - INFO - Application shutdown complete.
+---------------------------- Captured log teardown -----------------------------
+INFO     backend.main:main.py:167 Initiating application shutdown...
+INFO     backend.main:main.py:170 Shutting down scheduler (waiting for active jobs)...
+INFO     apscheduler.scheduler:base.py:245 Scheduler has been shut down
+INFO     backend.main:main.py:172 Scheduler shut down successfully.
+INFO     backend.main:main.py:177 Application shutdown complete.
+=============================== warnings summary ===============================
+venv/lib/python3.12/site-packages/passlib/utils/__init__.py:854
+  /home/andreas/work/family-chore/venv/lib/python3.12/site-packages/passlib/utils/__init__.py:854: DeprecationWarning: 'crypt' is deprecated and slated for removal in Python 3.13
+    from crypt import crypt as _crypt
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+
+---------- coverage: platform linux, python 3.12.3-final-0 -----------
+Name                                            Stmts   Miss Branch BrPart  Cover   Missing
+-------------------------------------------------------------------------------------------
+backend/__init__.py                                 0      0      0      0   100%
+backend/backup.py                                  52     37     10      1    26%   20, 24-35, 39-58, 62-80
+backend/crud.py                                   403    340    136      3    12%   10, 14, 18, 22-34, 39-49, 54-57, 63, 67, 71-76, 82-90, 95-160, 165-168, 172, 177-188, 193-217, 224-235, 241-242, 251-252, 263-327, 331-362, 369-395, 400, 406-410, 414, 419-430, 435-447, 451-456, 461, 469-509, 525-593, 608-631, 643-656, 663-677, 688-699, 704-709, 720-722, 727, 735, 744-746, 753-769, 775-781, 788-792, 798-802, 807-815, 820-825, 832, 840-859, 863-869
+backend/database.py                                12      4      0      0    67%   17-21
+backend/dependencies.py                            26     18      8      0    24%   13-47, 51-56
+backend/events.py                                  20      9      4      0    46%   13-15, 18-19, 23-26
+backend/init_db.py                                  8      8      2      0     0%   1-12
+backend/main.py                                   141     61     18      4    53%   35-78, 86-94, 109-110, 117, 122-123, 134, 137-138, 174-176, 185, 222-223, 230-247, 260
+backend/migrations/consolidated_migration.py       37     31     12      1    14%   13-63, 68-70
+backend/migrations/manager.py                      45     16      6      3    63%   22-25, 43-67, 72-73, 81-82
+backend/migrations/v1_5_bool_column.py             31     26      6      1    16%   19-71, 75-78
+backend/migrations/v1_7_bool_columns.py            35     29     10      1    16%   27-73, 77-80
+backend/migrations/v1_8_hash_pins.py               21     16      8      0    17%   13-45
+backend/migrations/v1_9_push_subscriptions.py      14     10      2      0    25%   12-38
+backend/models.py                                 104      0      0      0   100%
+backend/notifications_service.py                  110     74     22      2    29%   14-16, 37-75, 84, 95-96, 107-130, 137-140, 144-163, 168-189, 196
+backend/routers/analytics.py                       36     23     10      0    28%   35-75, 84-94
+backend/routers/auth.py                            30     21      8      0    24%   15-47
+backend/routers/notifications.py                   33     13      4      0    54%   20, 30-31, 41-44, 56, 64-68, 74
+backend/routers/rewards.py                         61     37     12      0    33%   18, 23-24, 30-33, 39-42, 47-50, 61-89, 104-140
+backend/routers/roles.py                           64     45     20      0    23%   18-37, 42-43, 49-50, 55-64, 70-113
+backend/routers/system.py                          87     63     26      0    21%   22-44, 54-131, 142-160, 167-172, 179, 184-188
+backend/routers/tasks.py                          111     78     24      0    24%   23-32, 37-38, 44-52, 58-68, 75, 80, 92-146, 154-196, 204, 217-242
+backend/routers/transactions.py                    16      2      0      0    88%   31, 49
+backend/routers/users.py                           38     19      6      0    43%   19-23, 28-29, 35-38, 49-81
+backend/schemas.py                                277     73     54      0    62%   73-75, 137-166, 189-210, 365-420
+backend/security.py                                48     16      6      2    63%   22, 30->34, 49, 54, 59-67, 72-77
+backend/seed_data.py                               32     12     10      4    62%   24-26, 34->56, 38-48, 52-54, 60
+-------------------------------------------------------------------------------------------
+TOTAL                                            1892   1081    424     22    36%
+Coverage HTML written to dir htmlcov
+
+=========================== short test summary info ============================
+FAILED tests/unit/test_auth_migration.py::test_login_auto_migrates_plaintext_pin
+FAILED tests/unit/test_auth_migration.py::test_login_rejects_incorrect_plaintext_pin
+========================= 2 failed, 1 warning in 1.42s =========================
