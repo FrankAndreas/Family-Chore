@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-import type { LoginResponse } from './types';
+import type { LoginResponse, User } from './types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
@@ -46,11 +46,17 @@ export const getUsers = () => api.get('/users/');
 export const createUser = (nickname: string, login_pin: string, role_id: number) =>
     api.post('/users/', { nickname, login_pin, role_id });
 
+export const updateUser = (id: number, data: Partial<User>) =>
+    api.put(`/users/${id}`, data);
+
+export const resetUserPassword = (id: number, new_pin: string) =>
+    api.put(`/users/${id}/password`, { new_pin });
+
+export const deleteUser = (id: number) =>
+    api.delete(`/users/${id}`);
+
 export const penalizeUser = (user_id: number, points: number, reason: string) =>
     api.post(`/users/${user_id}/penalize`, { points, reason });
-
-export const updateUser = (user_id: number, data: { email?: string | null, notifications_enabled?: boolean }) =>
-    api.put(`/users/${user_id}`, data);
 
 // Role APIs
 export const getRoles = () => api.get('/roles/');

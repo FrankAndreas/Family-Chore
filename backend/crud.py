@@ -35,7 +35,7 @@ def create_user(db: Session, user: schemas.UserCreate) -> models.User:
 
 
 def update_user(db: Session, user_id: int, user_update: schemas.UserUpdate) -> Optional[models.User]:
-    """Update user profile settings (e.g., email, notifications)."""
+    """Update user profile settings (e.g., email, notifications, nickname, role)."""
     db_user = db.query(models.User).filter(models.User.id == user_id).first()
     if not db_user:
         return None
@@ -47,6 +47,36 @@ def update_user(db: Session, user_id: int, user_update: schemas.UserUpdate) -> O
     db.commit()
     db.refresh(db_user)
     return db_user
+
+
+def update_user_password(db: Session, user_id: int, new_pin: str) -> bool:
+    """Update user's login PIN."""
+    db_user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not db_user:
+        return False
+
+    hashed_pin = security.get_password_hash(new_pin)
+    db_user.login_pin = hashed_pin
+    db.commit()
+    return True
+
+
+def delete_user(db: Session, user_id: int) -> bool:
+    """Delete a user and all related records to satisfy foreign key constraints."""
+    db_user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not db_user:
+        return False
+
+    # Delete related records explicitly
+    db.query(models.TaskInstance).filter(models.TaskInstance.user_id == user_id).delete()
+    db.query(models.Transaction).filter(models.Transaction.user_id == user_id).delete()
+    db.query(models.Notification).filter(models.Notification.user_id == user_id).delete()
+    db.query(models.PushSubscription).filter(models.PushSubscription.user_id == user_id).delete()
+
+    # Finally delete the user
+    db.delete(db_user)
+    db.commit()
+    return True
 
 
 def update_user_pin(db: Session, user_id: int, hashed_pin: str) -> None:

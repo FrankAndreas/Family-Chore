@@ -500,3 +500,16 @@ This file captures accumulated knowledge from development sessions. The Libraria
 - **Database Passwords Migration**: When changing the underlying Database password hashing strategy (like seeding plain text pins but shifting to bcrypt), explicit background migration (`python -c "update loop"`) is necessary instantly; otherwise, valid users lose access and get 500 server errors on the login endpoint due to `UnknownHashError`.
 ## Background Auto-Migration
 - **Smooth Transitions**: Instead of forcing a hard migration script for something like plaintext passwords, intercepting the login flow to hash unencrypted secrets dynamically creates a zero-friction upgrade path for users while keeping the database clean moving forward.
+
+## 📅 2026-02-28: Admin User Management (Edit & Delete)
+
+### What We Learned
+- **Deep Deletion Integrity**: When a user is deleted from a gamified ecosystem, standard SQLAlchemy `CASCADE` deletes are insufficient or risky. Explicitly querying and deleting related entities (`TaskInstance`, `Transaction`, `Notification`, `PushSubscription`) manually prior to the `User` record yields a much safer and auditable transaction loop.
+- **Fixture Reusability**: When test suites define mock clients (like `admin_token` overriding `current_user`), it is frequently easier to create a localized `setup_normal_user` function inside a test file to explicitly spawn a secondary testing target than to rewrite the global `conftest.py` dependency overrides.
+
+### Patterns Discovered
+- **Inline Editor Modals**: Modals are preferred over separate pages for administrative CRUD interactions (like modifying Roles, points, or nicknames) because they maintain context of the underlying list without a jarring UX shift.
+- **Role Inheritance Verification**: Combining frontend React conditional rendering (`if User is Admin show Edit`) with backend route dependencies (`@router.delete(..., dependencies=[Depends(get_current_admin_user)])`) is the primary pattern for securing admin routes. Providing fallback `403 Forbidden` handles tampering.
+
+### Gotchas
+- **TypeScript Duplicate Definitions**: Carelessly merging two separate `.tsx` or `.ts` file updates might accidentally re-declare variables (e.g. `updateUser`). Running `npm run lint` or `npx tsc --noEmit` locally before deployment validation prevents basic refactoring bugs from becoming production errors.

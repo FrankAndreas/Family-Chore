@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getUsers, createUser, getRoles, penalizeUser } from '../../api';
+import { getUsers, createUser, getRoles, penalizeUser, updateUser, resetUserPassword, deleteUser } from '../../api';
 import type { User, Role } from '../../types';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import './Dashboard.css';
@@ -21,6 +21,16 @@ const UserManagement: React.FC = () => {
     const [penaltyPoints, setPenaltyPoints] = useState<number | ''>('');
     const [penaltyReason, setPenaltyReason] = useState<string>('');
     const [penaltyError, setPenaltyError] = useState<string>('');
+
+    // Edit/Delete state
+    const [selectedUserForEdit, setSelectedUserForEdit] = useState<User | null>(null);
+    const [editNickname, setEditNickname] = useState('');
+    const [editRoleId, setEditRoleId] = useState<number>(0);
+    const [editNewPin, setEditNewPin] = useState('');
+    const [editError, setEditError] = useState('');
+
+    const [selectedUserForDelete, setSelectedUserForDelete] = useState<User | null>(null);
+    const [deleteError, setDeleteError] = useState('');
 
     useEffect(() => {
         fetchData();
@@ -87,6 +97,58 @@ const UserManagement: React.FC = () => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
             setPenaltyError(err.response?.data?.detail || 'Failed to penalize user');
+        }
+    };
+
+    const handleEditClick = (user: User) => {
+        setSelectedUserForEdit(user);
+        setEditNickname(user.nickname);
+        setEditRoleId(user.role?.id || roles[0]?.id || 0);
+        setEditNewPin('');
+        setEditError('');
+    };
+
+    const handleUpdateUser = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setEditError('');
+
+        if (!selectedUserForEdit) return;
+
+        try {
+            // Update profile
+            await updateUser(selectedUserForEdit.id, {
+                nickname: editNickname,
+                role_id: editRoleId
+            });
+
+            // Update PIN if provided
+            if (editNewPin) {
+                if (editNewPin.length !== 4 || !/^\d+$/.test(editNewPin)) {
+                    setEditError('New PIN must be exactly 4 digits');
+                    return;
+                }
+                await resetUserPassword(selectedUserForEdit.id, editNewPin);
+            }
+
+            setSelectedUserForEdit(null);
+            fetchData();
+        } catch (err: unknown) {
+            const errorObj = err as { response?: { data?: { detail?: string } } };
+            setEditError(errorObj.response?.data?.detail || 'Failed to update user');
+        }
+    };
+
+    const handleDeleteUser = async () => {
+        setDeleteError('');
+        if (!selectedUserForDelete) return;
+
+        try {
+            await deleteUser(selectedUserForDelete.id);
+            setSelectedUserForDelete(null);
+            fetchData();
+        } catch (err: unknown) {
+            const errorObj = err as { response?: { data?: { detail?: string } } };
+            setDeleteError(errorObj.response?.data?.detail || 'Failed to delete user');
         }
     };
 
@@ -175,7 +237,20 @@ const UserManagement: React.FC = () => {
                                 <span className="value">{user.lifetime_points}</span>
                             </div>
                         </div>
-                        <div className="user-card-actions" style={{ marginTop: '1rem', borderTop: '1px solid var(--border)', paddingTop: '1rem', display: 'flex', justifyContent: 'flex-end' }}>
+                        <div className="user-card-actions" style={{ marginTop: '1rem', borderTop: '1px solid var(--border)', paddingTop: '1rem', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                            <button
+                                className="btn btn-secondary btn-sm"
+                                onClick={() => handleEditClick(user)}
+                            >
+                                Edit
+                            </button>
+                            <button
+                                className="btn btn-secondary btn-sm"
+                                style={{ color: 'var(--danger)', borderColor: 'var(--danger-alpha)' }}
+                                onClick={() => setSelectedUserForDelete(user)}
+                            >
+                                Delete
+                            </button>
                             <button
                                 className="btn btn-secondary btn-sm"
                                 style={{ color: 'var(--danger)', borderColor: 'var(--danger-alpha)' }}
@@ -237,6 +312,94 @@ const UserManagement: React.FC = () => {
                                     </button>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Edit User Modal */}
+            {selectedUserForEdit && (
+                <div className="modal-overlay fade-in" onClick={() => setSelectedUserForEdit(null)}>
+                    <div className="modal-content glass-panel" onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2>Edit User: {selectedUserForEdit.nickname}</h2>
+                            <button className="close-btn" onClick={() => setSelectedUserForEdit(null)}>×</button>
+                        </div>
+
+                        <div className="modal-body">
+                            <form onSubmit={handleUpdateUser} className="form-grid">
+                                <div className="form-group">
+                                    <label>Nickname</label>
+                                    <input
+                                        type="text"
+                                        value={editNickname}
+                                        onChange={(e) => setEditNickname(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label>Role</label>
+                                    <select
+                                        value={editRoleId}
+                                        onChange={(e) => setEditRoleId(Number(e.target.value))}
+                                    >
+                                        {roles.map(role => (
+                                            <option key={role.id} value={role.id}>
+                                                {role.name} (x{role.multiplier_value})
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                                    <label>Reset PIN (Leave blank to keep current)</label>
+                                    <input
+                                        type="password"
+                                        value={editNewPin}
+                                        onChange={(e) => setEditNewPin(e.target.value)}
+                                        maxLength={4}
+                                        placeholder="****"
+                                    />
+                                </div>
+
+                                {editError && <div className="error-message" style={{ gridColumn: '1 / -1' }}>{editError}</div>}
+
+                                <div className="form-actions" style={{ gridColumn: '1 / -1', marginTop: '1rem' }}>
+                                    <button type="button" className="btn btn-secondary" onClick={() => setSelectedUserForEdit(null)}>
+                                        Cancel
+                                    </button>
+                                    <button type="submit" className="btn btn-primary">
+                                        Save Changes
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {selectedUserForDelete && (
+                <div className="modal-overlay fade-in" onClick={() => setSelectedUserForDelete(null)}>
+                    <div className="modal-content glass-panel" onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2>Delete User</h2>
+                            <button className="close-btn" onClick={() => setSelectedUserForDelete(null)}>×</button>
+                        </div>
+                        <div className="modal-body">
+                            <div className="alert-box" style={{ backgroundColor: 'var(--danger-alpha)', color: 'var(--danger)', padding: '1rem', borderRadius: 'var(--radius)', marginBottom: '1.5rem', border: '1px solid var(--danger)' }}>
+                                <strong>Warning: Permanent Action</strong>
+                                <p style={{ marginTop: '0.5rem' }}>Are you sure you want to delete <strong>{selectedUserForDelete.nickname}</strong>? This will permanently remove their profile, assigned tasks, and entire transaction history.</p>
+                            </div>
+
+                            {deleteError && <div className="error-message">{deleteError}</div>}
+
+                            <div className="form-actions space-between" style={{ marginTop: '2rem' }}>
+                                <button className="btn btn-secondary" onClick={() => setSelectedUserForDelete(null)}>
+                                    Cancel
+                                </button>
+                                <button className="btn btn-primary" style={{ backgroundColor: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={handleDeleteUser}>
+                                    Yes, Delete User
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

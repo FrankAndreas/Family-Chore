@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 import logging
 
-from .. import schemas, crud
+from .. import schemas, crud, models
 from ..database import get_db
 from ..dependencies import get_current_user, get_current_admin_user
 from ..events import broadcaster
@@ -29,13 +29,48 @@ def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return users
 
 
-@router.put("/users/{user_id}", response_model=schemas.User, dependencies=[Depends(get_current_user)])
-def update_user(user_id: int, user_update: schemas.UserUpdate, db: Session = Depends(get_db)):
-    """Update user settings (e.g. email, notifications_enabled)."""
+@router.put("/users/{user_id}", response_model=schemas.User)
+def update_user(user_id: int, user_update: schemas.UserUpdate,
+                current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Update user settings (e.g. email, notifications_enabled, nickname, role)."""
+    # Authorization: Only Admin or the user themselves can update their profile.
+    if current_user.id != user_id and current_user.role.name != "Admin":
+        raise HTTPException(status_code=403, detail="Not authorized to update this user")
+
+    # Role updates are Admin-only
+    if user_update.role_id is not None and current_user.role.name != "Admin":
+        raise HTTPException(status_code=403, detail="Only Admins can change roles")
+
     user = crud.update_user(db, user_id=user_id, user_update=user_update)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
+
+
+@router.put("/users/{user_id}/password")
+def reset_user_password(user_id: int, payload: schemas.UserPasswordReset,
+                        current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Admin or self password reset."""
+    if current_user.id != user_id and current_user.role.name != "Admin":
+        raise HTTPException(status_code=403, detail="Not authorized to reset password for this user")
+
+    success = crud.update_user_password(db, user_id=user_id, new_pin=payload.new_pin)
+    if not success:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"success": True}
+
+
+@router.delete("/users/{user_id}", dependencies=[Depends(get_current_admin_user)])
+def delete_user(user_id: int, current_user: models.User = Depends(
+        get_current_admin_user), db: Session = Depends(get_db)):
+    """Admin only endpoint to delete a user."""
+    if current_user.id == user_id:
+        raise HTTPException(status_code=400, detail="Cannot delete yourself")
+
+    success = crud.delete_user(db, user_id=user_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"success": True}
 
 
 @router.post("/users/{user_id}/penalize", dependencies=[Depends(get_current_admin_user)])

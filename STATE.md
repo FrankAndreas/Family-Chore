@@ -1,7 +1,7 @@
 # State & Global Memory
 
 **Librarian**: Agent-Librarian
-**Last Updated**: 2026-02-27 14:52
+**Last Updated**: 2026-02-28 21:25
 
 ## 🧠 Global Context
 The project is a **Family Chore Gamification System** (Universal-GSD-Core). We have completed **System Polish & Hardening** (V1.4), **Negative Points**, **Email Notifications** (V1.6), and **Frontend Integration**. Database schema version is **1.8**.
@@ -13,6 +13,7 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We h
 - **Database Schema**: Added `PushSubscription` model mapped to user relationships (v1.9 schema).
 - **Service Worker**: Added `sw.js` for handling incoming push events and displaying browser notifications.
 - **Frontend Toggle**: Added a Push Notifications toggle in the SettingsPage utilizing the `PushManager` browser API.
+- **User Management Endpoints**: Completed Admin control endpoints for `Edit User` and `Delete User`, managing deep FK cleanups.
 - **Background Dispatch**: Background tasks integrated to conditionally push to user endpoints on events like task completion or daily reminders.
 
 ## 📍 System State
@@ -32,4 +33,4 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We h
 
 ## 🔜 Next Session Prompt
 > **Start a new conversation and say:**
-> "Review STATE.md — S2 Auth Middleware is complete. Let's tackle the next priority task: Web Push Notifications."
+> "Review STATE.md — User Management implementation (Edit/Delete) is complete. Let's tackle the next priority task: Analytics & Heatmaps."

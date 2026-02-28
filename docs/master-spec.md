@@ -128,6 +128,9 @@ ChoreSpec is a family-oriented chore gamification system. It transforms househol
 
 ### Management
 - `POST /users/`, `GET /users/`
+- `PUT /users/{id}` (Update profile: nickname, email, role, etc.)
+- `PUT /users/{id}/password` (Admin or self password reset)
+- `DELETE /users/{id}` (Admin only, cannot delete self or last admin)
 - `POST /login/` (Nickname + PIN matching)
 - `GET /roles/`, `PUT /roles/{id}` (Multiplier update)
 
@@ -233,6 +236,30 @@ ChoreSpec is a family-oriented chore gamification system. It transforms househol
 - **When** the user attempts to access a protected endpoint
 - **Then** the system rejects the request with a 401 Unauthorized error
 - **And** the frontend prompts the user to log in again.
+
+### 4.6 BDD Scenarios (User Management: Edit/Delete)
+**Scenario: Admin updates another user's role**
+- **Given** an Admin is logged in
+- **When** the Admin updates User B's role to "Parent"
+- **Then** the backend updates User B's `role_id`
+- **And** User B's points multiplier is updated for future tasks.
+
+**Scenario: Admin resets another user's PIN**
+- **Given** an Admin is logged in
+- **When** the Admin sets a new PIN "5678" for User B
+- **Then** the backend hashes the new PIN using bcrypt and stores it
+- **And** User B can log in with "5678".
+
+**Scenario: Admin deletes a standard user**
+- **Given** an Admin is logged in
+- **When** the Admin deletes User B
+- **Then** User B is removed from the database (or soft-deleted)
+- **And** User B's pending tasks and data are handled gracefully.
+
+**Scenario: User attempts to change role without Admin privileges**
+- **Given** a standard User is logged in
+- **When** they attempt to update their own role or delete their account
+- **Then** the backend rejects the request with a 403 Forbidden error.
 
 ---
 

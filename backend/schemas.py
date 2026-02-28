@@ -82,8 +82,14 @@ class UserLogin(BaseModel):
 
 class UserUpdate(BaseModel):
     """Schema for updating user profile settings."""
+    nickname: Optional[str] = None
+    role_id: Optional[int] = None
     email: Optional[str] = None
     notifications_enabled: Optional[bool] = None
+
+
+class UserPasswordReset(BaseModel):
+    new_pin: str = Field(..., pattern=r'^\d{4}$', description="New 4-digit PIN")
 
 
 class User(UserBase):
