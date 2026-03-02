@@ -1,7 +1,7 @@
 # State & Global Memory
 
 **Librarian**: Agent-Librarian
-**Last Updated**: 2026-02-28 21:25
+**Last Updated**: 2026-03-02 21:06
 
 ## 🧠 Global Context
 The project is a **Family Chore Gamification System** (Universal-GSD-Core). We have completed **System Polish & Hardening** (V1.4), **Negative Points**, **Email Notifications** (V1.6), and **Frontend Integration**. Database schema version is **1.8**.
@@ -15,6 +15,11 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We h
 - **Frontend Toggle**: Added a Push Notifications toggle in the SettingsPage utilizing the `PushManager` browser API.
 - **User Management Endpoints**: Completed Admin control endpoints for `Edit User` and `Delete User`, managing deep FK cleanups.
 - **Background Dispatch**: Background tasks integrated to conditionally push to user endpoints on events like task completion or daily reminders.
+
+## 🔄 Recent Changes (2026-03-02 Deletion Modal UI Polish)
+- **Modal Dark-Mode Fix**: Hardcoded dark text colors (`#1a1a2e`, `#333`, `#c53030`) inside the Delete User confirmation modal to resolve white-on-white text caused by CSS variables resolving incorrectly inside the always-white `.modal-content`.
+- **Self-Deletion Prevention**: Admin's own Delete button is now `disabled` with tooltip "Cannot delete yourself".
+- **Button Style Consistency**: Reverted Delete/Deduct Points buttons to match the standard `btn-secondary btn-sm` style (same as Edit).
 
 ## 📍 System State
 - **Backend**: Port 8000. **135+ tests passed**. Flake8 and Mypy clean. Schema v1.9.

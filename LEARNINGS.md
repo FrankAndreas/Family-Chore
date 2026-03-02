@@ -513,3 +513,16 @@ This file captures accumulated knowledge from development sessions. The Libraria
 
 ### Gotchas
 - **TypeScript Duplicate Definitions**: Carelessly merging two separate `.tsx` or `.ts` file updates might accidentally re-declare variables (e.g. `updateUser`). Running `npm run lint` or `npx tsc --noEmit` locally before deployment validation prevents basic refactoring bugs from becoming production errors.
+
+## 📅 2026-03-02: Deletion Modal Dark-Mode Contrast Fix
+
+### What We Learned
+- **CSS Variables vs Fixed Backgrounds**: When a modal component (`.modal-content`) has a hardcoded white/light background (`rgba(255, 255, 255, 0.95)`), CSS custom properties like `var(--text-primary)` that resolve to white in dark mode will produce **invisible white-on-white text**. Always hardcode dark text colors (`#1a1a2e`, `#333`) inside components with fixed light backgrounds.
+- **Browser Subagent for Visual QA**: Using the browser subagent to capture modal screenshots is the fastest way to verify contrast issues that linting and type-checking cannot catch.
+
+### Patterns Discovered
+- **Scoped Color Strategy**: For modals that always render with a light background regardless of OS theme, maintain a separate set of hardcoded dark text colors instead of relying on theme-aware CSS variables. This avoids the "variable mismatch" trap entirely.
+- **Self-Deletion Guard**: Implementing `disabled={user.id === currentUser.id}` with a `title` tooltip is a clean, accessible pattern for preventing destructive self-actions without hiding the button entirely.
+
+### Gotchas
+- **`var(--text-secondary)` in Modals**: This variable resolved to a near-white grey in dark mode, making paragraph text inside the light-background modal completely invisible. It took multiple iterations to identify because the dark-mode page behind the modal looked correct.

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { getUsers, createUser, getRoles, penalizeUser, updateUser, resetUserPassword, deleteUser } from '../../api';
 import type { User, Role } from '../../types';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import './Dashboard.css';
 
 const UserManagement: React.FC = () => {
+    const { currentUser } = useOutletContext<{ currentUser: User }>();
     const [users, setUsers] = useState<User[]>([]);
     const [roles, setRoles] = useState<Role[]>([]);
     const [loading, setLoading] = useState(true);
@@ -237,7 +239,7 @@ const UserManagement: React.FC = () => {
                                 <span className="value">{user.lifetime_points}</span>
                             </div>
                         </div>
-                        <div className="user-card-actions" style={{ marginTop: '1rem', borderTop: '1px solid var(--border)', paddingTop: '1rem', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                        <div className="user-card-actions" style={{ marginTop: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
                             <button
                                 className="btn btn-secondary btn-sm"
                                 onClick={() => handleEditClick(user)}
@@ -246,14 +248,14 @@ const UserManagement: React.FC = () => {
                             </button>
                             <button
                                 className="btn btn-secondary btn-sm"
-                                style={{ color: 'var(--danger)', borderColor: 'var(--danger-alpha)' }}
                                 onClick={() => setSelectedUserForDelete(user)}
+                                disabled={user.id === currentUser.id}
+                                title={user.id === currentUser.id ? "Cannot delete yourself" : ""}
                             >
                                 Delete
                             </button>
                             <button
                                 className="btn btn-secondary btn-sm"
-                                style={{ color: 'var(--danger)', borderColor: 'var(--danger-alpha)' }}
                                 onClick={() => setSelectedUserForPenalty(user)}
                             >
                                 Deduct Points
@@ -307,7 +309,7 @@ const UserManagement: React.FC = () => {
                                     <button type="button" className="btn btn-secondary" onClick={() => setSelectedUserForPenalty(null)}>
                                         Cancel
                                     </button>
-                                    <button type="submit" className="btn btn-primary" style={{ backgroundColor: 'var(--danger)', borderColor: 'var(--danger)' }}>
+                                    <button type="submit" className="btn btn-primary" style={{ background: 'var(--warning-gradient)', border: 'none', color: '#fff' }}>
                                         Deduct {penaltyPoints || 0} Points
                                     </button>
                                 </div>
@@ -381,13 +383,22 @@ const UserManagement: React.FC = () => {
                 <div className="modal-overlay fade-in" onClick={() => setSelectedUserForDelete(null)}>
                     <div className="modal-content glass-panel" onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>Delete User</h2>
+                            <h2 style={{ color: '#1a1a2e' }}>Delete User</h2>
                             <button className="close-btn" onClick={() => setSelectedUserForDelete(null)}>×</button>
                         </div>
                         <div className="modal-body">
-                            <div className="alert-box" style={{ backgroundColor: 'var(--danger-alpha)', color: 'var(--danger)', padding: '1rem', borderRadius: 'var(--radius)', marginBottom: '1.5rem', border: '1px solid var(--danger)' }}>
-                                <strong>Warning: Permanent Action</strong>
-                                <p style={{ marginTop: '0.5rem' }}>Are you sure you want to delete <strong>{selectedUserForDelete.nickname}</strong>? This will permanently remove their profile, assigned tasks, and entire transaction history.</p>
+                            <div className="alert-box" style={{
+                                backgroundColor: 'rgba(245, 101, 101, 0.1)',
+                                padding: '1.25rem',
+                                borderRadius: 'var(--radius-md)',
+                                marginBottom: '1.5rem',
+                                border: '1px solid rgba(245, 101, 101, 0.3)'
+                            }}>
+                                <strong style={{ color: '#c53030', display: 'block', marginBottom: '0.5rem', fontSize: '1.1rem' }}>Warning: Permanent Action</strong>
+                                <p style={{ color: '#333', lineHeight: '1.5' }}>
+                                    Are you sure you want to delete <strong style={{ color: '#1a1a2e' }}>{selectedUserForDelete.nickname}</strong>?
+                                    This will permanently remove their profile, assigned tasks, and entire transaction history.
+                                </p>
                             </div>
 
                             {deleteError && <div className="error-message">{deleteError}</div>}
@@ -396,7 +407,7 @@ const UserManagement: React.FC = () => {
                                 <button className="btn btn-secondary" onClick={() => setSelectedUserForDelete(null)}>
                                     Cancel
                                 </button>
-                                <button className="btn btn-primary" style={{ backgroundColor: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={handleDeleteUser}>
+                                <button className="btn btn-primary" style={{ backgroundColor: '#e53e3e', border: 'none', color: '#fff' }} onClick={handleDeleteUser}>
                                     Yes, Delete User
                                 </button>
                             </div>
