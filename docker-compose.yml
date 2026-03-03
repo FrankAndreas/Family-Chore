@@ -9,8 +9,20 @@ services:
     container_name: chorespec-backend
     volumes:
       - chores_data:/app/data
+      - chores_uploads:/app/uploads
+      - chores_backups:/app/backups
     environment:
       - DATABASE_URL=sqlite:///./data/chorespec.db
+      # --- Production Secrets (uncomment and set for deployment) ---
+      # - JWT_SECRET_KEY=<generate-a-64-char-hex-string>
+      # - VAPID_PRIVATE_KEY=<path-or-pem-content>
+      # - VAPID_PUBLIC_KEY=<application-server-key>
+      # - VAPID_CLAIMS_EMAIL=mailto:your@email.com
+      # - SMTP_SERVER=smtp.example.com
+      # - SMTP_PORT=587
+      # - SMTP_USERNAME=your-username
+      # - SMTP_PASSWORD=your-password
+      # - CORS_ORIGINS=https://your-domain.com
     restart: unless-stopped
     healthcheck:
       test: [ "CMD-SHELL", "python3 -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000\")' || exit 1" ]
@@ -35,3 +47,5 @@ services:
 
 volumes:
   chores_data:
+  chores_uploads:
+  chores_backups:

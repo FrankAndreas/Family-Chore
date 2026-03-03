@@ -403,6 +403,18 @@ This file captures accumulated knowledge from development sessions. The Libraria
 
 ---
 
+## 📅 2026-03-03: Docker Infrastructure Hardening
+
+### Session Context
+- Named volumes (`chores_uploads`, `chores_backups`) for persistent file storage across container lifecycle
+- Production secrets: env-var-with-fallback pattern already in place; upgraded auto-gen logs from INFO → WARNING for visibility
+- Documenting all configurable env vars as commented references in `docker-compose.yml` aids operators
+
+### Gotchas
+- `mkdir -p` in Dockerfile must happen **before** `chown -R` — order matters for non-root volume ownership
+
+---
+
 ## Template for Future Entries
 
 ```markdown

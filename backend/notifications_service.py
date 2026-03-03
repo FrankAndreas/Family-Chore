@@ -92,7 +92,10 @@ def _load_vapid_keys() -> tuple[str, str]:
         return str(_PEM_PATH), public_key
 
     # Nothing configured — auto-generate
-    logger.info("No VAPID keys configured. Auto-generating a new key pair...")
+    logger.warning(
+        "VAPID keys not configured — auto-generating a new key pair. "
+        "Set VAPID_PRIVATE_KEY and VAPID_PUBLIC_KEY env vars for production."
+    )
     return _generate_vapid_keys()
 
 

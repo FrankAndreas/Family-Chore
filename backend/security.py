@@ -23,7 +23,10 @@ def _load_jwt_secret() -> str:
 
     # Auto-generate a cryptographically secure secret
     secret = secrets.token_hex(32)  # 64-char hex string (256 bits)
-    logger.info("JWT_SECRET_KEY not set. Auto-generated a new secret key.")
+    logger.warning(
+        "JWT_SECRET_KEY not set — auto-generated a new secret key. "
+        "Set JWT_SECRET_KEY env var for production."
+    )
 
     # Persist to .env so the key survives restarts
     env_lines = []

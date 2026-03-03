@@ -15,7 +15,7 @@ COPY backend /app/backend
 ENV PYTHONPATH=/app
 # Create a non-root user and set permissions
 RUN groupadd -r appgroup && useradd -r -g appgroup appuser && \
-    mkdir -p /app/data && \
+    mkdir -p /app/data /app/uploads /app/backups && \
     chown -R appuser:appgroup /app
 
 USER appuser
