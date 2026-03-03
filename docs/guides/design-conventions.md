@@ -127,8 +127,24 @@ Every commit must pass:
 - Explicitly `chown` writable directories before `USER` instruction
 
 ### 5.3 Secrets Management
-- JWT secret keys and VAPID keys: auto-generate at startup if missing
-- Override via environment variables in production — never commit secrets
+**Pattern**: Env-var with auto-generate fallback + WARNING log.
+
+- All secrets are read from environment variables at startup
+- If missing, the backend auto-generates a value, persists it to `backend/.env`, and logs a `WARNING`
+- In production, set env vars explicitly in `docker-compose.yml` (see commented reference block)
+
+| Env Var | Purpose | Auto-generates? |
+|---|---|---|
+| `JWT_SECRET_KEY` | Signs JWT auth tokens | ✅ 256-bit hex |
+| `VAPID_PRIVATE_KEY` | Web Push signing key (PEM path) | ✅ Key pair |
+| `VAPID_PUBLIC_KEY` | Web Push application server key | ✅ With private |
+| `VAPID_CLAIMS_EMAIL` | Push notification sender identity | Defaults to `mailto:admin@example.com` |
+| `SMTP_SERVER` | Email relay host | ❌ Falls back to stdout logging |
+| `SMTP_PORT` | Email relay port | Defaults to `587` |
+| `SMTP_USERNAME` | Email auth username | ❌ Optional |
+| `SMTP_PASSWORD` | Email auth password | ❌ Optional |
+| `CORS_ORIGINS` | Comma-separated allowed origins | Defaults to localhost dev servers |
+| `DATABASE_URL` | SQLAlchemy connection string | Defaults to `sqlite:///./chorespec_mvp.db` |
 
 ---
 
