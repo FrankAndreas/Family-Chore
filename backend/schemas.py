@@ -495,3 +495,58 @@ class PushSubscription(PushSubscriptionBase):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# --- Analytics Schemas ---
+
+
+class HeatmapDay(BaseModel):
+    """A single day's task completion count for a user."""
+    date: str
+    count: int
+
+
+class UserHeatmap(BaseModel):
+    """Heatmap data for a single user."""
+    user_id: int
+    nickname: str
+    days: List[HeatmapDay]
+
+
+class HeatmapResponse(BaseModel):
+    """Response containing heatmap data for all users."""
+    users: List[UserHeatmap]
+
+
+class StreakInfo(BaseModel):
+    """Current streak information for a user."""
+    nickname: str
+    current_streak: int
+
+
+class TopPerformer(BaseModel):
+    """The user who completed the most tasks this week."""
+    nickname: str
+    count: int
+
+
+class AnalyticsSummary(BaseModel):
+    """Aggregated summary statistics for the analytics dashboard."""
+    week_total_tasks: int
+    top_performer: Optional[TopPerformer] = None
+    streaks: List[StreakInfo]
+
+
+class HeatmapTaskDetail(BaseModel):
+    """A single completed task in a heatmap drill-down."""
+    task_name: str
+    base_points: int
+    completed_at: str  # ISO timestamp
+
+
+class HeatmapDayDetails(BaseModel):
+    """Detailed tasks for a specific user + date combination."""
+    user_id: int
+    nickname: str
+    date: str
+    tasks: List[HeatmapTaskDetail]

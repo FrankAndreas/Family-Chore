@@ -1,14 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
     PieChart, Pie, Cell
 } from 'recharts';
-import type { WeeklyStats, DistributionStat } from '../../api';
-import { getWeeklyStats, getPointsDistribution } from '../../api';
+import type { WeeklyStats, DistributionStat, HeatmapResponse, AnalyticsSummary } from '../../api';
+import { getWeeklyStats, getPointsDistribution, getHeatmapData, getAnalyticsSummary } from '../../api';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { useToast } from '../../hooks/useToast';
 import Toast from '../../components/Toast';
+import StatCards from '../../components/StatCards';
+import Heatmap from '../../components/Heatmap';
+import TimeRangeSelector from '../../components/TimeRangeSelector';
 import './AnalyticsDashboard.css';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
@@ -17,7 +20,11 @@ const AnalyticsDashboard: React.FC = () => {
     const { t } = useTranslation();
     const [weeklyData, setWeeklyData] = useState<WeeklyStats[]>([]);
     const [distributionData, setDistributionData] = useState<DistributionStat[]>([]);
+    const [heatmapData, setHeatmapData] = useState<HeatmapResponse | null>(null);
+    const [summaryData, setSummaryData] = useState<AnalyticsSummary | null>(null);
+    const [heatmapDays, setHeatmapDays] = useState(30);
     const [loading, setLoading] = useState(true);
+    const [heatmapLoading, setHeatmapLoading] = useState(false);
     const { toasts, removeToast, error } = useToast();
 
     useEffect(() => {
@@ -27,12 +34,16 @@ const AnalyticsDashboard: React.FC = () => {
 
     const fetchAnalytics = async () => {
         try {
-            const [weeklyRes, distRes] = await Promise.all([
+            const [weeklyRes, distRes, heatmapRes, summaryRes] = await Promise.all([
                 getWeeklyStats(),
-                getPointsDistribution()
+                getPointsDistribution(),
+                getHeatmapData(heatmapDays),
+                getAnalyticsSummary(),
             ]);
             setWeeklyData(weeklyRes.data);
             setDistributionData(distRes.data);
+            setHeatmapData(heatmapRes.data);
+            setSummaryData(summaryRes.data);
         } catch (err) {
             console.error("Failed to load analytics", err);
             error(t('common.error_loading'));
@@ -40,6 +51,20 @@ const AnalyticsDashboard: React.FC = () => {
             setLoading(false);
         }
     };
+
+    const handleTimeRangeChange = useCallback(async (days: number) => {
+        setHeatmapDays(days);
+        setHeatmapLoading(true);
+        try {
+            const res = await getHeatmapData(days);
+            setHeatmapData(res.data);
+        } catch (err) {
+            console.error("Failed to reload heatmap", err);
+            error(t('common.error_loading'));
+        } finally {
+            setHeatmapLoading(false);
+        }
+    }, [error, t]);
 
     if (loading) {
         return <LoadingSpinner fullPage message={t('common.loading')} />;
@@ -92,6 +117,9 @@ const AnalyticsDashboard: React.FC = () => {
                 </div>
             </header>
 
+            {/* Summary Stat Cards */}
+            <StatCards summary={summaryData} />
+
             <div className="analytics-grid">
                 {/* Weekly Activity Chart */}
                 <div className="glass-panel chart-card">
@@ -117,7 +145,7 @@ const AnalyticsDashboard: React.FC = () => {
                                         dataKey={key}
                                         stackId="a"
                                         fill={COLORS[index % COLORS.length]}
-                                        name={key} // Display user name in legend
+                                        name={key}
                                         animationDuration={1500}
                                     />
                                 ))}
@@ -153,6 +181,35 @@ const AnalyticsDashboard: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Family Progress Heatmap */}
+            {heatmapData && heatmapData.users.length > 0 && (
+                <section className="heatmap-section">
+                    <div className="heatmap-section__header">
+                        <h2 className="section-title">
+                            🗓️ {t('analytics.family_heatmap', `Family Progress (Last ${heatmapDays} Days)`)}
+                        </h2>
+                        <TimeRangeSelector
+                            selectedDays={heatmapDays}
+                            onChange={handleTimeRangeChange}
+                        />
+                    </div>
+                    {heatmapLoading ? (
+                        <LoadingSpinner message={t('common.loading')} />
+                    ) : (
+                        <div className="heatmap-grid-container">
+                            {heatmapData.users.map(user => (
+                                <Heatmap
+                                    key={user.user_id}
+                                    nickname={user.nickname}
+                                    userId={user.user_id}
+                                    days={user.days}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </section>
+            )}
         </div>
     );
 };

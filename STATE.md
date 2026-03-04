@@ -1,7 +1,7 @@
 # State & Global Memory
 
 **Librarian**: Agent-Librarian
-**Last Updated**: 2026-03-03 20:51
+**Last Updated**: 2026-03-04 06:12
 
 ## 🧠 Global Context
 The project is a **Family Chore Gamification System** (Universal-GSD-Core). We have completed **System Polish & Hardening** (V1.4), **Negative Points**, **Email Notifications** (V1.6), and **Frontend Integration**. Database schema version is **1.8**.
@@ -16,24 +16,22 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We h
 - **User Management Endpoints**: Completed Admin control endpoints for `Edit User` and `Delete User`, managing deep FK cleanups.
 - **Background Dispatch**: Background tasks integrated to conditionally push to user endpoints on events like task completion or daily reminders.
 
-## 🔄 Recent Changes (2026-03-03 Persistent File Storage)
-- **Docker Volumes**: Added `chores_uploads` and `chores_backups` named volumes in `docker-compose.yml` so uploaded photos and database backups persist across container restarts.
-- **Dockerfile**: Pre-creates `/app/uploads` and `/app/backups` directories with correct non-root ownership.
-- **Production Secrets Hardening**: Upgraded auto-generated secret logs from INFO to WARNING in `security.py` and `notifications_service.py`. Documented all production env vars (`JWT_SECRET_KEY`, `VAPID_*`, `SMTP_*`, `CORS_ORIGINS`) as commented references in `docker-compose.yml`.
-
-## 🔄 Recent Changes (2026-03-02 Deletion Modal UI Polish)
-- **Modal Dark-Mode Fix**: Hardcoded dark text colors (`#1a1a2e`, `#333`, `#c53030`) inside the Delete User confirmation modal to resolve white-on-white text caused by CSS variables resolving incorrectly inside the always-white `.modal-content`.
-- **Self-Deletion Prevention**: Admin's own Delete button is now `disabled` with tooltip "Cannot delete yourself".
-- **Button Style Consistency**: Reverted Delete/Deduct Points buttons to match the standard `btn-secondary btn-sm` style (same as Edit).
+## 🔄 Recent Changes (2026-03-04 Analytics & Heatmaps)
+- **Backend Endpoints**: Added `GET /analytics/heatmap` (per-user daily task counts), `GET /analytics/summary` (weekly totals, top performer, streak leaderboard), and `GET /analytics/heatmap/details` (task drill-down for a specific user+date).
+- **Pydantic Schemas**: 8 new schemas (`HeatmapDay`, `UserHeatmap`, `HeatmapResponse`, `HeatmapTaskDetail`, `HeatmapDayDetails`, `StreakInfo`, `TopPerformer`, `AnalyticsSummary`).
+- **Frontend Components**: `StatCards` (animated count-up stat cards), `Heatmap` (custom CSS Grid with clickable cells and task detail popup), `TimeRangeSelector` (Grafana-style 7d/14d/30d/60d/90d presets).
+- **Dashboard Integration**: `AnalyticsDashboard.tsx` now fetches all 4 data sources in parallel and renders stat cards → charts → heatmaps.
+- **Tests**: 5 analytics-specific tests (weekly, distribution, heatmap, summary, details). Full suite: **142 tests passing**.
+- **Docs**: Updated `user-guide.md` with new analytics features.
 
 ## 📍 System State
-- **Backend**: Port 8000. **135+ tests passed**. Flake8 and Mypy clean. Schema v1.9.
+- **Backend**: Port 8000. **142 tests passed**. Flake8 and Mypy clean. Schema v1.9.
 - **Frontend**: Port 8080 (Docker), 5173 (local). ESLint clean. Build successful.
 - **Docker**: Secure configuration operational.
 
 ## 🚧 Active Tasks (Next Priority)
-1. **Analytics**: Implement family progress heatmaps.
-2. **Database Migration**: Fully transition from SQLite to PostgreSQL for production stability.
+1. **Database Migration**: Transition from SQLite to PostgreSQL for production stability.
+2. **i18n expansion**: Add German translations for new analytics labels.
 
 ## ⚠️ Known Issues / Watchlist
 - ~~**File Storage**: Uploads stored locally (`backend/uploads`) — must be mapped to a persistent volume in production Docker config.~~ ✅ Resolved.
@@ -43,4 +41,4 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We h
 
 ## 🔜 Next Session Prompt
 > **Start a new conversation and say:**
-> "Review STATE.md — User Management implementation (Edit/Delete) is complete. Let's tackle the next priority task: Analytics & Heatmaps."
+> "Review STATE.md — Analytics & Heatmaps are complete. Let's tackle the next priority: PostgreSQL migration."

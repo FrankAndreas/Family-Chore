@@ -415,6 +415,21 @@ This file captures accumulated knowledge from development sessions. The Libraria
 
 ---
 
+## 📅 2026-03-04: Analytics & Heatmaps
+
+### Session Context
+- Custom CSS Grid heatmap (zero new dependencies) preferred over `react-calendar-heatmap` — matches existing Glassmorphism design system
+- `useCountUp` hook: initializing `useState(target)` avoids ESLint `set-state-in-effect` warning vs `useState(0)` + sync `setValue(0)` in effect
+- Grafana-style time range: simple preset buttons (7d/14d/30d/60d/90d) with dynamic re-fetch is cleaner than free-form date pickers for family use
+- Click-to-popup pattern: fixed-position popup below clicked cell with transparent overlay for click-away — lightweight alternative to a full modal
+
+### Gotchas
+- SQLAlchemy `Column[str]`/`Column[int]` don't satisfy mypy when passed to Pydantic constructors — wrap with `str()`, `int()` casts
+- `func.date(TaskInstance.completed_at)` works in SQLite but PostgreSQL may need `::date` cast — watch out during DB migration
+- Heatmap cell padding: `(date.getDay() + 6) % 7` converts JS Sunday=0 to Monday=0 for Monday-start grids
+
+---
+
 ## Template for Future Entries
 
 ```markdown

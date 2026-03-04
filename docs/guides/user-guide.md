@@ -71,8 +71,13 @@ Go to **"Rewards"** (or "Belohnungen").
 
 ### 5. Analytics & Fairness
 The **Analytics Dashboard** provides transparency into family contributions:
-- **Weekly Activity**: See who completed tasks each day.
-- **Fairness Distribution**: A pie chart showing the percentage of total points earned by each family member.
+- **Summary Cards**: At the top you'll see three stat cards:
+  - **Tasks This Week**: Total completed tasks in the last 7 days.
+  - **Top Performer 🏆**: The family member who completed the most tasks this week.
+  - **Best Streak 🔥**: The longest active daily streak among all family members.
+- **Weekly Activity**: A bar chart showing who completed tasks each day over the past week.
+- **Fairness Distribution**: A pie chart showing the percentage of total lifetime points earned by each family member.
+- **Family Progress Heatmap**: A 30-day activity grid for each family member (GitHub-style), showing daily task completions with color intensity. Hover over any cell to see the exact date and count.
 
 ### 6. Monitoring Activity
 The **Dashboard** features a **Global Activity Log** where you can see all family actions.
@@ -139,7 +144,10 @@ You can pool points with siblings or parents to buy a big reward together!
 3. Once the total matches the cost, click **"Redeem"** to share the cost!
 
 ### 7. Analytics
-Check the **Analytics** page to see how you compare to the rest of the family in the **Fairness Distribution** chart!
+Check the **Analytics** page to see:
+- Your **activity heatmap** — a 30-day color grid showing your daily task completions!
+- The **Fairness Distribution** chart — how do you compare to the rest of the family?
+- **Streaks** — see who has the longest daily streak!
 
 ---
 

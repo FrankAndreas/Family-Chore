@@ -250,6 +250,60 @@ export const getWeeklyStats = () => api.get<WeeklyStats[]>('/analytics/weekly');
 
 export const getPointsDistribution = () => api.get<DistributionStat[]>('/analytics/distribution');
 
+// Analytics — Heatmap & Summary
+export interface HeatmapDay {
+    date: string;
+    count: number;
+}
+
+export interface UserHeatmap {
+    user_id: number;
+    nickname: string;
+    days: HeatmapDay[];
+}
+
+export interface HeatmapResponse {
+    users: UserHeatmap[];
+}
+
+export interface StreakInfo {
+    nickname: string;
+    current_streak: number;
+}
+
+export interface TopPerformer {
+    nickname: string;
+    count: number;
+}
+
+export interface AnalyticsSummary {
+    week_total_tasks: number;
+    top_performer: TopPerformer | null;
+    streaks: StreakInfo[];
+}
+
+export const getHeatmapData = (days = 30) =>
+    api.get<HeatmapResponse>('/analytics/heatmap', { params: { days } });
+
+export const getAnalyticsSummary = () =>
+    api.get<AnalyticsSummary>('/analytics/summary');
+
+export interface HeatmapTaskDetail {
+    task_name: string;
+    base_points: number;
+    completed_at: string;
+}
+
+export interface HeatmapDayDetails {
+    user_id: number;
+    nickname: string;
+    date: string;
+    tasks: HeatmapTaskDetail[];
+}
+
+export const getHeatmapDayDetails = (userId: number, date: string) =>
+    api.get<HeatmapDayDetails>('/analytics/heatmap/details', { params: { user_id: userId, date } });
+
 // Notification APIs
 export const getUserNotifications = (user_id: number, unreadOnly = false) =>
     api.get<import('./types').Notification[]>(`/notifications/${user_id}`, { params: { unread_only: unreadOnly } });
