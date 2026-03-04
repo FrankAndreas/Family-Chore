@@ -261,6 +261,13 @@ ChoreSpec is a family-oriented chore gamification system. It transforms househol
 - **When** they attempt to update their own role or delete their account
 - **Then** the backend rejects the request with a 403 Forbidden error.
 
+### 4.7 BDD Scenarios (Analytics Localization)
+**Scenario: User views Analytics Dashboard in German**
+- **Given** a user with `preferred_language` set to 'de' (German)
+- **When** the user navigates to the Analytics Dashboard
+- **Then** all labels including StatCards, TimeRangeSelector, and Heatmap are displayed in German
+- **And** date formatting in the Heatmap popup respects the German locale.
+
 ---
 
 ## 5. Current Implementation Delta (vs. MVP Spec)

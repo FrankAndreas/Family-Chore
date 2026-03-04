@@ -77,7 +77,9 @@ The **Analytics Dashboard** provides transparency into family contributions:
   - **Best Streak 🔥**: The longest active daily streak among all family members.
 - **Weekly Activity**: A bar chart showing who completed tasks each day over the past week.
 - **Fairness Distribution**: A pie chart showing the percentage of total lifetime points earned by each family member.
-- **Family Progress Heatmap**: A 30-day activity grid for each family member (GitHub-style), showing daily task completions with color intensity. Hover over any cell to see the exact date and count.
+- **Family Progress Heatmap**: A 30-day activity grid for each family member (GitHub-style), showing daily task completions with color intensity. Hover over any cell to see the exact date and count. Click on a cell to see a drill-down of the completed tasks for that day.
+- **Time Range Selector**: Switch between 7, 14, 30, 60, or 90-day views for the heatmap.
+- **🌍 Language Support**: All analytics labels, stat cards, and time range buttons are fully translated when you switch to German (Deutsch) in Settings.
 
 ### 6. Monitoring Activity
 The **Dashboard** features a **Global Activity Log** where you can see all family actions.

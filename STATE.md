@@ -1,7 +1,7 @@
 # State & Global Memory
 
 **Librarian**: Agent-Librarian
-**Last Updated**: 2026-03-04 06:12
+**Last Updated**: 2026-03-04 21:18
 
 ## 🧠 Global Context
 The project is a **Family Chore Gamification System** (Universal-GSD-Core). We have completed **System Polish & Hardening** (V1.4), **Negative Points**, **Email Notifications** (V1.6), and **Frontend Integration**. Database schema version is **1.8**.
@@ -24,6 +24,14 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We h
 - **Tests**: 5 analytics-specific tests (weekly, distribution, heatmap, summary, details). Full suite: **142 tests passing**.
 - **Docs**: Updated `user-guide.md` with new analytics features.
 
+## 🔄 Recent Changes (2026-03-04 i18n Expansion — Analytics German)
+- **German Translations**: Added 19 analytics keys to `de.json` covering StatCards, TimeRangeSelector, and Heatmap.
+- **English Translations**: Added 13 missing analytics keys to `en.json` for completeness.
+- **Interpolation Fix**: Refactored `AnalyticsDashboard.tsx` `family_heatmap` to use i18next `{{ }}` interpolation instead of JS template literal.
+- **BDD Spec**: Added §4.7 Analytics Localization scenario to `master-spec.md`.
+- **Docs**: Updated `user-guide.md` with Time Range Selector and Language Support notes.
+- **QA**: Browser-verified all 10 German labels render correctly on the Analytics Dashboard.
+
 ## 📍 System State
 - **Backend**: Port 8000. **142 tests passed**. Flake8 and Mypy clean. Schema v1.9.
 - **Frontend**: Port 8080 (Docker), 5173 (local). ESLint clean. Build successful.
@@ -31,7 +39,8 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We h
 
 ## 🚧 Active Tasks (Next Priority)
 1. **Database Migration**: Transition from SQLite to PostgreSQL for production stability.
-2. **i18n expansion**: Add German translations for new analytics labels.
+2. ~~**i18n expansion**: Add German translations for new analytics labels.~~ ✅ Completed.
+3. **Pluralization**: Handle singular/plural forms (e.g., "1 Tag" vs "2 Tage") via i18next `count` interpolation.
 
 ## ⚠️ Known Issues / Watchlist
 - ~~**File Storage**: Uploads stored locally (`backend/uploads`) — must be mapped to a persistent volume in production Docker config.~~ ✅ Resolved.
@@ -41,4 +50,4 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We h
 
 ## 🔜 Next Session Prompt
 > **Start a new conversation and say:**
-> "Review STATE.md — Analytics & Heatmaps are complete. Let's tackle the next priority: PostgreSQL migration."
+> "Review STATE.md — Analytics i18n is complete. Let's tackle the next priority."

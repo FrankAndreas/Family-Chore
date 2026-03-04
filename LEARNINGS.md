@@ -430,6 +430,18 @@ This file captures accumulated knowledge from development sessions. The Libraria
 
 ---
 
+## 📅 2026-03-04: Analytics i18n Expansion (German)
+
+### Session Context
+- i18next `t('key', { var: value, defaultValue: '...' })` for interpolation — do NOT use JS template literals as the fallback string, they bypass i18next's variable substitution
+- Locale key parity: always validate EN↔DE key sets match with a quick Python script before committing
+- Time range abbreviations: "7T" (Tage) instead of "7d" (days) is natural German shorthand
+
+### Gotchas
+- Pluralization gap discovered: "1 Tage" should be "1 Tag" — i18next supports `_one`/`_other` suffixed keys for count-based plurals, but not yet implemented in this project
+
+---
+
 ## Template for Future Entries
 
 ```markdown

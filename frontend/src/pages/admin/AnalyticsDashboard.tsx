@@ -187,7 +187,7 @@ const AnalyticsDashboard: React.FC = () => {
                 <section className="heatmap-section">
                     <div className="heatmap-section__header">
                         <h2 className="section-title">
-                            🗓️ {t('analytics.family_heatmap', `Family Progress (Last ${heatmapDays} Days)`)}
+                            🗓️ {t('analytics.family_heatmap', { days: heatmapDays, defaultValue: 'Family Progress (Last {{days}} Days)' })}
                         </h2>
                         <TimeRangeSelector
                             selectedDays={heatmapDays}
