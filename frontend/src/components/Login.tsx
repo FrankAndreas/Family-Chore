@@ -11,6 +11,8 @@ interface LoginProps {
 export default function Login({ onLogin }: LoginProps) {
     const [nickname, setNickname] = useState('');
     const [pin, setPin] = useState('');
+    const [nicknameError, setNicknameError] = useState('');
+    const [pinError, setPinError] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [showFamilyDash, setShowFamilyDash] = useState(false);
@@ -19,8 +21,31 @@ export default function Login({ onLogin }: LoginProps) {
         return <FamilyDashboardView onExit={() => setShowFamilyDash(false)} />;
     }
 
+    const validate = () => {
+        let valid = true;
+        if (!nickname.trim()) {
+            setNicknameError('Nickname is required');
+            valid = false;
+        } else {
+            setNicknameError('');
+        }
+
+        if (!pin.trim()) {
+            setPinError('PIN is required');
+            valid = false;
+        } else if (!/^\d{4}$/.test(pin)) {
+            setPinError('PIN must be exactly 4 digits');
+            valid = false;
+        } else {
+            setPinError('');
+        }
+        return valid;
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!validate()) return;
+
         setError('');
         setLoading(true);
 
@@ -50,13 +75,18 @@ export default function Login({ onLogin }: LoginProps) {
                         <input
                             id="nickname"
                             type="text"
-                            className="input"
+                            className={`input ${nicknameError ? 'input-error' : ''}`}
                             value={nickname}
-                            onChange={(e) => setNickname(e.target.value)}
+                            onChange={(e) => {
+                                setNickname(e.target.value);
+                                if (nicknameError) setNicknameError('');
+                            }}
+                            onBlur={validate}
                             placeholder="Enter your nickname"
                             required
                             autoFocus
                         />
+                        {nicknameError && <small className="error-text" style={{ color: '#ff4d4f', marginTop: '4px', display: 'block' }}>{nicknameError}</small>}
                     </div>
 
                     <div className="form-group">
@@ -64,14 +94,19 @@ export default function Login({ onLogin }: LoginProps) {
                         <input
                             id="pin"
                             type="password"
-                            className="input"
+                            className={`input ${pinError ? 'input-error' : ''}`}
                             value={pin}
-                            onChange={(e) => setPin(e.target.value)}
+                            onChange={(e) => {
+                                setPin(e.target.value);
+                                if (pinError) setPinError('');
+                            }}
+                            onBlur={validate}
                             placeholder="4-digit PIN"
                             maxLength={4}
                             pattern="[0-9]{4}"
                             required
                         />
+                        {pinError && <small className="error-text" style={{ color: '#ff4d4f', marginTop: '4px', display: 'block' }}>{pinError}</small>}
                     </div>
 
                     {error && <div className="error-message" role="alert" aria-live="assertive">{error}</div>}
@@ -94,12 +129,6 @@ export default function Login({ onLogin }: LoginProps) {
                     </div>
 
                 </form>
-
-                <div className="login-footer">
-                    <p className="text-muted text-center">
-                        Default Admin: nickname "Admin", PIN "1234"
-                    </p>
-                </div>
             </div>
         </div>
     );

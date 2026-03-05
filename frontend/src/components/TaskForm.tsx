@@ -52,39 +52,106 @@ const TaskForm: React.FC<TaskFormProps> = ({
     submitting = false,
 
 }) => {
+    const [nameError, setNameError] = React.useState('');
+    const [descError, setDescError] = React.useState('');
+    const [pointsError, setPointsError] = React.useState('');
+    const [minDaysError, setMinDaysError] = React.useState('');
+
+    const validate = () => {
+        let valid = true;
+        if (!name.trim()) {
+            setNameError('Task name is required');
+            valid = false;
+        } else {
+            setNameError('');
+        }
+
+        if (!description.trim()) {
+            setDescError('Description is required');
+            valid = false;
+        } else {
+            setDescError('');
+        }
+
+        if (basePoints < 1) {
+            setPointsError('Base points must be at least 1');
+            valid = false;
+        } else {
+            setPointsError('');
+        }
+
+        if (scheduleType === 'recurring') {
+            if (recurrenceMinDays < 1) {
+                setMinDaysError('Minimum days must be at least 1');
+                valid = false;
+            } else if (recurrenceMinDays > recurrenceMaxDays) {
+                setMinDaysError('Minimum days cannot exceed maximum days');
+                valid = false;
+            } else {
+                setMinDaysError('');
+            }
+        }
+
+        return valid;
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (validate()) {
+            onSubmit(e);
+        }
+    };
 
     return (
-        <form onSubmit={onSubmit} className="form-grid">
+        <form onSubmit={handleSubmit} className="form-grid">
             <div className="form-group">
                 <label>Task Name</label>
                 <input
                     type="text"
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    style={nameError ? { borderColor: '#ff4d4f' } : {}}
+                    onChange={(e) => {
+                        setName(e.target.value);
+                        if (nameError) setNameError('');
+                    }}
+                    onBlur={validate}
                     required
                     placeholder="e.g. Wash Dishes"
                 />
+                {nameError && <small className="error-text" style={{ color: '#ff4d4f', marginTop: '4px', display: 'block' }}>{nameError}</small>}
             </div>
             <div className="form-group">
                 <label>Description</label>
                 <input
                     type="text"
                     value={description}
-                    onChange={(e) => setDescription(e.target.value)}
+                    style={descError ? { borderColor: '#ff4d4f' } : {}}
+                    onChange={(e) => {
+                        setDescription(e.target.value);
+                        if (descError) setDescError('');
+                    }}
+                    onBlur={validate}
                     required
                     placeholder="e.g. Load and start the dishwasher"
                 />
+                {descError && <small className="error-text" style={{ color: '#ff4d4f', marginTop: '4px', display: 'block' }}>{descError}</small>}
             </div>
             <div className="form-group">
                 <label>Base Points</label>
                 <input
                     type="number"
                     value={basePoints}
-                    onChange={(e) => setBasePoints(Number(e.target.value))}
+                    style={pointsError ? { borderColor: '#ff4d4f' } : {}}
+                    onChange={(e) => {
+                        setBasePoints(Number(e.target.value));
+                        if (pointsError) setPointsError('');
+                    }}
+                    onBlur={validate}
                     min={1}
                     max={1000}
                     required
                 />
+                {pointsError && <small className="error-text" style={{ color: '#ff4d4f', marginTop: '4px', display: 'block' }}>{pointsError}</small>}
             </div>
             <div className="form-group">
                 <label>Assigned To</label>
@@ -163,17 +230,21 @@ const TaskForm: React.FC<TaskFormProps> = ({
                                 <input
                                     type="number"
                                     value={recurrenceMinDays}
+                                    style={minDaysError ? { borderColor: '#ff4d4f' } : {}}
                                     onChange={(e) => {
                                         const val = Number(e.target.value);
                                         setRecurrenceMinDays(val);
                                         if (val > recurrenceMaxDays) {
                                             setRecurrenceMaxDays(val);
                                         }
+                                        if (minDaysError) setMinDaysError('');
                                     }}
+                                    onBlur={validate}
                                     min={1}
                                     max={365}
                                     required
                                 />
+                                {minDaysError && <small className="error-text" style={{ color: '#ff4d4f', marginTop: '4px', display: 'block' }}>{minDaysError}</small>}
                                 <small style={{ color: 'var(--text-secondary)', fontSize: 'var(--font-size-xs)' }}>
                                     Wait at least <strong>{recurrenceMinDays}</strong> {recurrenceMinDays === 1 ? 'day' : 'days'} after completion
                                 </small>
