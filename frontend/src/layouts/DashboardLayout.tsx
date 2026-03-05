@@ -55,6 +55,21 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ currentUser, onLogout
         setMobileMenuOpen(false);
     };
 
+    const getBreadcrumbs = () => {
+        const path = location.pathname;
+        if (path === '/dashboard') return [t('navigation.my_chores', 'MY CHORES'), t('navigation.tasks')];
+        if (path === '/rewards') return [t('navigation.my_chores', 'MY CHORES'), t('navigation.rewards')];
+        if (path === '/settings') return [t('navigation.my_chores', 'MY CHORES'), t('navigation.settings')];
+        if (path === '/admin') return [t('navigation.admin'), t('navigation.dashboard')];
+        if (path.startsWith('/admin/users')) return [t('navigation.admin'), t('navigation.users')];
+        if (path.startsWith('/admin/tasks')) return [t('navigation.admin'), t('navigation.tasks')];
+        if (path.startsWith('/admin/roles')) return [t('navigation.admin'), t('navigation.roles')];
+        if (path === '/analytics') return [t('navigation.admin'), t('analytics.title')];
+        return [];
+    };
+
+    const breadcrumbs = getBreadcrumbs();
+
     return (
         <div className="dashboard-container">
             <a href="#main-content" className="skip-link">
@@ -170,6 +185,18 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ currentUser, onLogout
             </aside >
 
             <main id="main-content" className="main-content" tabIndex={-1}>
+                {breadcrumbs.length > 0 && (
+                    <nav className="breadcrumbs" aria-label="Breadcrumb">
+                        <ol>
+                            {breadcrumbs.map((bc, idx) => (
+                                <li key={idx} aria-current={idx === breadcrumbs.length - 1 ? 'page' : undefined}>
+                                    {bc}
+                                    {idx < breadcrumbs.length - 1 && <span className="breadcrumb-separator" aria-hidden="true">/</span>}
+                                </li>
+                            ))}
+                        </ol>
+                    </nav>
+                )}
                 <Outlet context={{ currentUser }} />
             </main>
         </div >
