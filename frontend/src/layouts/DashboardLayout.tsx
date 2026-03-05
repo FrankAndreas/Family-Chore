@@ -57,6 +57,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ currentUser, onLogout
 
     return (
         <div className="dashboard-container">
+            <a href="#main-content" className="skip-link">
+                {t('navigation.skip_to_content', 'Skip to main content')}
+            </a>
             <aside
                 className={`sidebar glass-panel ${mobileMenuOpen ? 'mobile-open' : ''}`}
                 style={{ width: mobileMenuOpen ? '100%' : `${sidebarWidth}px` }}
@@ -81,7 +84,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ currentUser, onLogout
                         <NotificationCenter />
                     </div>
                 </div>
-                <nav className={`sidebar-nav ${mobileMenuOpen ? 'show' : ''}`}>
+                <nav className={`sidebar-nav ${mobileMenuOpen ? 'show' : ''}`} aria-label={t('navigation.main', 'Main Navigation')}>
                     {isAdmin && (
                         <>
                             <div className="nav-section-title">{t('navigation.admin')}</div>
@@ -166,7 +169,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ currentUser, onLogout
                 />
             </aside >
 
-            <main className="main-content">
+            <main id="main-content" className="main-content" tabIndex={-1}>
                 <Outlet context={{ currentUser }} />
             </main>
         </div >
