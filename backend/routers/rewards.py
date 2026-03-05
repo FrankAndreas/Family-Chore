@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 import logging
 
-from .. import schemas, crud
+from .. import schemas, crud, models
 from ..database import get_db
 from ..dependencies import get_current_user, get_current_admin_user
 from ..events import broadcaster
@@ -42,8 +42,13 @@ def delete_reward(reward_id: int, db: Session = Depends(get_db)):
     return None
 
 
-@router.post("/users/{user_id}/goal", response_model=schemas.User, dependencies=[Depends(get_current_user)])
-def set_user_goal(user_id: int, reward_id: int, db: Session = Depends(get_db)):
+@router.post("/users/{user_id}/goal", response_model=schemas.User)
+def set_user_goal(user_id: int, reward_id: int,
+                  current_user: models.User = Depends(get_current_user),
+                  db: Session = Depends(get_db)):
+    # Authorization: Only Admin or the user themselves can set their goal
+    if current_user.id != user_id and current_user.role.name != "Admin":
+        raise HTTPException(status_code=403, detail="Not authorized to set goal for this user")
     user = crud.set_user_goal(db, user_id=user_id, reward_id=reward_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -51,13 +56,15 @@ def set_user_goal(user_id: int, reward_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/rewards/{reward_id}/redeem",
-             response_model=schemas.RedemptionResponse,
-             dependencies=[Depends(get_current_user)])
-async def redeem_reward(reward_id: int, user_id: int, db: Session = Depends(get_db)):
+             response_model=schemas.RedemptionResponse)
+async def redeem_reward(reward_id: int,
+                        current_user: models.User = Depends(get_current_user),
+                        db: Session = Depends(get_db)):
     """
-    Redeem a reward for a user.
+    Redeem a reward for the currently authenticated user.
     Deducts points, creates a REDEEM transaction, and optionally clears goal.
     """
+    user_id = int(current_user.id)
     logger.info(f"Redeeming reward {reward_id} for user {user_id}")
     result = crud.redeem_reward(db, user_id=user_id, reward_id=reward_id)
 

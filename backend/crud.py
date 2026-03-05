@@ -897,3 +897,16 @@ def delete_push_subscription(db: Session, endpoint: str):
         db.commit()
         return True
     return False
+
+
+def delete_push_subscription_by_user(db: Session, endpoint: str, user_id: int) -> bool:
+    """Delete a push subscription only if it belongs to the specified user."""
+    db_sub = db.query(models.PushSubscription).filter(
+        models.PushSubscription.endpoint == endpoint,
+        models.PushSubscription.user_id == user_id
+    ).first()
+    if db_sub:
+        db.delete(db_sub)
+        db.commit()
+        return True
+    return False

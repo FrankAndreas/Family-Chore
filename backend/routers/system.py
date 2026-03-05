@@ -5,7 +5,7 @@ import logging
 from fastapi import APIRouter, Depends, BackgroundTasks, HTTPException
 from sqlalchemy.orm import Session
 
-from .. import schemas, crud
+from .. import schemas, crud, models
 from ..database import get_db
 from ..dependencies import get_current_user, get_current_admin_user
 from ..notifications_service import send_email_background
@@ -179,8 +179,13 @@ def set_default_language(setting: schemas.SystemSettingsBase, db: Session = Depe
     return crud.set_system_setting(db, "default_language", setting.value, setting.description)
 
 
-@router.put("/users/{user_id}/language", response_model=schemas.User, dependencies=[Depends(get_current_user)])
-def update_user_language(user_id: int, lang_update: schemas.UserLanguageUpdate, db: Session = Depends(get_db)):
+@router.put("/users/{user_id}/language", response_model=schemas.User)
+def update_user_language(user_id: int, lang_update: schemas.UserLanguageUpdate,
+                         current_user: models.User = Depends(get_current_user),
+                         db: Session = Depends(get_db)):
+    # Authorization: Only Admin or the user themselves
+    if current_user.id != user_id and current_user.role.name != "Admin":
+        raise HTTPException(status_code=403, detail="Not authorized to update language for this user")
     user = crud.update_user_language(
         db, user_id=user_id, language=lang_update.preferred_language or "")
     if not user:

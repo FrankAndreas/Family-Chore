@@ -1,7 +1,7 @@
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from contextlib import asynccontextmanager
 import logging
 import asyncio
@@ -16,6 +16,8 @@ from .routers import analytics, notifications, auth, users, roles, tasks, reward
 from .migrations.manager import MigrationManager
 from .backup import BackupManager
 from .notifications_service import send_email_sync, send_push_to_user_sync
+from .dependencies import get_current_admin_user
+from .security import verify_token
 from .events import broadcaster
 
 
@@ -33,8 +35,8 @@ scheduler = BackgroundScheduler()
 def scheduled_daily_reset():
     """Scheduled job that runs at midnight to generate daily task instances."""
     logger.info("Midnight scheduler: Running daily reset...")
+    db = SessionLocal()
     try:
-        db = SessionLocal()
         count = crud.perform_daily_reset_if_needed(db)
         if count > 0:
             logger.info(
@@ -73,9 +75,10 @@ def scheduled_daily_reset():
 
         else:
             logger.info("Midnight scheduler: No new instances needed")
-        db.close()
     except Exception as e:
         logger.error(f"Midnight scheduler failed: {e}")
+    finally:
+        db.close()
 
 
 backup_manager = BackupManager()
@@ -110,22 +113,23 @@ async def lifespan(app: FastAPI):
         logger.error(f"Failed to seed data: {e}")
 
     # Smart daily reset: Only generate if not already done today
+    db = SessionLocal()
     try:
-        db = SessionLocal()
         count = crud.perform_daily_reset_if_needed(db)
         if count > 0:
             logger.info(f"Startup: Generated {count} task instances for today")
         else:
             logger.info(
                 "Startup: Daily reset already performed today, skipping")
-        db.close()
     except Exception as e:
         logger.error(f"Failed to generate daily instances on startup: {e}")
+    finally:
+        db.close()
 
     # Fetch system timezone (default to Europe/Berlin)
     timezone_str = "Europe/Berlin"
+    db = SessionLocal()
     try:
-        db = SessionLocal()
         setting = crud.get_system_setting(db, "default_timezone")
         if setting:
             timezone_str = setting.value
@@ -133,9 +137,10 @@ async def lifespan(app: FastAPI):
             # Create default if not exists
             crud.set_system_setting(
                 db, "default_timezone", timezone_str, "System-wide timezone for scheduler")
-        db.close()
     except Exception as e:
         logger.error(f"Failed to fetch timezone setting: {e}")
+    finally:
+        db.close()
 
     logger.info(f"Configuring scheduler with timezone: {timezone_str}")
     scheduler.configure(timezone=timezone_str)
@@ -216,7 +221,7 @@ app.include_router(analytics.router)
 app.include_router(notifications.router)
 
 
-@app.post("/backups/run", tags=["System"])
+@app.post("/backups/run", tags=["System"], dependencies=[Depends(get_current_admin_user)])
 def trigger_manual_backup():
     """Manually trigger a backup in the background."""
     run_backup_job()
@@ -225,8 +230,22 @@ def trigger_manual_backup():
 
 # --- SSE Endpoint ---
 @app.get("/events", tags=["System"])
-async def sse_events():
-    """Server-Sent Events endpoint for real-time updates."""
+async def sse_events(token: str = ""):
+    """Server-Sent Events endpoint for real-time updates.
+
+    Accepts JWT via ?token= query param because the native EventSource API
+    cannot send Authorization headers.
+
+    NOTE: Passing JWT in query strings means tokens may appear in server access
+    logs, browser history, and proxy logs. Sanitise production logs accordingly.
+    """
+    if not token:
+        return JSONResponse(status_code=401, content={"detail": "Not authenticated"})
+
+    payload = verify_token(token)
+    if payload is None:
+        return JSONResponse(status_code=401, content={"detail": "Invalid or expired token"})
+
     async def event_stream():
         queue = await broadcaster.subscribe()
         try:

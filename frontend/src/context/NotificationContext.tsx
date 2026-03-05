@@ -77,7 +77,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     useEffect(() => {
         if (!currentUser) return;
 
-        const eventSource = new EventSource(`${API_BASE}/events`);
+        const token = localStorage.getItem('auth_token') || '';
+        const eventSource = new EventSource(`${API_BASE}/events?token=${encodeURIComponent(token)}`);
 
         eventSource.onmessage = (event) => {
             const data = JSON.parse(event.data);
@@ -103,7 +104,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     const markAsRead = async (id: number) => {
         if (!currentUser) return;
         try {
-            await markNotificationRead(id, currentUser.id);
+            await markNotificationRead(id);
             setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: 1 } : n));
         } catch (error) {
             console.error("Failed to mark as read", error);
@@ -113,7 +114,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     const markAllAsRead = async () => {
         if (!currentUser) return;
         try {
-            await markAllNotificationsRead(currentUser.id);
+            await markAllNotificationsRead();
             setNotifications(prev => prev.map(n => ({ ...n, read: 1 })));
         } catch (error) {
             console.error("Failed to mark all as read", error);

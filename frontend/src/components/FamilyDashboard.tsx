@@ -241,7 +241,8 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
     useEffect(() => {
         loadData();
 
-        const eventSource = new EventSource(`${API_BASE}/events`);
+        const token = localStorage.getItem('auth_token') || '';
+        const eventSource = new EventSource(`${API_BASE}/events?token=${encodeURIComponent(token)}`);
         eventSourceRef.current = eventSource;
 
         eventSource.onopen = () => {

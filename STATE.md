@@ -1,10 +1,10 @@
 # State & Global Memory
 
 **Librarian**: Agent-Librarian
-**Last Updated**: 2026-03-04 21:18
+**Last Updated**: 2026-03-05 07:23
 
 ## 🧠 Global Context
-The project is a **Family Chore Gamification System** (Universal-GSD-Core). We have completed **System Polish & Hardening** (V1.4), **Negative Points**, **Email Notifications** (V1.6), and **Frontend Integration**. Database schema version is **1.8**.
+The project is a **Family Chore Gamification System** (Universal-GSD-Core). We have completed **System Polish & Hardening** (V1.4), **Negative Points**, **Email Notifications** (V1.6), **Frontend Integration**, **Analytics & Heatmaps**, and **Security Hardening**. Database schema version is **1.9**.
 
 ## 🔄 Recent Changes (2026-02-27 Auth Migration & Security)
 - **Secrets Auto-Generation**: JWT Secret Keys and VAPID keys are auto-generated on startup if missing, removing the need for committed secrets.
@@ -32,22 +32,35 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We h
 - **Docs**: Updated `user-guide.md` with Time Range Selector and Language Support notes.
 - **QA**: Browser-verified all 10 German labels render correctly on the Analytics Dashboard.
 
+## 🔄 Recent Changes (2026-03-05 Security Hardening Sprint)
+- **S2**: Seed data now hashes admin PIN with bcrypt via `security.get_password_hash()` before DB insert.
+- **S3**: SSE `/events` endpoint requires JWT (passed via `?token=` query param due to EventSource API limitations).
+- **S4**: `/backups/run` endpoint secured with `Depends(get_current_admin_user)`.
+- **S7–S10**: IDOR vulnerabilities fixed — reward redemption, notification read/mark-read, goal-setting, and language update all derive `user_id` from JWT instead of accepting it as a parameter.
+- **S12**: Login error messages unified to `401 "Invalid credentials"` to prevent user enumeration.
+- **S13**: Push unsubscribe verifies subscription ownership via new `crud.delete_push_subscription_by_user()`.
+- **E4**: All scheduler `SessionLocal()` calls wrapped in `try/finally` to prevent DB session leaks.
+- **Frontend**: Updated `api.ts`, `RewardHub.tsx`, `NotificationContext.tsx`, `FamilyDashboard.tsx` to match new backend API contracts.
+- **Tests**: All 142 passing. BDD feature file and unit tests updated for new error messages and removed `user_id` params.
+
 ## 📍 System State
 - **Backend**: Port 8000. **142 tests passed**. Flake8 and Mypy clean. Schema v1.9.
 - **Frontend**: Port 8080 (Docker), 5173 (local). ESLint clean. Build successful.
 - **Docker**: Secure configuration operational.
 
 ## 🚧 Active Tasks (Next Priority)
-1. **Database Migration**: Transition from SQLite to PostgreSQL for production stability.
-2. ~~**i18n expansion**: Add German translations for new analytics labels.~~ ✅ Completed.
+1. **S5**: Restrict `/uploads/` to authenticated users (currently public).
+2. **Database Migration**: Transition from SQLite to PostgreSQL for production stability.
 3. **Pluralization**: Handle singular/plural forms (e.g., "1 Tag" vs "2 Tage") via i18next `count` interpolation.
 
 ## ⚠️ Known Issues / Watchlist
-- ~~**File Storage**: Uploads stored locally (`backend/uploads`) — must be mapped to a persistent volume in production Docker config.~~ ✅ Resolved.
-- ~~**Production Secrets**: The backend `SECRET_KEY` in `backend.security` must be overwritten via environment variables before production deployment.~~ ✅ Resolved — auto-generates with WARNING logs; all env vars documented in `docker-compose.yml`.
+- **S5**: `/uploads/` directory is publicly accessible without authentication.
+- ~~**IDOR vulnerabilities**: S7–S10, S13 — user_id params allowed cross-user access.~~ ✅ Resolved.
+- ~~**Login enumeration**: S12 — distinct error messages leaked user existence.~~ ✅ Resolved.
+- ~~**SSE/Backup endpoints unauthenticated**: S3, S4.~~ ✅ Resolved.
 
 ---
 
 ## 🔜 Next Session Prompt
 > **Start a new conversation and say:**
-> "Review STATE.md — Analytics i18n is complete. Let's tackle the next priority."
+> "Review STATE.md — Security hardening is complete. Let's tackle the next priority."

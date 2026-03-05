@@ -36,35 +36,27 @@ def test_set_user_goal_api(client, db_session, seeded_db):
     assert resp.json()["current_goal_reward_id"] == reward['id']
 
 
-def test_redeem_reward_api_insufficient_points(client, db_session, seeded_db):
-    # Setup
-    role = db_session.query(models.Role).first()
-    user = client.post(
-        "/users/", json={"nickname": "PoorUser", "login_pin": "1234", "role_id": role.id}).json()
+def test_redeem_reward_api_insufficient_points(client, db_session, seeded_db, admin_user):
+    # Setup: admin_user has 0 points
     reward = client.post(
         "/rewards/", json={"name": "Expensive", "cost_points": 1000}).json()
 
-    # Redeem
-    resp = client.post(f"/rewards/{reward['id']}/redeem?user_id={user['id']}")
+    # Redeem (now uses JWT user identity, no user_id param)
+    resp = client.post(f"/rewards/{reward['id']}/redeem")
     assert resp.status_code == 400
     assert "Insufficient points" in resp.json()["detail"]
 
 
-def test_redeem_reward_api_success(client, db_session, seeded_db):
-    # Setup
-    role = db_session.query(models.Role).first()
-    # Need user with points. Can't set points directly via API easily (unless we complete tasks).
-    # Let's use direct DB manipulation for setup speed.
-    user_db = models.User(nickname="RichUser", login_pin="1234",
-                          role_id=role.id, current_points=100)
-    db_session.add(user_db)
+def test_redeem_reward_api_success(client, db_session, seeded_db, admin_user):
+    # Give the admin user some points
+    admin_user.current_points = 100
     db_session.commit()
 
     reward = client.post(
         "/rewards/", json={"name": "Cheap", "cost_points": 50}).json()
 
-    # Redeem
-    resp = client.post(f"/rewards/{reward['id']}/redeem?user_id={user_db.id}")
+    # Redeem (now uses JWT user identity, no user_id param)
+    resp = client.post(f"/rewards/{reward['id']}/redeem")
     assert resp.status_code == 200
     data = resp.json()
     assert data["success"] is True

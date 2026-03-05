@@ -193,10 +193,8 @@ export interface RedemptionResponse {
     error?: string;
 }
 
-export const redeemReward = (reward_id: number, user_id: number) =>
-    api.post<RedemptionResponse>(`/rewards/${reward_id}/redeem`, null, {
-        params: { user_id }
-    });
+export const redeemReward = (reward_id: number) =>
+    api.post<RedemptionResponse>(`/rewards/${reward_id}/redeem`);
 
 export interface SplitContribution {
     user_id: number;
@@ -308,11 +306,11 @@ export const getHeatmapDayDetails = (userId: number, date: string) =>
 export const getUserNotifications = (user_id: number, unreadOnly = false) =>
     api.get<import('./types').Notification[]>(`/notifications/${user_id}`, { params: { unread_only: unreadOnly } });
 
-export const markNotificationRead = (notification_id: number, user_id: number) =>
-    api.post<import('./types').Notification>(`/notifications/${notification_id}/read`, null, { params: { user_id } });
+export const markNotificationRead = (notification_id: number) =>
+    api.post<import('./types').Notification>(`/notifications/${notification_id}/read`);
 
-export const markAllNotificationsRead = (user_id: number) =>
-    api.post<boolean>('/notifications/read-all', null, { params: { user_id } });
+export const markAllNotificationsRead = () =>
+    api.post<boolean>('/notifications/read-all');
 
 export const getVapidPublicKey = () =>
     api.get<{ public_key: string }>('/notifications/push/vapid-public-key');

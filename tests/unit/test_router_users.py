@@ -63,7 +63,7 @@ def test_login_flow(client, db_session, seeded_db):
     # Wrong User
     resp = client.post(
         "/login/", json={"nickname": "Ghost", "login_pin": "9999"})
-    assert resp.status_code == 404
+    assert resp.status_code == 401
 
 
 def test_get_roles(client, seeded_db):

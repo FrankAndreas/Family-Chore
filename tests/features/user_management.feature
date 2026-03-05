@@ -42,11 +42,11 @@ Feature: User Management and Authentication
             | nickname | login_pin | role_name |
             | Charlie  | 3333      | Admin     |
         When I login with nickname "Charlie" and PIN "9999"
-        Then the login should fail with error "Incorrect PIN"
+        Then the login should fail with error "Invalid credentials"
 
     Scenario: Login fails with non-existent user
         When I login with nickname "NonExistent" and PIN "0000"
-        Then the login should fail with error "User not found"
+        Then the login should fail with error "Invalid credentials"
 
     Scenario: AC 1.5 - User permissions apply after login
         Given a user exists with:

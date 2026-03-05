@@ -2,6 +2,7 @@
 import logging
 from backend.database import SessionLocal
 from backend.models import Role, User
+from backend import security
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +39,7 @@ def seed_data():
                 logger.info("Creating default Admin user...")
                 admin_user = User(
                     nickname="Admin",
-                    login_pin="1234",
+                    login_pin=security.get_password_hash("1234"),
                     role_id=admin_role.id,
                     current_points=0,
                     lifetime_points=0

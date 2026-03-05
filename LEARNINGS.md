@@ -442,6 +442,23 @@ This file captures accumulated knowledge from development sessions. The Libraria
 
 ---
 
+## 📅 2026-03-05: Security Hardening Sprint
+
+### Session Context
+- **SSE Authentication**: Native `EventSource` API cannot send `Authorization` headers. The accepted pattern is passing JWT via `?token=` query parameter. Add a security comment noting tokens will appear in server access logs and browser history.
+- **IDOR Fix Pattern**: Replace `user_id: int` query/path params with `current_user: models.User = Depends(get_current_user)`, then use `int(current_user.id)` internally. Admin-or-self authorization checks use `current_user.id != user_id and current_user.role.name != "Admin"`.
+- **Login Enumeration**: Unify all login failure responses to the same HTTP status (401) and the same message ("Invalid credentials"). Keep distinct log messages server-side for debugging.
+- **Ownership checks**: For endpoints like push unsubscribe, add a `_by_user` variant of the CRUD function that filters by both the resource identifier AND `user_id` to enforce ownership.
+- **Frontend API contract changes**: When backend endpoints stop accepting `user_id` as a parameter, ALL frontend callers must be updated — check both `api.ts` wrappers AND component call-sites (e.g. `RewardHub.tsx`, `NotificationContext.tsx`).
+
+### Gotchas
+- Removing `get_current_user` import from `main.py` after switching SSE to `verify_token` caused an F401 lint error — always run `flake8` after import changes.
+- `from .security import verify_token` placed inside the SSE function body (lazy import) works but triggers E306 and is non-idiomatic — move to top-level.
+- Continuation line indentation (E128): flake8 requires alignment with the opening parenthesis character, not just +4 spaces from the `def`.
+- Test fixtures using `app.dependency_overrides[get_current_user]` return a fixed admin user — when endpoints switch from `user_id` param to JWT identity, tests must operate on the admin user's data (e.g. set `admin_user.current_points = 100`), not create separate test users.
+
+---
+
 ## Template for Future Entries
 
 ```markdown

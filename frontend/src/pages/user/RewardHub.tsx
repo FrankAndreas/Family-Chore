@@ -138,7 +138,7 @@ const RewardHub: React.FC = () => {
 
         setRedeeming(true);
         try {
-            await redeemReward(redeemConfirm.reward.id, currentUser.id);
+            await redeemReward(redeemConfirm.reward.id);
             success(t('rewards.toasts.redeem_success', { name: redeemConfirm.reward.name }));
             setRedeemConfirm(null);
             // Re-fetch rewards instead of full page reload (preserves React state and SSE)
