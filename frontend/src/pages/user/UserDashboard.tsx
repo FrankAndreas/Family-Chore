@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { getUserDailyTasks, completeTask, getTasks, getUserTransactions, uploadTaskPhoto, updateUser } from '../../api';
+import { getUserDailyTasks, completeTask, getTasks, getUserTransactions, uploadTaskPhoto } from '../../api';
 import type { TaskInstance, Task, User, Transaction, TransactionFilters } from '../../types';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import Toast from '../../components/Toast';
@@ -21,12 +21,9 @@ const UserDashboard: React.FC = () => {
     const [tasks, setTasks] = useState<TaskInstanceWithDetails[]>([]);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<'tasks' | 'history' | 'settings'>('tasks');
+    const [activeTab, setActiveTab] = useState<'tasks' | 'history'>('tasks');
     const [completingId, setCompletingId] = useState<number | null>(null);
     const [photoUrls, setPhotoUrls] = useState<Record<number, File | null>>({});
-    const [email, setEmail] = useState('');
-    const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-    const [isSavingSettings, setIsSavingSettings] = useState(false);
     const { toasts, removeToast, success, error: showError } = useToast();
 
     const [filters, setFilters] = useState<TransactionFilters>({});
@@ -66,28 +63,9 @@ const UserDashboard: React.FC = () => {
 
     useEffect(() => {
         if (currentUser) {
-            setEmail(currentUser.email || '');
-            setNotificationsEnabled(currentUser.notifications_enabled ?? true);
             fetchData();
         }
     }, [fetchData, currentUser]);
-
-    const handleSaveSettings = async () => {
-        setIsSavingSettings(true);
-        try {
-            await updateUser(currentUser.id, {
-                email: email || null,
-                notifications_enabled: notificationsEnabled
-            });
-            success('Settings saved successfully!');
-            // To be robust, we could reload currentUser info or rely on parent updates
-        } catch (err) {
-            console.error('Failed to save settings', err);
-            showError('Failed to save settings. Please try again.');
-        } finally {
-            setIsSavingSettings(false);
-        }
-    };
 
     const handleComplete = async (instance: TaskInstanceWithDetails) => {
         setCompletingId(instance.id);
@@ -173,16 +151,10 @@ const UserDashboard: React.FC = () => {
                 >
                     📜 History
                 </button>
-                <button
-                    className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('settings')}
-                >
-                    ⚙️ Settings
-                </button>
             </div>
 
             {loading ? (
-                <LoadingSpinner message={activeTab === 'tasks' ? "Loading tasks..." : activeTab === 'history' ? "Loading history..." : "Loading settings..."} />
+                <LoadingSpinner message={activeTab === 'tasks' ? "Loading tasks..." : "Loading history..."} />
             ) : (
                 <div className="dashboard-content">
                     {activeTab === 'tasks' && (
@@ -319,46 +291,6 @@ const UserDashboard: React.FC = () => {
                                     </table>
                                 </div>
                             )}
-                        </div>
-                    )}
-
-                    {activeTab === 'settings' && (
-                        <div className="section glass-panel full-width">
-                            <h2>⚙️ Notification Settings</h2>
-                            <p>Configure how you receive updates and reminders.</p>
-
-                            <div className="form-group" style={{ marginTop: '20px' }}>
-                                <label>Email Address</label>
-                                <input
-                                    type="email"
-                                    className="filter-input"
-                                    style={{ width: '100%', maxWidth: '400px', display: 'block', marginTop: '5px' }}
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="Enter your email"
-                                />
-                            </div>
-
-                            <div className="form-group" style={{ marginTop: '15px' }}>
-                                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-                                    <input
-                                        type="checkbox"
-                                        checked={notificationsEnabled}
-                                        onChange={(e) => setNotificationsEnabled(e.target.checked)}
-                                    />
-                                    Enable Email Notifications
-                                </label>
-                                <small style={{ display: 'block', marginTop: '5px', color: '#666' }}>Receive daily reminders and approval requests.</small>
-                            </div>
-
-                            <button
-                                className="btn btn-primary"
-                                style={{ marginTop: '20px' }}
-                                onClick={handleSaveSettings}
-                                disabled={isSavingSettings}
-                            >
-                                {isSavingSettings ? 'Saving...' : 'Save Settings'}
-                            </button>
                         </div>
                     )}
                 </div>
