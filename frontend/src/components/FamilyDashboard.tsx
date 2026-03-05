@@ -19,16 +19,16 @@ function ClaimModal({ taskName, users, onSelectUser, onClose }: ClaimModalProps)
 
                 <div className="user-grid">
                     {users.map(user => (
-                        <div
+                        <button
                             key={user.id}
                             className="user-select-card"
                             onClick={() => onSelectUser(user.id)}
                         >
-                            <div className="user-avatar">
+                            <div className="user-avatar" aria-hidden="true">
                                 {user.nickname.charAt(0).toUpperCase()}
                             </div>
                             <div className="user-name">{user.nickname}</div>
-                        </div>
+                        </button>
                     ))}
                 </div>
 
