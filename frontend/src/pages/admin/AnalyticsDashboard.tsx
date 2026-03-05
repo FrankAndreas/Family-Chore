@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useOutletContext, Navigate } from 'react-router-dom';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
     PieChart, Pie, Cell
 } from 'recharts';
-import type { WeeklyStats, DistributionStat, HeatmapResponse, AnalyticsSummary } from '../../api';
+import type { WeeklyStats, DistributionStat, HeatmapResponse, AnalyticsSummary, User } from '../../api';
 import { getWeeklyStats, getPointsDistribution, getHeatmapData, getAnalyticsSummary } from '../../api';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { useToast } from '../../hooks/useToast';
@@ -16,8 +17,13 @@ import './AnalyticsDashboard.css';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
+interface DashboardContext {
+    currentUser: User;
+}
+
 const AnalyticsDashboard: React.FC = () => {
     const { t } = useTranslation();
+    const { currentUser } = useOutletContext<DashboardContext>();
     const [weeklyData, setWeeklyData] = useState<WeeklyStats[]>([]);
     const [distributionData, setDistributionData] = useState<DistributionStat[]>([]);
     const [heatmapData, setHeatmapData] = useState<HeatmapResponse | null>(null);
@@ -28,9 +34,11 @@ const AnalyticsDashboard: React.FC = () => {
     const { toasts, removeToast, error } = useToast();
 
     useEffect(() => {
-        fetchAnalytics();
+        if (currentUser.role.name === 'Admin') {
+            fetchAnalytics();
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [currentUser]);
 
     const fetchAnalytics = async () => {
         try {
@@ -65,6 +73,10 @@ const AnalyticsDashboard: React.FC = () => {
             setHeatmapLoading(false);
         }
     }, [error, t]);
+
+    if (currentUser.role.name !== 'Admin') {
+        return <Navigate to="/dashboard" replace />;
+    }
 
     if (loading) {
         return <LoadingSpinner fullPage message={t('common.loading')} />;
