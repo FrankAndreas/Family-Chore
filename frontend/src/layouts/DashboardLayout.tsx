@@ -121,7 +121,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ currentUser, onLogout
                         </>
                     )}
 
-                    <div className="nav-section-title">MY CHORES</div>
+                    <div className="nav-section-title">{t('navigation.my_chores', 'MY CHORES')}</div>
                     <button
                         className={`nav-item ${isActive('/dashboard') ? 'active' : ''}`}
                         onClick={() => handleNavigation('/dashboard')}

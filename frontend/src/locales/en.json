@@ -35,7 +35,8 @@
         "roles": "Roles",
         "settings": "Settings",
         "logout": "Logout",
-        "admin": "Admin"
+        "admin": "Admin",
+        "my_chores": "MY CHORES"
     },
     "dashboard": {
         "title": "Dashboard",

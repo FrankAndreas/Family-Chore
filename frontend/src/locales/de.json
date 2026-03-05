@@ -35,7 +35,8 @@
         "roles": "Rollen",
         "settings": "Einstellungen",
         "logout": "Abmelden",
-        "admin": "Admin"
+        "admin": "Admin",
+        "my_chores": "MEINE AUFGABEN"
     },
     "dashboard": {
         "title": "Dashboard",
