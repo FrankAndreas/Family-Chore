@@ -58,13 +58,15 @@ export const NotificationCenter: React.FC = () => {
                 className="notification-bell"
                 onClick={() => setIsOpen(!isOpen)}
                 aria-label="Notifications"
+                aria-expanded={isOpen}
+                aria-haspopup="menu"
             >
                 🔔
                 {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}
             </button>
 
             {isOpen && (
-                <div className="notification-dropdown">
+                <div className="notification-dropdown" role="menu" aria-label="Notifications menu">
                     <div className="notification-header">
                         <h3>Notifications</h3>
                         {unreadCount > 0 && (
@@ -75,21 +77,26 @@ export const NotificationCenter: React.FC = () => {
                     </div>
                     <div className="notification-list">
                         {notifications.length === 0 ? (
-                            <div className="empty-notifications">No notifications</div>
+                            <div className="empty-notifications" role="menuitem">No notifications</div>
                         ) : (
                             notifications.map(notification => (
                                 <div
                                     key={notification.id}
                                     className={`notification-item ${notification.read === 0 ? 'unread' : ''}`}
                                     onClick={() => handleNotificationClick(notification.id)}
+                                    role="menuitem"
+                                    tabIndex={0}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') handleNotificationClick(notification.id);
+                                    }}
                                 >
-                                    <div className="notification-icon">{getIcon(notification.type)}</div>
+                                    <div className="notification-icon" aria-hidden="true">{getIcon(notification.type)}</div>
                                     <div className="notification-content">
                                         <div className="notification-title">{notification.title}</div>
                                         <div className="notification-message">{notification.message}</div>
                                         <span className="notification-time">{formatTime(notification.created_at)}</span>
                                     </div>
-                                    {notification.read === 0 && <div className="unread-dot" />}
+                                    {notification.read === 0 && <div className="unread-dot" aria-label="Unread" />}
                                 </div>
                             ))
                         )}
