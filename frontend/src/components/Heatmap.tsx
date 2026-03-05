@@ -27,7 +27,7 @@ const Heatmap: React.FC<HeatmapProps> = ({ days, nickname, userId }) => {
     const [loadingPopup, setLoadingPopup] = useState(false);
 
     const handleMouseEnter = useCallback(
-        (e: React.MouseEvent<HTMLDivElement>, day: HeatmapDay) => {
+        (e: React.MouseEvent<HTMLElement> | React.FocusEvent<HTMLElement>, day: HeatmapDay) => {
             if (popup) return; // Don't show tooltip while popup is open
             const rect = e.currentTarget.getBoundingClientRect();
             setTooltip({
@@ -44,7 +44,7 @@ const Heatmap: React.FC<HeatmapProps> = ({ days, nickname, userId }) => {
     }, [popup]);
 
     const handleCellClick = useCallback(
-        async (e: React.MouseEvent<HTMLDivElement>, day: HeatmapDay) => {
+        async (e: React.MouseEvent<HTMLElement>, day: HeatmapDay) => {
             if (day.count === 0) return; // Nothing to show
             setTooltip(null);
             setLoadingPopup(true);
@@ -92,15 +92,21 @@ const Heatmap: React.FC<HeatmapProps> = ({ days, nickname, userId }) => {
                 <div className="heatmap-grid">
                     {paddedDays.map((day, i) =>
                         day ? (
-                            <div
+                            <button
                                 key={day.date}
                                 className={`heatmap-cell ${intensityClass(day.count)} ${day.count > 0 ? 'heatmap-cell--clickable' : ''}`}
                                 onMouseEnter={(e) => handleMouseEnter(e, day)}
                                 onMouseLeave={handleMouseLeave}
                                 onClick={(e) => handleCellClick(e, day)}
-                            />
+                                onFocus={(e) => handleMouseEnter(e, day)}
+                                onBlur={handleMouseLeave}
+                                aria-label={`${day.date}: ${day.count} ${t('analytics.tasks_lowercase', 'tasks')}`}
+                                disabled={day.count === 0}
+                            >
+                                <span className="sr-only">{day.count}</span>
+                            </button>
                         ) : (
-                            <div key={`pad-${i}`} className="heatmap-cell heatmap-cell--pad" />
+                            <div key={`pad-${i}`} className="heatmap-cell heatmap-cell--pad" aria-hidden="true" />
                         ),
                     )}
                 </div>

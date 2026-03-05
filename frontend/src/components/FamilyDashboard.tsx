@@ -558,7 +558,7 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
                                                 <td><strong>{getUserName(tx.user_id)}</strong></td>
                                                 <td>
                                                     <span className={`badge ${tx.type === 'EARN' ? 'badge-success' : 'badge-warning'}`}>
-                                                        {tx.type}
+                                                        <span aria-hidden="true">{tx.type === 'EARN' ? '📈 ' : '📉 '}</span>{tx.type}
                                                     </span>
                                                 </td>
                                                 <td className={tx.awarded_points >= 0 ? 'text-success' : 'text-danger'}>
