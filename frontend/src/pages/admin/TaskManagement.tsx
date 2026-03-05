@@ -3,7 +3,7 @@ import { getTasks, createTask, updateTask, deleteTask, getRoles, exportTasks } f
 import type { Task, Role } from '../../types';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import Modal from '../../components/Modal';
-import TaskForm from '../../components/TaskForm';
+import TaskForm, { type TaskFormData } from '../../components/TaskForm';
 import ImportTasksModal from '../../components/ImportTasksModal';
 import { useToast } from '../../context/ToastContext';
 import './Dashboard.css';
@@ -20,14 +20,16 @@ const TaskManagement: React.FC = () => {
     const { showToast } = useToast();
 
     // Form state
-    const [name, setName] = useState('');
-    const [description, setDescription] = useState('');
-    const [basePoints, setBasePoints] = useState<number>(10);
-    const [assignedRoleId, setAssignedRoleId] = useState<number>(0);
-    const [scheduleType, setScheduleType] = useState('daily');
-    const [defaultDueTime, setDefaultDueTime] = useState('17:00');
-    const [recurrenceMinDays, setRecurrenceMinDays] = useState<number>(3);
-    const [recurrenceMaxDays, setRecurrenceMaxDays] = useState<number>(5);
+    const [formData, setFormData] = useState<TaskFormData>({
+        name: '',
+        description: '',
+        basePoints: 10,
+        assignedRoleId: 0,
+        scheduleType: 'daily',
+        defaultDueTime: '17:00',
+        recurrenceMinDays: 3,
+        recurrenceMaxDays: 5
+    });
     const [error, setError] = useState('');
 
     useEffect(() => {
@@ -42,8 +44,8 @@ const TaskManagement: React.FC = () => {
             const [tasksRes, rolesRes] = await Promise.all([getTasks(), getRoles()]);
             setTasks(tasksRes.data);
             setRoles(rolesRes.data);
-            if (rolesRes.data.length > 0 && assignedRoleId === 0) {
-                setAssignedRoleId(rolesRes.data[0].id);
+            if (rolesRes.data.length > 0 && formData.assignedRoleId === 0) {
+                setFormData(prev => ({ ...prev, assignedRoleId: rolesRes.data[0].id }));
             }
         } catch (err: unknown) {
             console.error('Failed to fetch data', err);
@@ -60,26 +62,30 @@ const TaskManagement: React.FC = () => {
     };
 
     const resetForm = () => {
-        setName('');
-        setDescription('');
-        setBasePoints(10);
-        setAssignedRoleId(roles.length > 0 ? roles[0].id : 0);
-        setScheduleType('daily');
-        setDefaultDueTime('17:00');
-        setRecurrenceMinDays(3);
-        setRecurrenceMaxDays(5);
+        setFormData({
+            name: '',
+            description: '',
+            basePoints: 10,
+            assignedRoleId: roles.length > 0 ? roles[0].id : 0,
+            scheduleType: 'daily',
+            defaultDueTime: '17:00',
+            recurrenceMinDays: 3,
+            recurrenceMaxDays: 5
+        });
         setError('');
     };
 
     const fillFormWithTask = (task: Task) => {
-        setName(task.name);
-        setDescription(task.description);
-        setBasePoints(task.base_points);
-        setAssignedRoleId(task.assigned_role_id || 0);
-        setScheduleType(task.schedule_type);
-        setDefaultDueTime(task.default_due_time);
-        setRecurrenceMinDays(task.recurrence_min_days || 3);
-        setRecurrenceMaxDays(task.recurrence_max_days || 5);
+        setFormData({
+            name: task.name,
+            description: task.description,
+            basePoints: task.base_points,
+            assignedRoleId: task.assigned_role_id || 0,
+            scheduleType: task.schedule_type,
+            defaultDueTime: task.default_due_time,
+            recurrenceMinDays: task.recurrence_min_days || 3,
+            recurrenceMaxDays: task.recurrence_max_days || 5
+        });
         setError('');
     };
 
@@ -111,7 +117,7 @@ const TaskManagement: React.FC = () => {
             counter++;
         }
 
-        setName(copyName);
+        setFormData(prev => ({ ...prev, name: copyName }));
         setShowAddForm(true);
         setShowEditModal(false);
         showToast('Task copied to form. Edit and save as new task.', 'success');
@@ -157,14 +163,14 @@ const TaskManagement: React.FC = () => {
 
         try {
             await createTask({
-                name,
-                description,
-                base_points: basePoints,
-                assigned_role_id: assignedRoleId === 0 ? null : assignedRoleId,
-                schedule_type: scheduleType,
-                default_due_time: scheduleType === 'recurring' ? 'recurring' : defaultDueTime,
-                recurrence_min_days: scheduleType === 'recurring' ? recurrenceMinDays : null,
-                recurrence_max_days: scheduleType === 'recurring' ? recurrenceMaxDays : null
+                name: formData.name,
+                description: formData.description,
+                base_points: formData.basePoints,
+                assigned_role_id: formData.assignedRoleId === 0 ? null : formData.assignedRoleId,
+                schedule_type: formData.scheduleType,
+                default_due_time: formData.scheduleType === 'recurring' ? 'recurring' : formData.defaultDueTime,
+                recurrence_min_days: formData.scheduleType === 'recurring' ? formData.recurrenceMinDays : null,
+                recurrence_max_days: formData.scheduleType === 'recurring' ? formData.recurrenceMaxDays : null
             });
             showToast('Task created successfully! 🎉', 'success');
             setShowAddForm(false);
@@ -189,14 +195,14 @@ const TaskManagement: React.FC = () => {
 
         try {
             await updateTask(editingTask.id, {
-                name,
-                description,
-                base_points: basePoints,
-                assigned_role_id: assignedRoleId === 0 ? null : assignedRoleId,
-                schedule_type: scheduleType,
-                default_due_time: scheduleType === 'recurring' ? 'recurring' : defaultDueTime,
-                recurrence_min_days: scheduleType === 'recurring' ? recurrenceMinDays : null,
-                recurrence_max_days: scheduleType === 'recurring' ? recurrenceMaxDays : null
+                name: formData.name,
+                description: formData.description,
+                base_points: formData.basePoints,
+                assigned_role_id: formData.assignedRoleId === 0 ? null : formData.assignedRoleId,
+                schedule_type: formData.scheduleType,
+                default_due_time: formData.scheduleType === 'recurring' ? 'recurring' : formData.defaultDueTime,
+                recurrence_min_days: formData.scheduleType === 'recurring' ? formData.recurrenceMinDays : null,
+                recurrence_max_days: formData.scheduleType === 'recurring' ? formData.recurrenceMaxDays : null
             });
             showToast('Task updated successfully! ✅', 'success');
             setShowEditModal(false);
@@ -235,22 +241,8 @@ const TaskManagement: React.FC = () => {
                 size="large"
             >
                 <TaskForm
-                    name={name}
-                    setName={setName}
-                    description={description}
-                    setDescription={setDescription}
-                    basePoints={basePoints}
-                    setBasePoints={setBasePoints}
-                    assignedRoleId={assignedRoleId}
-                    setAssignedRoleId={setAssignedRoleId}
-                    scheduleType={scheduleType}
-                    setScheduleType={setScheduleType}
-                    defaultDueTime={defaultDueTime}
-                    setDefaultDueTime={setDefaultDueTime}
-                    recurrenceMinDays={recurrenceMinDays}
-                    setRecurrenceMinDays={setRecurrenceMinDays}
-                    recurrenceMaxDays={recurrenceMaxDays}
-                    setRecurrenceMaxDays={setRecurrenceMaxDays}
+                    formData={formData}
+                    onChange={(updates) => setFormData(prev => ({ ...prev, ...updates }))}
                     roles={roles}
                     onSubmit={handleUpdateTask}
                     onCancel={handleCancelEdit}
@@ -310,22 +302,8 @@ const TaskManagement: React.FC = () => {
                 <div className="section glass-panel mb-xl fade-in">
                     <h2>Add New Task</h2>
                     <TaskForm
-                        name={name}
-                        setName={setName}
-                        description={description}
-                        setDescription={setDescription}
-                        basePoints={basePoints}
-                        setBasePoints={setBasePoints}
-                        assignedRoleId={assignedRoleId}
-                        setAssignedRoleId={setAssignedRoleId}
-                        scheduleType={scheduleType}
-                        setScheduleType={setScheduleType}
-                        defaultDueTime={defaultDueTime}
-                        setDefaultDueTime={setDefaultDueTime}
-                        recurrenceMinDays={recurrenceMinDays}
-                        setRecurrenceMinDays={setRecurrenceMinDays}
-                        recurrenceMaxDays={recurrenceMaxDays}
-                        setRecurrenceMaxDays={setRecurrenceMaxDays}
+                        formData={formData}
+                        onChange={(updates) => setFormData(prev => ({ ...prev, ...updates }))}
                         roles={roles}
                         onSubmit={handleCreateTask}
                         error={error}
