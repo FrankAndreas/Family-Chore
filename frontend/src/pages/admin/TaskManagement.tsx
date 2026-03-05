@@ -15,6 +15,7 @@ const TaskManagement: React.FC = () => {
     const [showAddForm, setShowAddForm] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showImportModal, setShowImportModal] = useState(false);
+    const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
     const [editingTask, setEditingTask] = useState<Task | null>(null);
     const [submitting, setSubmitting] = useState(false);
     const { showToast } = useToast();
@@ -123,19 +124,8 @@ const TaskManagement: React.FC = () => {
         showToast('Task copied to form. Edit and save as new task.', 'success');
     };
 
-    const handleDeleteTask = async (task: Task) => {
-        if (!confirm(`Are you sure you want to delete "${task.name}"? This will also delete all related task instances.`)) {
-            return;
-        }
-
-        try {
-            await deleteTask(task.id);
-            showToast(`Task "${task.name}" deleted successfully`, 'success');
-            fetchData();
-        } catch (err) {
-            console.error('Failed to delete task', err);
-            showToast('Failed to delete task', 'error');
-        }
+    const handleDeleteTask = (task: Task) => {
+        setTaskToDelete(task);
     };
 
     const handleExport = async () => {
@@ -233,6 +223,46 @@ const TaskManagement: React.FC = () => {
 
     return (
         <div className="page-container fade-in">
+            {/* Delete Confirmation Modal */}
+            <Modal
+                isOpen={!!taskToDelete}
+                onClose={() => setTaskToDelete(null)}
+                title="Confirm Deletion"
+            >
+                <div>
+                    <p style={{ color: '#333' }}>
+                        Are you sure you want to delete <strong>"{taskToDelete?.name}"</strong>?
+                    </p>
+                    <p style={{ color: '#c53030', marginTop: '0.5rem', fontSize: '0.9rem' }}>
+                        This will also delete all related task instances and cannot be undone.
+                    </p>
+                    <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', justifyContent: 'flex-end' }}>
+                        <button className="btn btn-secondary" onClick={() => setTaskToDelete(null)}>
+                            Cancel
+                        </button>
+                        <button
+                            className="btn"
+                            style={{ backgroundColor: '#ef4444', color: 'white' }}
+                            onClick={async () => {
+                                if (!taskToDelete) return;
+                                try {
+                                    await deleteTask(taskToDelete.id);
+                                    showToast(`Task "${taskToDelete.name}" deleted successfully`, 'success');
+                                    fetchData();
+                                } catch (err) {
+                                    console.error('Failed to delete task', err);
+                                    showToast('Failed to delete task', 'error');
+                                } finally {
+                                    setTaskToDelete(null);
+                                }
+                            }}
+                        >
+                            Delete Task
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+
             {/* Edit Task Modal */}
             <Modal
                 isOpen={showEditModal}

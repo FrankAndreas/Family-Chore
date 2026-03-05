@@ -6,6 +6,7 @@ import type { Reward, User } from '../../types';
 import { TIER_THRESHOLDS } from '../../constants';
 import { triggerConfetti } from '../../utils/confetti';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import Modal from '../../components/Modal';
 import Toast from '../../components/Toast';
 import { useToast } from '../../hooks/useToast';
 import '../admin/Dashboard.css';
@@ -20,6 +21,7 @@ const RewardHub: React.FC = () => {
     const { t } = useTranslation();
     const [rewards, setRewards] = useState<Reward[]>([]);
     const [loading, setLoading] = useState(true);
+    const [rewardToDelete, setRewardToDelete] = useState<Reward | null>(null);
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const { toasts, removeToast, success, error } = useToast();
@@ -96,17 +98,8 @@ const RewardHub: React.FC = () => {
         }
     };
 
-    const handleDeleteReward = async (reward: Reward) => {
-        if (!window.confirm(t('rewards.confirm_delete', `Are you sure you want to delete ${reward.name}? This will remove it as a goal for anyone tracking it.`))) return;
-
-        try {
-            await deleteReward(reward.id);
-            success(t('rewards.toasts.delete_success', 'Reward deleted!'));
-            fetchRewards();
-        } catch (err) {
-            error(t('rewards.toasts.delete_error', 'Failed to delete reward.'));
-            console.error('Failed to delete reward', err);
-        }
+    const handleDeleteReward = (reward: Reward) => {
+        setRewardToDelete(reward);
     };
 
     const openEditForm = (reward: Reward) => {
@@ -243,6 +236,43 @@ const RewardHub: React.FC = () => {
 
     return (
         <div className="page-container reward-hub fade-in">
+            {/* Delete Confirmation Modal */}
+            <Modal
+                isOpen={!!rewardToDelete}
+                onClose={() => setRewardToDelete(null)}
+                title={t('common.confirm', 'Confirm Action')}
+            >
+                <div>
+                    <p style={{ color: '#333' }}>
+                        {t('rewards.confirm_delete', `Are you sure you want to delete ${rewardToDelete?.name}? This will remove it as a goal for anyone tracking it.`)}
+                    </p>
+                    <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', justifyContent: 'flex-end' }}>
+                        <button className="btn btn-secondary" onClick={() => setRewardToDelete(null)}>
+                            {t('common.cancel', 'Cancel')}
+                        </button>
+                        <button
+                            className="btn"
+                            style={{ backgroundColor: '#ef4444', color: 'white' }}
+                            onClick={async () => {
+                                if (!rewardToDelete) return;
+                                try {
+                                    await deleteReward(rewardToDelete.id);
+                                    success(t('rewards.toasts.delete_success', 'Reward deleted!'));
+                                    fetchRewards();
+                                } catch (err) {
+                                    error(t('rewards.toasts.delete_error', 'Failed to delete reward.'));
+                                    console.error('Failed to delete reward', err);
+                                } finally {
+                                    setRewardToDelete(null);
+                                }
+                            }}
+                        >
+                            {t('common.delete', 'Delete')}
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+
             {/* Toast notifications */}
             <div className="toast-container">
                 {toasts.map(toast => (
