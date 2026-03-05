@@ -36,9 +36,12 @@ const Toast: React.FC<ToastProps> = ({
         }
     };
 
+    const ariaRole = type === 'error' || type === 'warning' ? 'alert' : 'status';
+    const ariaLive = type === 'error' || type === 'warning' ? 'assertive' : 'polite';
+
     return (
-        <div className={`toast toast-${type} fade-in`}>
-            <span className="toast-icon">{getIcon()}</span>
+        <div className={`toast toast-${type} fade-in`} role={ariaRole} aria-live={ariaLive}>
+            <span className="toast-icon" aria-hidden="true">{getIcon()}</span>
             <span className="toast-message">{message}</span>
             <button className="toast-close" onClick={onClose} aria-label="Close">
                 ✕
