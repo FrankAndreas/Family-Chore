@@ -192,25 +192,73 @@ const UserDashboard: React.FC = () => {
                                                             )}
                                                         </div>
                                                         {task?.requires_photo_verification && !isInReview && (
-                                                            <div className="photo-upload-section" style={{ marginTop: '10px' }}>
-                                                                <input
-                                                                    type="file"
-                                                                    accept="image/*"
-                                                                    capture="environment"
-                                                                    onChange={(e) => {
-                                                                        const file = e.target.files ? e.target.files[0] : null;
-                                                                        setPhotoUrls(prev => ({ ...prev, [instance.id]: file }));
+                                                            <div className="photo-upload-section" style={{ marginTop: '1rem' }}>
+                                                                <label
+                                                                    className="dropzone-container"
+                                                                    style={{
+                                                                        display: 'flex',
+                                                                        flexDirection: 'column',
+                                                                        alignItems: 'center',
+                                                                        justifyContent: 'center',
+                                                                        border: '2px dashed var(--border-color)',
+                                                                        borderRadius: '8px',
+                                                                        padding: '1.5rem',
+                                                                        cursor: 'pointer',
+                                                                        backgroundColor: 'var(--bg-secondary)',
+                                                                        transition: 'all 0.2s ease',
+                                                                        textAlign: 'center',
+                                                                        gap: '0.5rem'
                                                                     }}
-                                                                    onFocus={() => setCompletingId(instance.id)}
-                                                                    className="filter-input"
-                                                                    style={{ width: '100%', padding: '5px' }}
-                                                                />
-                                                                {photoUrls[instance.id] && (
-                                                                    <div style={{ marginTop: '5px', borderRadius: '4px', overflow: 'hidden', maxWidth: '100px', maxHeight: '100px' }}>
-                                                                        <img src={URL.createObjectURL(photoUrls[instance.id]!)} alt="Preview" style={{ width: '100%', height: 'auto', objectFit: 'cover' }} />
-                                                                    </div>
-                                                                )}
-                                                                <small style={{ display: 'block', marginTop: '5px' }}>This task requires a photo verification.</small>
+                                                                    onDragOver={(e) => {
+                                                                        e.preventDefault();
+                                                                        e.currentTarget.style.borderColor = 'var(--primary-color)';
+                                                                        e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+                                                                    }}
+                                                                    onDragLeave={(e) => {
+                                                                        e.preventDefault();
+                                                                        e.currentTarget.style.borderColor = 'var(--border-color)';
+                                                                        e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+                                                                    }}
+                                                                    onDrop={(e) => {
+                                                                        e.preventDefault();
+                                                                        e.currentTarget.style.borderColor = 'var(--border-color)';
+                                                                        e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+                                                                        const file = e.dataTransfer.files ? e.dataTransfer.files[0] : null;
+                                                                        if (file && file.type.startsWith('image/')) {
+                                                                            setPhotoUrls(prev => ({ ...prev, [instance.id]: file }));
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    <input
+                                                                        type="file"
+                                                                        accept="image/*"
+                                                                        capture="environment"
+                                                                        style={{ display: 'none' }}
+                                                                        onChange={(e) => {
+                                                                            const file = e.target.files ? e.target.files[0] : null;
+                                                                            setPhotoUrls(prev => ({ ...prev, [instance.id]: file }));
+                                                                        }}
+                                                                    />
+                                                                    {photoUrls[instance.id] ? (
+                                                                        <div style={{ position: 'relative', width: '100%', maxWidth: '200px' }}>
+                                                                            <img
+                                                                                src={URL.createObjectURL(photoUrls[instance.id]!)}
+                                                                                alt="Preview"
+                                                                                style={{ width: '100%', height: 'auto', borderRadius: '4px', objectFit: 'cover', border: '1px solid var(--border-color)' }}
+                                                                            />
+                                                                            <div style={{ position: 'absolute', top: '4px', right: '4px', background: 'rgba(0,0,0,0.6)', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '12px' }}>
+                                                                                ✓
+                                                                            </div>
+                                                                            <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Tap to replace photo</div>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <>
+                                                                            <div style={{ fontSize: '2rem' }}>📸</div>
+                                                                            <div style={{ fontWeight: '500' }}>Tap to take photo or drop image here</div>
+                                                                            <small style={{ color: 'var(--text-secondary)' }}>Verification required</small>
+                                                                        </>
+                                                                    )}
+                                                                </label>
                                                             </div>
                                                         )}
                                                     </div>
