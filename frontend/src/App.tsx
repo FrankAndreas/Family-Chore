@@ -13,6 +13,7 @@ import UserDashboard from './pages/user/UserDashboard';
 import RewardHub from './pages/user/RewardHub';
 import AnalyticsDashboard from './pages/admin/AnalyticsDashboard';
 import SettingsPage from './pages/SettingsPage';
+import NotFoundPage from './pages/NotFoundPage';
 import type { User } from './types';
 import './App.css';
 import './index.css';
@@ -66,9 +67,8 @@ function App() {
                 <Route path="analytics" element={<AnalyticsDashboard />} />
                 <Route path="settings" element={<SettingsPage />} />
               </Route>
-
-              {/* Catch all - redirect to home */}
-              <Route path="*" element={<Navigate to="/" replace />} />
+              {/* Catch all - 404 page */}
+              <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </BrowserRouter>
         </ErrorBoundary>

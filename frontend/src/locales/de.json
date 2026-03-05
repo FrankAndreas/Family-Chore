@@ -13,7 +13,10 @@
         "yes": "Ja",
         "no": "Nein",
         "points": "Punkte",
-        "pts": "Pkt"
+        "pts": "Pkt",
+        "not_found_title": "404 - Seite nicht gefunden",
+        "not_found_desc": "Hoppla! Es sieht so aus, als hätten Sie sich verirrt. Diese Seite existiert nicht.",
+        "back_to_home": "Bring mich nach Hause 🏠"
     },
     "login": {
         "title": "Willkommen bei ChoreSpec",

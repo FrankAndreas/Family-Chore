@@ -13,7 +13,10 @@
         "yes": "Yes",
         "no": "No",
         "points": "points",
-        "pts": "pts"
+        "pts": "pts",
+        "not_found_title": "404 - Page Not Found",
+        "not_found_desc": "Oops! It looks like you've wandered off the map. This page doesn't exist.",
+        "back_to_home": "Take Me Home 🏠"
     },
     "login": {
         "title": "Welcome to ChoreSpec",
