@@ -11,6 +11,7 @@ interface LoginProps {
 export default function Login({ onLogin }: LoginProps) {
     const [nickname, setNickname] = useState('');
     const [pin, setPin] = useState('');
+    const [showPin, setShowPin] = useState(false);
     const [nicknameError, setNicknameError] = useState('');
     const [pinError, setPinError] = useState('');
     const [error, setError] = useState('');
@@ -91,21 +92,41 @@ export default function Login({ onLogin }: LoginProps) {
 
                     <div className="form-group">
                         <label htmlFor="pin">PIN</label>
-                        <input
-                            id="pin"
-                            type="password"
-                            className={`input ${pinError ? 'input-error' : ''}`}
-                            value={pin}
-                            onChange={(e) => {
-                                setPin(e.target.value);
-                                if (pinError) setPinError('');
-                            }}
-                            onBlur={validate}
-                            placeholder="4-digit PIN"
-                            maxLength={4}
-                            pattern="[0-9]{4}"
-                            required
-                        />
+                        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                            <input
+                                id="pin"
+                                type={showPin ? "text" : "password"}
+                                className={`input ${pinError ? 'input-error' : ''}`}
+                                value={pin}
+                                onChange={(e) => {
+                                    setPin(e.target.value);
+                                    if (pinError) setPinError('');
+                                }}
+                                onBlur={validate}
+                                placeholder="4-digit PIN"
+                                maxLength={4}
+                                pattern="[0-9]{4}"
+                                required
+                                style={{ paddingRight: '40px' }}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPin(!showPin)}
+                                aria-label={showPin ? "Hide PIN" : "Show PIN"}
+                                style={{
+                                    position: 'absolute',
+                                    right: '10px',
+                                    background: 'none',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    fontSize: '1.2rem',
+                                    padding: '0',
+                                    color: 'var(--text-secondary)'
+                                }}
+                            >
+                                {showPin ? '🙈' : '👁️'}
+                            </button>
+                        </div>
                         {pinError && <small className="error-text" style={{ color: '#ff4d4f', marginTop: '4px', display: 'block' }}>{pinError}</small>}
                     </div>
 
