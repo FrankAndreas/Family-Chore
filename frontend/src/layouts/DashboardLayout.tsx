@@ -92,31 +92,31 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ currentUser, onLogout
                                 className={`nav-item ${isActive('/admin') ? 'active' : ''}`}
                                 onClick={() => handleNavigation('/admin')}
                             >
-                                📊 {t('navigation.dashboard')}
+                                <span aria-hidden="true">📊</span> {t('navigation.dashboard')}
                             </button>
                             <button
                                 className={`nav-item ${isActive('/admin/users') ? 'active' : ''}`}
                                 onClick={() => handleNavigation('/admin/users')}
                             >
-                                👥 {t('navigation.users')}
+                                <span aria-hidden="true">👥</span> {t('navigation.users')}
                             </button>
                             <button
                                 className={`nav-item ${isActive('/admin/tasks') ? 'active' : ''}`}
                                 onClick={() => handleNavigation('/admin/tasks')}
                             >
-                                📋 {t('navigation.tasks')}
+                                <span aria-hidden="true">📋</span> {t('navigation.tasks')}
                             </button>
                             <button
                                 className={`nav-item ${isActive('/admin/roles') ? 'active' : ''}`}
                                 onClick={() => handleNavigation('/admin/roles')}
                             >
-                                ⚙️ {t('navigation.roles')}
+                                <span aria-hidden="true">⚙️</span> {t('navigation.roles')}
                             </button>
                             <button
                                 className={`nav-item ${isActive('/analytics') ? 'active' : ''}`}
                                 onClick={() => handleNavigation('/analytics')}
                             >
-                                📈 {t('analytics.title')}
+                                <span aria-hidden="true">📈</span> {t('analytics.title')}
                             </button>
                         </>
                     )}
@@ -126,19 +126,19 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ currentUser, onLogout
                         className={`nav-item ${isActive('/dashboard') ? 'active' : ''}`}
                         onClick={() => handleNavigation('/dashboard')}
                     >
-                        ✅ {t('navigation.tasks')}
+                        <span aria-hidden="true">✅</span> {t('navigation.tasks')}
                     </button>
                     <button
                         className={`nav-item ${isActive('/rewards') ? 'active' : ''}`}
                         onClick={() => handleNavigation('/rewards')}
                     >
-                        🎁 {t('navigation.rewards')}
+                        <span aria-hidden="true">🎁</span> {t('navigation.rewards')}
                     </button>
                     <button
                         className={`nav-item ${isActive('/settings') ? 'active' : ''}`}
                         onClick={() => handleNavigation('/settings')}
                     >
-                        🔧 {t('navigation.settings')}
+                        <span aria-hidden="true">🔧</span> {t('navigation.settings')}
                     </button>
 
                     <div className="mobile-footer">
