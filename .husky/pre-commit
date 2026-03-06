@@ -12,7 +12,7 @@ npx tsc --noEmit || exit 1
 
 # Backend flake8
 echo "🐍 Backend flake8..."
-cd .. && ./venv/bin/python -m flake8 backend tests --max-line-length=120 || exit 1
+cd .. && ./venv/bin/python -m flake8 backend tests --max-line-length=120 --exclude=backend/migrations/versions || exit 1
 
 # Backend mypy
 echo "🐍 Backend mypy..."

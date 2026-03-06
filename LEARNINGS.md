@@ -498,6 +498,18 @@ This file captures accumulated knowledge from development sessions. The Libraria
 ### Gotchas
 - **Suffix Requirements**: If you attempt to use `{ count: value }` in component code without establishing the corresponding `_one` and `_other` keys in *every* target dictionary (e.g., `en.json` and `de.json`), `i18next` fails over to rendering raw placeholder keys on screen.
 
+---
+
+## 📅 2026-03-06: UX Architecture & Accessibility Standards
+
+### Session Context
+- **Nielsen's Heuristics**: Adherence to "Visibility of System Status" already strong (SkeletonLoaders, Spinners), but native HTML lacks screen-reader context on ad-hoc buttons.
+- **Semantic Mapping**: Wrapping text in `<label>` next to an `<input>` is not enough. React/HTML requires `htmlFor="someId"` bound to `<input id="someId">` to explicitly trigger focus natively.
+- **Alternative Text**: Decorative emojis need `<span aria-hidden="true">` to prevent screen-reader spam, while informative images (like uploaded task verifications) need highly descriptive `alt` text to satisfy WCAG 2.1 AA level compliance.
+
+### Gotchas
+- **Generic CSS Outlines**: A common mistake is adding custom React `onFocus` states that clash with generic `#id:focus` pseudo-classes defined in `index.css`. Trust the global CSS to handle the visual focus rings (e.g., `outline` settings) while JavaScript manages the markup.
+
 ## Template for Future Entries
 
 ```markdown

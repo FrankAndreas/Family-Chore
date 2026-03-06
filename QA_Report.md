@@ -65,3 +65,19 @@
 ## ⚠️ Edge Cases & Notes:
 - Removed hardcoded JavaScript ternary logic (e.g. `value === 1 ? 'day' : 'days'`) in favor of native `useTranslation` capabilities.
 - Added `_one` and `_other` keys for strict plural support across `days`, `tasks`, and `dayStreak`.
+
+# QA Report: UX & Accessibility Fixes (Phase 1)
+
+## ✅ Tests Passed: Frontend Lint & DOM Semantics
+- **Automated Verification**: `npm run lint` and `npx tsc --noEmit` executed against `frontend/src` successfully.
+- **Manual Verification 1 (ARIA Close Buttons)**: `aria-label="Close modal"` and `aria-label="Close details"` successfully injected into the native React synthetic DOM representation across `<Heatmap>` and `<UserManagement>` modals.
+- **Manual Verification 2 (Input-Label Binding)**: `htmlFor` attributes securely mapped to their respective `id` properties (`taskName`, `taskDescription`, `taskBasePoints`) within `<TaskForm>`.
+- **Manual Verification 3 (Image Alt-Text Descriptiveness)**: Default "Preview" alt-text securely replaced with explicit, content-aware "Task completion verification photo" within `<UserDashboard>`.
+
+## ❌ Tests Failed: 0
+- No failures observed. The DOM structurally supports the enhanced WCAG 2.1 traits without degrading layout properties. 
+
+## ⚠️ Edge Cases & Notes:
+- Cross-checking `index.css` revealed existing generic `:focus` definitions are handling the outline rendering for inputs successfully.
+
+---

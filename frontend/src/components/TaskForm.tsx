@@ -89,8 +89,9 @@ const TaskForm: React.FC<TaskFormProps> = ({
     return (
         <form onSubmit={handleSubmit} className="form-grid">
             <div className="form-group">
-                <label>Task Name</label>
+                <label htmlFor="taskName">Task Name</label>
                 <input
+                    id="taskName"
                     type="text"
                     value={formData.name}
                     style={nameError ? { borderColor: '#ff4d4f' } : {}}
@@ -105,8 +106,9 @@ const TaskForm: React.FC<TaskFormProps> = ({
                 {nameError && <small className="error-text" style={{ color: '#ff4d4f', marginTop: '4px', display: 'block' }}>{nameError}</small>}
             </div>
             <div className="form-group">
-                <label>Description</label>
+                <label htmlFor="taskDescription">Description</label>
                 <input
+                    id="taskDescription"
                     type="text"
                     value={formData.description}
                     style={descError ? { borderColor: '#ff4d4f' } : {}}
@@ -121,8 +123,9 @@ const TaskForm: React.FC<TaskFormProps> = ({
                 {descError && <small className="error-text" style={{ color: '#ff4d4f', marginTop: '4px', display: 'block' }}>{descError}</small>}
             </div>
             <div className="form-group">
-                <label>Base Points</label>
+                <label htmlFor="taskBasePoints">Base Points</label>
                 <input
+                    id="taskBasePoints"
                     type="number"
                     value={formData.basePoints}
                     style={pointsError ? { borderColor: '#ff4d4f' } : {}}

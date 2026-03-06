@@ -33,7 +33,7 @@ const PhotoPreview: React.FC<{ file: File }> = ({ file }) => {
     return (
         <img
             src={url}
-            alt="Preview"
+            alt="Task completion verification photo"
             style={{ width: '100%', height: 'auto', borderRadius: '4px', objectFit: 'cover', border: '1px solid var(--border-color)' }}
         />
     );

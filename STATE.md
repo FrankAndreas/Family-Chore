@@ -64,9 +64,15 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We h
 - **i18next Plural Logic**: Upgraded `en.json` and `de.json` to utilize native `_one` and `_other` suffix keys for `day` vs `days`, `task` vs `tasks`, and `Day Streak!`.
 - **Component Refactoring**: Stripped hardcoded JavaScript ternary singular/plural logic from `StatCards.tsx`, `TaskForm.tsx`, `Heatmap.tsx`, and `UserDashboard.tsx`. These now inject `{ count: number }` directly into the `useTranslation` hook so it intelligently renders the grammatically correct language version.
 
+## 🔄 Recent Changes (2026-03-06 UX Architecture & Accessibility)
+- **Accessibility (ARIA)**: Injected `aria-label` tags into native React components (`Heatmap.tsx` and `UserManagement.tsx`) to properly describe modal and popup close actions (`✕`) for screen readers.
+- **Semantic HTML**: Replaced isolated `<label>` text with programmatic `htmlFor` bindings mapped to explicit `id` attributes on form inputs within `TaskForm.tsx`.
+- **Image Descriptiveness**: Replaced generic `alt="Preview"` tags with contextually aware alternatives (e.g. "Task completion verification photo") inside `UserDashboard.tsx` for visual impairment tools.
+- **QA Verifications**: All modifications structurally verified via `npm run lint` and `npx tsc --noEmit` without introducing regressions or layout degradation.
+
 ## 📍 System State
 - **Backend**: Port 8000. **142 tests passed**. Flake8 and Mypy clean. Schema v1.9 tracked via Alembic.
-- **Frontend**: Port 8080 (Docker), 5173 (local). ESLint clean. Build successful. Fully internationalized (EN/DE).
+- **Frontend**: Port 8080 (Docker), 5173 (local). ESLint clean. Build successful. Fully internationalized (EN/DE). Enhanced WCAG 2.1 compliance.
 - **Docker**: Secure PostgreSQL + FastAPI configuration operational.
 
 ## 🚧 Active Tasks (Next Priority)

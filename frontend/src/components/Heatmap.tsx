@@ -132,7 +132,7 @@ const Heatmap: React.FC<HeatmapProps> = ({ days, nickname, userId }) => {
                     >
                         <div className="heatmap-popup__header">
                             <strong>{popup.details.date}</strong>
-                            <button className="heatmap-popup__close" onClick={closePopup}>✕</button>
+                            <button className="heatmap-popup__close" onClick={closePopup} aria-label="Close details">✕</button>
                         </div>
                         <ul className="heatmap-popup__list">
                             {popup.details.tasks.map((task, i) => (

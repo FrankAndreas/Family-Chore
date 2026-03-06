@@ -283,7 +283,7 @@ const UserManagement: React.FC = () => {
                     <div className="modal-content glass-panel" onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
                             <h2>Deduct Points</h2>
-                            <button className="close-btn" onClick={() => setSelectedUserForPenalty(null)}>×</button>
+                            <button className="close-btn" onClick={() => setSelectedUserForPenalty(null)} aria-label="Close modal">×</button>
                         </div>
 
                         <div className="modal-body">
@@ -336,7 +336,7 @@ const UserManagement: React.FC = () => {
                     <div className="modal-content glass-panel" onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
                             <h2>Edit User: {selectedUserForEdit.nickname}</h2>
-                            <button className="close-btn" onClick={() => setSelectedUserForEdit(null)}>×</button>
+                            <button className="close-btn" onClick={() => setSelectedUserForEdit(null)} aria-label="Close modal">×</button>
                         </div>
 
                         <div className="modal-body">
@@ -396,7 +396,7 @@ const UserManagement: React.FC = () => {
                     <div className="modal-content glass-panel" onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
                             <h2 style={{ color: '#1a1a2e' }}>Delete User</h2>
-                            <button className="close-btn" onClick={() => setSelectedUserForDelete(null)}>×</button>
+                            <button className="close-btn" onClick={() => setSelectedUserForDelete(null)} aria-label="Close modal">×</button>
                         </div>
                         <div className="modal-body">
                             <div className="alert-box" style={{
