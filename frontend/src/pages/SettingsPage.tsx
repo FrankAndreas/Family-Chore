@@ -38,10 +38,10 @@ const SettingsPage: React.FC = () => {
                 email: email || null,
                 notifications_enabled: notificationsEnabled
             });
-            success('Settings saved successfully!');
+            success(t('settings.settingsSavedSuccess', 'Settings saved successfully!'));
         } catch (err) {
             console.error('Failed to save settings', err);
-            showError('Failed to save settings. Please try again.');
+            showError(t('settings.settingsSavedError', 'Failed to save settings. Please try again.'));
         } finally {
             setIsSavingSettings(false);
         }
@@ -80,17 +80,17 @@ const SettingsPage: React.FC = () => {
                 </div>
 
                 <div className="section glass-panel">
-                    <h3>🔔 Notifications</h3>
-                    <p className="text-secondary mb-3">Configure how you receive updates and reminders.</p>
+                    <h3>🔔 {t('settings.notifications', 'Notifications')}</h3>
+                    <p className="text-secondary mb-3">{t('settings.notificationsDesc', 'Configure how you receive updates and reminders.')}</p>
 
                     <div className="form-group mt-3">
-                        <label>Email Address</label>
+                        <label>{t('settings.emailAddress', 'Email Address')}</label>
                         <input
                             type="email"
                             className="filter-input w-full max-w-sm block mt-1"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            placeholder="Enter your email"
+                            placeholder={t('settings.enterEmail', 'Enter your email')}
                         />
                     </div>
 
@@ -101,31 +101,31 @@ const SettingsPage: React.FC = () => {
                                 checked={notificationsEnabled}
                                 onChange={(e) => setNotificationsEnabled(e.target.checked)}
                             />
-                            Enable Email Notifications
+                            {t('settings.enableEmailNotifications', 'Enable Email Notifications')}
                         </label>
-                        <small className="block mt-1 text-secondary">Receive daily reminders and approval requests.</small>
+                        <small className="block mt-1 text-secondary">{t('settings.emailNotificationsDesc', 'Receive daily reminders and approval requests.')}</small>
                     </div>
 
                     {isPushSupported ? (
                         <div className="mt-4 pt-4 border-t flex-between">
                             <div>
-                                <h4>Push Notifications</h4>
+                                <h4>{t('settings.pushNotifications', 'Push Notifications')}</h4>
                                 <p className="text-secondary text-sm">
                                     {pushSubscribed
-                                        ? "Notifications are enabled for this device."
-                                        : "Enable notifications to stay updated on chores and rewards."}
+                                        ? t('settings.pushNotificationsEnabled', "Notifications are enabled for this device.")
+                                        : t('settings.pushNotificationsDisabled', "Enable notifications to stay updated on chores and rewards.")}
                                 </p>
                             </div>
                             <button
                                 className={`btn ${pushSubscribed ? 'btn-secondary' : 'btn-primary'}`}
                                 onClick={() => pushSubscribed ? unsubscribeFromPush() : subscribeToPush()}
                             >
-                                {pushSubscribed ? 'Disable' : 'Enable'}
+                                {pushSubscribed ? t('common.disable', 'Disable') : t('common.enable', 'Enable')}
                             </button>
                         </div>
                     ) : (
                         <p className="text-secondary mt-2">
-                            Push notifications are not supported by this browser.
+                            {t('settings.pushNotSupported', 'Push notifications are not supported by this browser.')}
                         </p>
                     )}
 
@@ -134,14 +134,14 @@ const SettingsPage: React.FC = () => {
                         onClick={handleSaveSettings}
                         disabled={isSavingSettings}
                     >
-                        {isSavingSettings ? 'Saving...' : 'Save Settings'}
+                        {isSavingSettings ? t('common.saving', 'Saving...') : t('settings.saveSettings', 'Save Settings')}
                     </button>
                 </div>
 
                 <div className="section glass-panel mt-5">
-                    <h3>🚧 More Settings Coming Soon</h3>
+                    <h3>{t('settings.moreSettings')}</h3>
                     <p className="text-secondary mt-2">
-                        Profile customization, notification preferences, and more.
+                        {t('settings.moreSettingsDesc')}
                     </p>
                 </div>
             </div>

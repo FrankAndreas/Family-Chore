@@ -44,13 +44,60 @@
     "dashboard": {
         "title": "Dashboard",
         "welcome": "Willkommen, {{name}}!",
+        "whoDidIt": "Wer hat es gemacht?",
+        "completing": "Abschluss:",
+        "splitRedemption": "🎁 Geteilte Einlösung",
+        "splitEvenly": "Gleichmäßig aufteilen",
+        "maxFromEach": "Maximum von Jedem",
+        "remaining": "Verbleibend",
+        "confirmSplit": "Aufteilung bestätigen",
+        "backToLogin": "Zurück zum Login",
+        "allCaughtUpTitle": "Alles erledigt!",
+        "loadingBoard": "Lade Familien-Board...",
         "stats": {
             "totalUsers": "Benutzer insgesamt",
             "totalTasks": "Aufgaben insgesamt",
             "totalRewards": "Belohnungen insgesamt",
             "currentPoints": "Aktuelle Punkte",
             "lifetimePoints": "Lebenszeitpunkte"
-        }
+        },
+        "familyDashboard": "Familien-Dashboard",
+        "liveUpdates": "Live-Updates",
+        "reconnecting": "Verbindung wird wiederhergestellt",
+        "last": "Zuletzt",
+        "unassignedOther": "Nicht zugewiesen / Andere",
+        "done": "Fertig",
+        "noAffordableRewardsTitle": "Noch keine erschwinglichen Belohnungen",
+        "noAffordableRewardsDesc": "Erledige mehr Aufgaben, um Punkte zu verdienen!",
+        "recentActivity": "Letzte Aktivität",
+        "allUsers": "Alle Benutzer",
+        "allActivity": "Alle Aktivitäten",
+        "earned": "Verdient",
+        "redeemed": "Eingelöst",
+        "search": "Suchen...",
+        "noHistoryFound": "Kein Verlauf gefunden",
+        "noActivityMatchingFilters": "Keine aktuellen Aktivitäten entsprechen Ihren Filtern.",
+        "earnType": "VERDIENT",
+        "redeemType": "EINGELÖST",
+        "completedTaskDef": "Aufgabe erledigt",
+        "redeemedRewardDef": "Belohnung eingelöst",
+        "taskSubmittedReview": "Aufgabe zur Überprüfung eingereicht! 📸",
+        "taskCompletedSuccess": "Aufgabe erledigt! Punkte vergeben. 🎉",
+        "myDashboard": "Mein Dashboard",
+        "youHave": "Du hast",
+        "dayStreak": "Tage in Folge!",
+        "myTasks": "Meine Aufgaben",
+        "todaysToDo": "Heutige Aufgaben",
+        "allCaughtUpUserTitle": "Alles erledigt!",
+        "noPendingTasksDesc": "Keine ausstehenden Aufgaben für heute. Genieße deine Freizeit oder schau später noch einmal vorbei! 🌟",
+        "due": "Fällig",
+        "inReview": "In Überprüfung",
+        "submitting": "Wird eingereicht...",
+        "pendingAdminReview": "Wartet auf Admin-Überprüfung",
+        "markComplete": "Als erledigt markieren",
+        "transactionHistory": "Transaktionsverlauf",
+        "searchDescription": "Beschreibung suchen...",
+        "noTransactionsMatchingFilters": "Keine Transaktionen gefunden, die Ihren Filtern entsprechen."
     },
     "tasks": {
         "title": "Aufgabenverwaltung",
@@ -159,6 +206,8 @@
             "2": "Silber",
             "3": "Gold"
         },
+        "tier_requires": "(Benötigt {{lp}} LP)",
+        "tier_default": "(Standard)",
         "tier_progress": {
             "title": "{{tier}}-Fortschritt",
             "max_level": "Maximalstufe erreicht! 🏆"
@@ -231,7 +280,20 @@
         "messages": {
             "saved": "Einstellungen erfolgreich gespeichert! ✅",
             "saveFailed": "Einstellungen konnten nicht gespeichert werden"
-        }
+        },
+        "moreSettingsDesc": "Profilanpassung, Benachrichtigungseinstellungen und mehr.",
+        "settingsSavedSuccess": "Einstellungen erfolgreich gespeichert!",
+        "settingsSavedError": "Einstellungen konnten nicht gespeichert werden. Bitte versuchen Sie es erneut.",
+        "notificationsDesc": "Konfigurieren Sie, wie Sie Updates und Erinnerungen erhalten.",
+        "emailAddress": "E-Mail Adresse",
+        "enterEmail": "E-Mail eingeben",
+        "enableEmailNotifications": "E-Mail-Benachrichtigungen aktivieren",
+        "emailNotificationsDesc": "Erhalten Sie tägliche Erinnerungen und Genehmigungsanfragen.",
+        "pushNotifications": "Push-Benachrichtigungen",
+        "pushNotificationsEnabled": "Benachrichtigungen sind für dieses Gerät aktiviert.",
+        "pushNotificationsDisabled": "Aktiviere Benachrichtigungen, um über Aufgaben und Belohnungen auf dem Laufenden zu bleiben.",
+        "pushNotSupported": "Push-Benachrichtigungen werden von diesem Browser nicht unterstützt.",
+        "saveSettings": "Einstellungen speichern"
     },
     "analytics": {
         "title": "Analyse-Dashboard",
@@ -261,5 +323,14 @@
         "friday": "Freitag",
         "saturday": "Samstag",
         "sunday": "Sonntag"
+    },
+    "history": {
+        "time": "Zeit",
+        "who": "Wer",
+        "action": "Aktion",
+        "points": "Punkte",
+        "details": "Details",
+        "date": "Datum",
+        "type": "Typ"
     }
 }

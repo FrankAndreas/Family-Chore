@@ -44,13 +44,60 @@
     "dashboard": {
         "title": "Dashboard",
         "welcome": "Welcome, {{name}}!",
+        "whoDidIt": "Who did it?",
+        "completing": "Completing:",
+        "splitRedemption": "🎁 Split Redemption",
+        "splitEvenly": "Split Evenly",
+        "maxFromEach": "Max from Each",
+        "remaining": "Remaining",
+        "confirmSplit": "Confirm Split",
+        "backToLogin": "Back to Login",
+        "allCaughtUpTitle": "All caught up!",
+        "loadingBoard": "Loading Family Board...",
         "stats": {
             "totalUsers": "Total Users",
             "totalTasks": "Total Tasks",
             "totalRewards": "Total Rewards",
             "currentPoints": "Current Points",
             "lifetimePoints": "Lifetime Points"
-        }
+        },
+        "familyDashboard": "Family Dashboard",
+        "liveUpdates": "Live updates",
+        "reconnecting": "Reconnecting",
+        "last": "Last",
+        "unassignedOther": "Unassigned / Other",
+        "done": "Done",
+        "noAffordableRewardsTitle": "No affordable rewards yet",
+        "noAffordableRewardsDesc": "Complete more tasks to earn points!",
+        "recentActivity": "Recent Activity",
+        "allUsers": "All Users",
+        "allActivity": "All Activity",
+        "earned": "Earned",
+        "redeemed": "Redeemed",
+        "search": "Search...",
+        "noHistoryFound": "No History Found",
+        "noActivityMatchingFilters": "No recent activity matching your filters.",
+        "earnType": "EARN",
+        "redeemType": "REDEEM",
+        "completedTaskDef": "Completed task",
+        "redeemedRewardDef": "Redeemed reward",
+        "taskSubmittedReview": "Task submitted for review! 📸",
+        "taskCompletedSuccess": "Task completed! Points awarded. 🎉",
+        "myDashboard": "My Dashboard",
+        "youHave": "You have",
+        "dayStreak": "Day Streak!",
+        "myTasks": "My Tasks",
+        "todaysToDo": "Today's To-Do",
+        "allCaughtUpUserTitle": "You're All Caught Up!",
+        "noPendingTasksDesc": "No pending tasks for today. Enjoy your free time or check back later! 🌟",
+        "due": "Due",
+        "inReview": "In Review",
+        "submitting": "Submitting...",
+        "pendingAdminReview": "Pending Admin Review",
+        "markComplete": "Mark Complete",
+        "transactionHistory": "Transaction History",
+        "searchDescription": "Search description...",
+        "noTransactionsMatchingFilters": "No transactions found matching your filters."
     },
     "tasks": {
         "title": "Task Management",
@@ -158,6 +205,8 @@
         "confirm_redeem_button": "Yes, Redeem!",
         "confirm_redeem_title": "Redeem Reward?",
         "confirm_redeem_message": "Do you really want to redeem {{name}} for {{points}} points?",
+        "tier_requires": "(Requires {{lp}} LP)",
+        "tier_default": "(Default)",
         "redeem_button": "Redeem",
         "modal": {
             "current_balance": "Current Balance",
@@ -221,7 +270,20 @@
         "messages": {
             "saved": "Settings saved successfully! ✅",
             "saveFailed": "Failed to save settings"
-        }
+        },
+        "moreSettingsDesc": "Profile customization, notification preferences, and more.",
+        "settingsSavedSuccess": "Settings saved successfully!",
+        "settingsSavedError": "Failed to save settings. Please try again.",
+        "notificationsDesc": "Configure how you receive updates and reminders.",
+        "emailAddress": "Email Address",
+        "enterEmail": "Enter your email",
+        "enableEmailNotifications": "Enable Email Notifications",
+        "emailNotificationsDesc": "Receive daily reminders and approval requests.",
+        "pushNotifications": "Push Notifications",
+        "pushNotificationsEnabled": "Notifications are enabled for this device.",
+        "pushNotificationsDisabled": "Enable notifications to stay updated on chores and rewards.",
+        "pushNotSupported": "Push notifications are not supported by this browser.",
+        "saveSettings": "Save Settings"
     },
     "weekdays": {
         "monday": "Monday",
@@ -251,5 +313,14 @@
         "range_90d": "90d",
         "time_range": "Time Range",
         "family_heatmap": "Family Progress (Last {{days}} Days)"
+    },
+    "history": {
+        "time": "Time",
+        "who": "Who",
+        "action": "Action",
+        "points": "Points",
+        "details": "Details",
+        "date": "Date",
+        "type": "Type"
     }
 }

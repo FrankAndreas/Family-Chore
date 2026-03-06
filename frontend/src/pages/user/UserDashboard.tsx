@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useOutletContext } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { getUserDailyTasks, completeTask, getTasks, getUserTransactions, uploadTaskPhoto } from '../../api';
 import type { TaskInstance, Task, User, Transaction, TransactionFilters } from '../../types';
 import { SkeletonLoader } from '../../components/SkeletonLoader';
@@ -18,12 +19,35 @@ interface TaskInstanceWithDetails extends TaskInstance {
     taskDetails?: Task;
 }
 
+// Helper component to manage Object URL lifecycle
+const PhotoPreview: React.FC<{ file: File }> = ({ file }) => {
+    const [url, setUrl] = useState<string>('');
+
+    useEffect(() => {
+        const objectUrl = URL.createObjectURL(file);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setUrl(objectUrl);
+        return () => URL.revokeObjectURL(objectUrl);
+    }, [file]);
+
+    return (
+        <img
+            src={url}
+            alt="Preview"
+            style={{ width: '100%', height: 'auto', borderRadius: '4px', objectFit: 'cover', border: '1px solid var(--border-color)' }}
+        />
+    );
+};
+
 const UserDashboard: React.FC = () => {
+    const { t } = useTranslation();
     const { currentUser, refreshUser } = useOutletContext<DashboardContext>();
     const [tasks, setTasks] = useState<TaskInstanceWithDetails[]>([]);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'tasks' | 'history'>('tasks');
+    const [historyPage, setHistoryPage] = useState(1);
+    const [hasMoreHistory, setHasMoreHistory] = useState(true);
     const [completingId, setCompletingId] = useState<number | null>(null);
     const [photoUrls, setPhotoUrls] = useState<Record<number, File | null>>({});
     const { toasts, removeToast, success, error: showError } = useToast();
@@ -36,7 +60,9 @@ const UserDashboard: React.FC = () => {
         setFilters(prev => ({ ...prev, search: debouncedSearch || undefined }));
     }, [debouncedSearch]);
 
-    const fetchData = useCallback(async () => {
+    // Removed redundant effect for resolving photoUrls memory leaks because PhotoPreview handles it.
+
+    const fetchData = useCallback(async (resetHistory = false) => {
         setLoading(true);
 
         try {
@@ -58,8 +84,23 @@ const UserDashboard: React.FC = () => {
                 // Only show PENDING or IN_REVIEW tasks on the dashboard actively
                 setTasks(instancesWithDetails.filter(t => t.status === 'PENDING' || t.status === 'IN_REVIEW'));
             } else if (activeTab === 'history') {
-                const transactionsRes = await getUserTransactions(currentUser.id, { limit: 50, ...filters });
-                setTransactions(transactionsRes.data);
+                const currentPage = resetHistory ? 1 : historyPage;
+                if (resetHistory) setHistoryPage(1);
+                const limit = 50;
+
+                const transactionsRes = await getUserTransactions(currentUser.id, {
+                    skip: (currentPage - 1) * limit,
+                    limit,
+                    ...filters
+                });
+
+                if (resetHistory) {
+                    setTransactions(transactionsRes.data);
+                } else {
+                    setTransactions(prev => [...prev, ...transactionsRes.data]);
+                }
+
+                setHasMoreHistory(transactionsRes.data.length === limit);
             }
         } catch (err) {
             console.error('Failed to fetch data', err);
@@ -67,13 +108,28 @@ const UserDashboard: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    }, [currentUser.id, activeTab, filters, showError]);
+    }, [currentUser.id, activeTab, filters, historyPage, showError]);
 
     useEffect(() => {
         if (currentUser) {
-            fetchData();
+            // Only reset history on activeTab change to 'history' or filter changes
+            // Initial load for 'tasks' also runs here
+            fetchData(activeTab === 'history' && historyPage === 1);
         }
-    }, [fetchData, currentUser]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeTab, filters, currentUser]);
+
+    // Handle history pagination changes specifically
+    useEffect(() => {
+        if (historyPage > 1 && activeTab === 'history') {
+            fetchData(false);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [historyPage]);
+
+    const loadMoreHistory = () => {
+        setHistoryPage(prev => prev + 1);
+    };
 
     const handleComplete = async (instance: TaskInstanceWithDetails) => {
         setCompletingId(instance.id);
@@ -92,10 +148,10 @@ const UserDashboard: React.FC = () => {
 
             const res = await completeTask(instance.id);
             if (res.data.status === 'IN_REVIEW') {
-                success('Task submitted for review! 📸');
+                success(t('dashboard.taskSubmittedReview', 'Task submitted for review! 📸'));
                 setPhotoUrls(prev => { const next = { ...prev }; delete next[instance.id]; return next; });
             } else {
-                success('Task completed! Points awarded. 🎉');
+                success(t('dashboard.taskCompletedSuccess', 'Task completed! Points awarded. 🎉'));
                 await refreshUser();
             }
             fetchData(); // Refresh list to show updated status
@@ -142,12 +198,12 @@ const UserDashboard: React.FC = () => {
             </div>
 
             <header className="page-header">
-                <h1 className="page-title">My Dashboard</h1>
-                <p className="page-subtitle">Welcome, <span className="highlight-text">{currentUser.nickname}</span>! You have {currentUser.current_points} points.</p>
+                <h1 className="page-title">{t('dashboard.myDashboard', 'My Dashboard')}</h1>
+                <p className="page-subtitle">{t('dashboard.welcome', 'Welcome')}, <span className="highlight-text">{currentUser.nickname}</span>! {t('dashboard.youHave', 'You have')} {currentUser.current_points} {t('dashboard.points', 'points')}.</p>
                 <div className="gamification-badges flex-center gap-2 mt-2" style={{ justifyContent: 'center' }}>
                     {currentUser.current_streak > 0 && (
                         <span className="badge badge-warning text-lg px-2 py-1">
-                            🔥 {currentUser.current_streak} Day Streak!
+                            🔥 {currentUser.current_streak} {t('dashboard.dayStreak', 'Day Streak!')}
                         </span>
                     )}
                     {currentUser.last_task_date !== new Date().toISOString().split('T')[0] && (
@@ -163,13 +219,13 @@ const UserDashboard: React.FC = () => {
                     className={`tab-btn ${activeTab === 'tasks' ? 'active' : ''}`}
                     onClick={() => setActiveTab('tasks')}
                 >
-                    📝 My Tasks
+                    📝 {t('dashboard.myTasks', 'My Tasks')}
                 </button>
                 <button
                     className={`tab-btn ${activeTab === 'history' ? 'active' : ''}`}
                     onClick={() => setActiveTab('history')}
                 >
-                    📜 History
+                    📜 {t('navigation.history', 'History')}
                 </button>
             </div>
 
@@ -185,12 +241,12 @@ const UserDashboard: React.FC = () => {
                     {activeTab === 'tasks' && (
                         <div className="dashboard-sections">
                             <div className="section glass-panel">
-                                <h2>📅 Today's To-Do</h2>
+                                <h2>📅 {t('dashboard.todaysToDo', "Today's To-Do")}</h2>
                                 {tasks.length === 0 ? (
                                     <div className="empty-state">
                                         <div className="empty-state-icon">🏖️</div>
-                                        <h3>You're All Caught Up!</h3>
-                                        <p>No pending tasks for today. Enjoy your free time or check back later! 🌟</p>
+                                        <h3>{t('dashboard.allCaughtUpUserTitle')}</h3>
+                                        <p>{t('dashboard.noPendingTasksDesc', 'No pending tasks for today. Enjoy your free time or check back later! 🌟')}</p>
                                     </div>
                                 ) : (
                                     <div className="tasks-list">
@@ -205,14 +261,14 @@ const UserDashboard: React.FC = () => {
                                                         <p className="task-description">{task?.description || 'No description'}</p>
                                                         <div className="task-meta-info">
                                                             <span className="due-time">
-                                                                🕒 Due: {new Date(instance.due_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                🕒 {t('dashboard.due', 'Due')}: {new Date(instance.due_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                             </span>
                                                             <span className="points-earn">
-                                                                💰 {calculatedPoints} points
+                                                                💰 {calculatedPoints} {t('dashboard.points', 'points')}
                                                             </span>
                                                             {isInReview && (
                                                                 <span className="badge badge-warning ml-2">
-                                                                    ⏳ In Review
+                                                                    ⏳ {t('dashboard.inReview', 'In Review')}
                                                                 </span>
                                                             )}
                                                         </div>
@@ -252,11 +308,7 @@ const UserDashboard: React.FC = () => {
                                                                     />
                                                                     {photoUrls[instance.id] ? (
                                                                         <div style={{ position: 'relative', width: '100%', maxWidth: '200px' }}>
-                                                                            <img
-                                                                                src={URL.createObjectURL(photoUrls[instance.id]!)}
-                                                                                alt="Preview"
-                                                                                style={{ width: '100%', height: 'auto', borderRadius: '4px', objectFit: 'cover', border: '1px solid var(--border-color)' }}
-                                                                            />
+                                                                            <PhotoPreview file={photoUrls[instance.id]!} />
                                                                             <div style={{ position: 'absolute', top: '4px', right: '4px', background: 'rgba(0,0,0,0.6)', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '12px' }}>
                                                                                 ✓
                                                                             </div>
@@ -278,7 +330,7 @@ const UserDashboard: React.FC = () => {
                                                         onClick={() => handleComplete(instance)}
                                                         disabled={completingId === instance.id || isInReview}
                                                     >
-                                                        {completingId === instance.id ? 'Submitting...' : (isInReview ? 'Pending Admin Review' : 'Mark Complete')}
+                                                        {completingId === instance.id ? t('dashboard.submitting', 'Submitting...') : (isInReview ? t('dashboard.pendingAdminReview', 'Pending Admin Review') : t('dashboard.markComplete', 'Mark Complete'))}
                                                     </button>
                                                 </div>
                                             );
@@ -291,7 +343,7 @@ const UserDashboard: React.FC = () => {
 
                     {activeTab === 'history' && (
                         <div className="section glass-panel full-width">
-                            <h2>📜 Transaction History</h2>
+                            <h2>📜 {t('dashboard.transactionHistory', 'Transaction History')}</h2>
 
                             {/* Filters */}
                             <div className="filters-bar">
@@ -300,14 +352,14 @@ const UserDashboard: React.FC = () => {
                                     className="filter-select"
                                     value={filters.txn_type || ''}
                                 >
-                                    <option value="">All Activity</option>
-                                    <option value="EARN">Earned</option>
-                                    <option value="REDEEM">Redeemed</option>
+                                    <option value="">{t('dashboard.allActivity', 'All Activity')}</option>
+                                    <option value="EARN">{t('dashboard.earned', 'Earned')}</option>
+                                    <option value="REDEEM">{t('dashboard.redeemed', 'Redeemed')}</option>
                                 </select>
 
                                 <input
                                     type="text"
-                                    placeholder="Search description..."
+                                    placeholder={t('dashboard.searchDescription', 'Search description...')}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     className="filter-input"
                                     value={searchTerm}
@@ -316,17 +368,17 @@ const UserDashboard: React.FC = () => {
 
                             {transactions.length === 0 ? (
                                 <div className="empty-state">
-                                    <p>No transactions found matching your filters.</p>
+                                    <p>{t('dashboard.noTransactionsMatchingFilters', 'No transactions found matching your filters.')}</p>
                                 </div>
                             ) : (
                                 <div className="table-container">
                                     <table className="data-table">
                                         <thead>
                                             <tr>
-                                                <th>Date</th>
-                                                <th>Type</th>
-                                                <th>Points</th>
-                                                <th>Details</th>
+                                                <th>{t('history.date')}</th>
+                                                <th>{t('history.type')}</th>
+                                                <th>{t('history.points')}</th>
+                                                <th>{t('history.details')}</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -335,19 +387,26 @@ const UserDashboard: React.FC = () => {
                                                     <td>{formatDate(tx.timestamp)}</td>
                                                     <td>
                                                         <span className={`badge ${tx.type === 'EARN' ? 'badge-success' : 'badge-warning'}`}>
-                                                            {tx.type}
+                                                            {tx.type === 'EARN' ? t('dashboard.earnType', 'EARN') : t('dashboard.redeemType', 'REDEEM')}
                                                         </span>
                                                     </td>
                                                     <td className={tx.awarded_points >= 0 ? 'text-success' : 'text-danger'}>
                                                         {tx.awarded_points > 0 ? '+' : ''}{tx.awarded_points}
                                                     </td>
                                                     <td>
-                                                        {tx.description || (tx.type === 'EARN' ? 'Completed task' : 'Redeemed reward')}
+                                                        {tx.description || (tx.type === 'EARN' ? t('dashboard.completedTaskDef', 'Completed task') : t('dashboard.redeemedRewardDef', 'Redeemed reward'))}
                                                     </td>
                                                 </tr>
                                             ))}
                                         </tbody>
                                     </table>
+                                    {hasMoreHistory && (
+                                        <div style={{ textAlign: 'center', marginTop: '1rem', paddingBottom: '1rem' }}>
+                                            <button className="btn btn-secondary" onClick={loadMoreHistory}>
+                                                Load More
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>

@@ -417,9 +417,9 @@ const RewardHub: React.FC = () => {
                                     value={formData.tier_level}
                                     onChange={(e) => setFormData({ ...formData, tier_level: parseInt(e.target.value) })}
                                 >
-                                    <option value={1}>{t('rewards.create_form.tiers.bronze')}</option>
-                                    <option value={2}>{t('rewards.create_form.tiers.silver')}</option>
-                                    <option value={3}>{t('rewards.create_form.tiers.gold')}</option>
+                                    <option value={1}>{t('rewards.create_form.tiers.bronze', '🥉 Bronze (Small rewards)')}</option>
+                                    <option value={2}>{t('rewards.create_form.tiers.silver', '🥈 Silver (Medium rewards)')}</option>
+                                    <option value={3}>{t('rewards.create_form.tiers.gold', '🥇 Gold (Big rewards)')}</option>
                                 </select>
                             </div>
 
@@ -460,13 +460,13 @@ const RewardHub: React.FC = () => {
                 if (tierRewards.length === 0) return null;
 
                 const tierTitle = t(`rewards.tier_names.${tier}`);
-                let tierSubtitle = '(Default)';
+                let tierSubtitle = t('rewards.tier_default');
                 let emoji = '🥉';
                 if (tier === 2) {
-                    tierSubtitle = `(Requires ${TIER_THRESHOLDS.SILVER} LP)`;
+                    tierSubtitle = t('rewards.tier_requires', { lp: TIER_THRESHOLDS.SILVER });
                     emoji = '🥈';
                 } else if (tier === 3) {
-                    tierSubtitle = `(Requires ${TIER_THRESHOLDS.GOLD} LP)`;
+                    tierSubtitle = t('rewards.tier_requires', { lp: TIER_THRESHOLDS.GOLD });
                     emoji = '🥇';
                 }
 
@@ -607,9 +607,9 @@ const RewardHub: React.FC = () => {
                                         value={formData.tier_level}
                                         onChange={(e) => setFormData({ ...formData, tier_level: parseInt(e.target.value) })}
                                     >
-                                        <option value={1}>{t('rewards.create_form.tiers.bronze')}</option>
-                                        <option value={2}>{t('rewards.create_form.tiers.silver')}</option>
-                                        <option value={3}>{t('rewards.create_form.tiers.gold')}</option>
+                                        <option value={1}>{t('rewards.create_form.tiers.bronze', '🥉 Bronze (Small rewards)')}</option>
+                                        <option value={2}>{t('rewards.create_form.tiers.silver', '🥈 Silver (Medium rewards)')}</option>
+                                        <option value={3}>{t('rewards.create_form.tiers.gold', '🥇 Gold (Big rewards)')}</option>
                                     </select>
                                 </div>
 

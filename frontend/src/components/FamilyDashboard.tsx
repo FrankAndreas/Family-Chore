@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { getPendingTasks, getUsers, getRewards, completeTask, redeemRewardSplit, getAllTransactions } from '../api';
+import { useTranslation } from 'react-i18next';
 import type { TaskInstance, User, Reward, Transaction } from '../types';
 import { useDebounce } from '../hooks/useDebounce';
 import './FamilyDashboard.css';
@@ -12,11 +13,12 @@ interface ClaimModalProps {
 }
 
 function ClaimModal({ taskName, users, onSelectUser, onClose }: ClaimModalProps) {
+    const { t } = useTranslation();
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal-content" onClick={e => e.stopPropagation()}>
-                <h2>Who did it?</h2>
-                <p>Completing: <strong>{taskName}</strong></p>
+                <h2>{t('dashboard.whoDidIt')}</h2>
+                <p>{t('dashboard.completing')} <strong>{taskName}</strong></p>
 
                 <div className="user-grid">
                     {users.map(user => (
@@ -34,7 +36,7 @@ function ClaimModal({ taskName, users, onSelectUser, onClose }: ClaimModalProps)
                 </div>
 
                 <button className="btn btn-secondary" style={{ marginTop: '2rem', width: '100%' }} onClick={onClose}>
-                    Cancel
+                    {t('common.cancel')}
                 </button>
             </div>
         </div>
@@ -50,6 +52,7 @@ interface SplitRedeemModalProps {
 }
 
 function SplitRedeemModal({ reward, users, onConfirm, onClose, redeeming }: SplitRedeemModalProps) {
+    const { t } = useTranslation();
     const [contributions, setContributions] = useState<{ [userId: number]: number }>(
         () => Object.fromEntries(users.map(u => [u.id, 0]))
     );
@@ -113,15 +116,15 @@ function SplitRedeemModal({ reward, users, onConfirm, onClose, redeeming }: Spli
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal-content split-modal" onClick={e => e.stopPropagation()}>
-                <h2>🎁 Split Redemption</h2>
-                <p className="reward-title"><strong>{reward.name}</strong> — {reward.cost_points} pts</p>
+                <h2>{t('dashboard.splitRedemption')}</h2>
+                <p className="reward-title"><strong>{reward.name}</strong> — {reward.cost_points} {t('common.pts')}</p>
 
                 <div className="preset-buttons">
                     <button className="btn btn-secondary btn-small" onClick={handleSplitEvenly}>
-                        Split Evenly
+                        {t('dashboard.splitEvenly')}
                     </button>
                     <button className="btn btn-secondary btn-small" onClick={handleMaxFromEach}>
-                        Max from Each
+                        {t('dashboard.maxFromEach')}
                     </button>
                 </div>
 
@@ -130,7 +133,7 @@ function SplitRedeemModal({ reward, users, onConfirm, onClose, redeeming }: Spli
                         <div key={user.id} className="contribution-row">
                             <span className="contrib-user">
                                 {user.nickname}
-                                <span className="contrib-available">({user.current_points} pts)</span>
+                                <span className="contrib-available">({user.current_points} {t('common.pts')})</span>
                             </span>
                             <input
                                 type="number"
@@ -169,6 +172,7 @@ function SplitRedeemModal({ reward, users, onConfirm, onClose, redeeming }: Spli
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
+    const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState<'tasks' | 'redeem' | 'history'>('tasks');
     const [tasks, setTasks] = useState<TaskInstance[]>([]);
     const [users, setUsers] = useState<User[]>([]);
@@ -181,6 +185,8 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
     const [toast, setToast] = useState<string | null>(null);
     const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
     const [connected, setConnected] = useState(false);
+    const [historyPage, setHistoryPage] = useState(1);
+    const [hasMoreHistory, setHasMoreHistory] = useState(true);
     const eventSourceRef = useRef<EventSource | null>(null);
 
     const loadData = useCallback(async () => {
@@ -230,20 +236,43 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
         setFilters(prev => ({ ...prev, search: debouncedSearch || undefined }));
     }, [debouncedSearch]);
 
-    const refreshTransactions = useCallback(async (newFilters = {}) => {
+    const refreshTransactions = useCallback(async (newFilters = {}, reset = false) => {
         const updatedFilters = { ...filters, ...newFilters };
         setFilters(updatedFilters);
+        const currentPage = reset ? 1 : historyPage;
+        if (reset) setHistoryPage(1);
+
         try {
+            const limit = 50;
             const transactionsRes = await getAllTransactions({
-                skip: 0,
-                limit: 50,
+                skip: (currentPage - 1) * limit,
+                limit,
                 ...updatedFilters
             });
-            setTransactions(transactionsRes.data);
+
+            if (reset) {
+                setTransactions(transactionsRes.data);
+            } else {
+                setTransactions(prev => [...prev, ...transactionsRes.data]);
+            }
+
+            setHasMoreHistory(transactionsRes.data.length === limit);
         } catch (error) {
             console.error("Failed to refresh transactions", error);
         }
-    }, [filters]);
+    }, [filters, historyPage]);
+
+    const loadMoreHistory = () => {
+        setHistoryPage(prev => prev + 1);
+    };
+
+    // Load more when page changes, if not page 1 (which is handled by reset)
+    useEffect(() => {
+        if (historyPage > 1 && activeTab === 'history') {
+            refreshTransactions({}, false);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [historyPage]);
 
     useEffect(() => {
         loadData();
@@ -266,12 +295,12 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
             } else if (data.type === 'task_created' || data.type === 'task_completed' || data.type === 'task_deleted') {
                 refreshTasks();
                 // If we're on history tab, refresh that too
-                if (activeTab === 'history') refreshTransactions();
+                if (activeTab === 'history') refreshTransactions({}, true);
             } else if (data.type === 'reward_redeemed') {
                 refreshData();
                 setToast(`🎉 ${data.payload?.reward_name || 'Reward'} redeemed!`);
                 setTimeout(() => setToast(null), 3000);
-                if (activeTab === 'history') refreshTransactions();
+                if (activeTab === 'history') refreshTransactions({}, true);
             }
             setLastUpdate(new Date());
         };
@@ -290,9 +319,10 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
 
     useEffect(() => {
         if (activeTab === 'history') {
-            refreshTransactions();
+            refreshTransactions({}, true);
         }
-    }, [activeTab, refreshTransactions]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeTab]); // Removed refreshTransactions to avoid infinite loops when it changes filters
 
     const handleCompleteClick = (task: TaskInstance) => {
         setSelectedTask(task);
@@ -305,7 +335,7 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
             await completeTask(selectedTask.id, userId);
             setTasks(prev => prev.filter(t => t.id !== selectedTask.id));
             setSelectedTask(null);
-            refreshTransactions(); // Refresh history if needed
+            if (activeTab === 'history') refreshTransactions({}, true); // Refresh history if needed
         } catch (error) {
             console.error("Failed to complete task", error);
             setToast("Error completing task. Please try again.");
@@ -327,7 +357,7 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
             setTimeout(() => setToast(null), 4000);
             setSelectedRedeem(null);
             refreshData();
-            refreshTransactions();
+            if (activeTab === 'history') refreshTransactions({}, true);
         } catch (error) {
             console.error("Failed to redeem", error);
             setToast('❌ Redemption failed. Check contributions?');
@@ -356,7 +386,7 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
 
     const unknownTasks = tasks.filter(t => !users.find(u => u.id === t.user_id));
 
-    if (loading) return <div className="loading">Loading Family Board...</div>;
+    if (loading) return <div className="loading">{t('dashboard.loadingBoard')}</div>;
 
     return (
         <div className="family-dashboard">
@@ -368,13 +398,13 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
 
             <div className="family-dashboard-header">
                 <div>
-                    <h1>🏡 Family Dashboard</h1>
+                    <h1>🏡 {t('dashboard.familyDashboard')}</h1>
                     <small style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem' }}>
-                        {connected ? '🟢 Live updates' : '🔴 Reconnecting...'} • Last: {lastUpdate.toLocaleTimeString()}
+                        {connected ? `🟢 ${t('dashboard.liveUpdates')}` : `🔴 ${t('dashboard.reconnecting')}...`} • {t('dashboard.last')}: {lastUpdate.toLocaleTimeString()}
                     </small>
                 </div>
                 <button className="btn btn-secondary" onClick={onExit}>
-                    Back to Login
+                    {t('dashboard.backToLogin')}
                 </button>
             </div>
 
@@ -389,13 +419,13 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
                     className={`tab-btn ${activeTab === 'redeem' ? 'active' : ''}`}
                     onClick={() => setActiveTab('redeem')}
                 >
-                    🎁 Redeem
+                    🎁 {t('navigation.rewards')}
                 </button>
                 <button
                     className={`tab-btn ${activeTab === 'history' ? 'active' : ''}`}
                     onClick={() => setActiveTab('history')}
                 >
-                    📜 History
+                    📜 {t('navigation.history', 'History')}
                 </button>
             </div>
 
@@ -434,7 +464,7 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
 
                     {unknownTasks.length > 0 && (
                         <div className="user-group">
-                            <h3>Unassigned / Other</h3>
+                            <h3>{t('dashboard.unassignedOther', 'Unassigned / Other')}</h3>
                             <div className="tasks-grid">
                                 {unknownTasks.map(instance => (
                                     <div key={instance.id} className="task-card glass-card">
@@ -443,7 +473,7 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
                                             className="btn btn-primary"
                                             onClick={() => handleCompleteClick(instance)}
                                         >
-                                            Done
+                                            {t('dashboard.done', 'Done')}
                                         </button>
                                     </div>
                                 ))}
@@ -454,8 +484,8 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
                     {tasks.length === 0 && (
                         <div className="empty-state">
                             <div className="empty-state-icon">🎉</div>
-                            <h3>All caught up!</h3>
-                            <p>No pending tasks on the family board right now.</p>
+                            <h3>{t('dashboard.allCaughtUpTitle')}</h3>
+                            <p>{t('tasks.noPendingTasks')}</p>
                         </div>
                     )}
                 </div>
@@ -501,8 +531,8 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
                     {users.every(u => getAffordableRewards(u).length === 0) && (
                         <div className="empty-state">
                             <div className="empty-state-icon">😢</div>
-                            <h3>No affordable rewards yet</h3>
-                            <p>Complete more tasks to earn points!</p>
+                            <h3>{t('dashboard.noAffordableRewardsTitle', 'No affordable rewards yet')}</h3>
+                            <p>{t('dashboard.noAffordableRewardsDesc', 'Complete more tasks to earn points!')}</p>
                         </div>
                     )}
                 </div>
@@ -511,30 +541,30 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
             {activeTab === 'history' && (
                 <div className="tab-content fade-in">
                     <div className="glass-card history-panel">
-                        <h2>📜 Recent Activity</h2>
+                        <h2>📜 {t('dashboard.recentActivity', 'Recent Activity')}</h2>
 
                         {/* Filters */}
                         <div className="filters-bar">
                             <select
-                                onChange={(e) => refreshTransactions({ user_id: e.target.value ? Number(e.target.value) : undefined })}
+                                onChange={(e) => refreshTransactions({ user_id: e.target.value ? Number(e.target.value) : undefined }, true)}
                                 className="filter-select"
                             >
-                                <option value="">All Users</option>
+                                <option value="">{t('dashboard.allUsers', 'All Users')}</option>
                                 {users.map(u => <option key={u.id} value={u.id}>{u.nickname}</option>)}
                             </select>
 
                             <select
-                                onChange={(e) => refreshTransactions({ txn_type: e.target.value || undefined })}
+                                onChange={(e) => refreshTransactions({ txn_type: e.target.value || undefined }, true)}
                                 className="filter-select"
                             >
-                                <option value="">All Activity</option>
-                                <option value="EARN">Earned</option>
-                                <option value="REDEEM">Redeemed</option>
+                                <option value="">{t('dashboard.allActivity', 'All Activity')}</option>
+                                <option value="EARN">{t('dashboard.earned', 'Earned')}</option>
+                                <option value="REDEEM">{t('dashboard.redeemed', 'Redeemed')}</option>
                             </select>
 
                             <input
                                 type="text"
-                                placeholder="Search..."
+                                placeholder={t('dashboard.search', 'Search...')}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className="filter-input"
                                 value={searchTerm}
@@ -544,19 +574,19 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
                         {transactions.length === 0 ? (
                             <div className="empty-state">
                                 <div className="empty-state-icon">📭</div>
-                                <h3>No History Found</h3>
-                                <p>No recent activity matching your filters.</p>
+                                <h3>{t('dashboard.noHistoryFound', 'No History Found')}</h3>
+                                <p>{t('dashboard.noActivityMatchingFilters', 'No recent activity matching your filters.')}</p>
                             </div>
                         ) : (
                             <div className="table-container">
                                 <table className="data-table">
                                     <thead>
                                         <tr>
-                                            <th>Time</th>
-                                            <th>Who</th>
-                                            <th>Action</th>
-                                            <th>Points</th>
-                                            <th>Details</th>
+                                            <th>{t('history.time')}</th>
+                                            <th>{t('history.who')}</th>
+                                            <th>{t('history.action')}</th>
+                                            <th>{t('history.points')}</th>
+                                            <th>{t('history.details')}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -566,19 +596,26 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
                                                 <td><strong>{getUserName(tx.user_id)}</strong></td>
                                                 <td>
                                                     <span className={`badge ${tx.type === 'EARN' ? 'badge-success' : 'badge-warning'}`}>
-                                                        <span aria-hidden="true">{tx.type === 'EARN' ? '📈 ' : '📉 '}</span>{tx.type}
+                                                        <span aria-hidden="true">{tx.type === 'EARN' ? '📈 ' : '📉 '}</span>{tx.type === 'EARN' ? t('dashboard.earnType', 'EARN') : t('dashboard.redeemType', 'REDEEM')}
                                                     </span>
                                                 </td>
                                                 <td className={tx.awarded_points >= 0 ? 'text-success' : 'text-danger'}>
                                                     {tx.awarded_points > 0 ? '+' : ''}{tx.awarded_points}
                                                 </td>
                                                 <td>
-                                                    {tx.description || (tx.type === 'EARN' ? 'Completed task' : 'Redeemed reward')}
+                                                    {tx.description || (tx.type === 'EARN' ? t('dashboard.completedTaskDef', 'Completed task') : t('dashboard.redeemedRewardDef', 'Redeemed reward'))}
                                                 </td>
                                             </tr>
                                         ))}
                                     </tbody>
                                 </table>
+                                {hasMoreHistory && (
+                                    <div style={{ textAlign: 'center', marginTop: '1rem', paddingBottom: '1rem' }}>
+                                        <button className="btn btn-secondary" onClick={loadMoreHistory}>
+                                            Load More
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>

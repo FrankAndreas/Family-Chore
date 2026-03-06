@@ -41,13 +41,19 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ currentUser, onLogout
     }, [isResizing]);
 
     React.useEffect(() => {
-        window.addEventListener('mousemove', resize);
-        window.addEventListener('mouseup', stopResizing);
+        if (isResizing) {
+            window.addEventListener('mousemove', resize);
+            window.addEventListener('mouseup', stopResizing);
+        } else {
+            window.removeEventListener('mousemove', resize);
+            window.removeEventListener('mouseup', stopResizing);
+        }
+
         return () => {
             window.removeEventListener('mousemove', resize);
             window.removeEventListener('mouseup', stopResizing);
         };
-    }, [resize, stopResizing]);
+    }, [isResizing, resize, stopResizing]);
 
     const isAdmin = currentUser.role.name === 'Admin';
 
