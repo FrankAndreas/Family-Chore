@@ -69,6 +69,70 @@
     letter-spacing: 0.5px;
 }
 
+.role-and-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.connection-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.connection-status.online {
+    color: #52c41a;
+    background: rgba(82, 196, 26, 0.1);
+}
+
+.connection-status.offline {
+    color: #ff4d4f;
+    background: rgba(255, 77, 79, 0.1);
+}
+
+.status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+.connection-status.online .status-dot {
+    background-color: #52c41a;
+    box-shadow: 0 0 4px rgba(82, 196, 26, 0.8);
+}
+
+.connection-status.offline .status-dot {
+    background-color: #ff4d4f;
+    box-shadow: 0 0 4px rgba(255, 77, 79, 0.8);
+    animation: pulse-dot 2s infinite;
+}
+
+@keyframes pulse-dot {
+    0% {
+        opacity: 1;
+        box-shadow: 0 0 4px rgba(255, 77, 79, 0.8);
+    }
+
+    50% {
+        opacity: 0.4;
+        box-shadow: none;
+    }
+
+    100% {
+        opacity: 1;
+        box-shadow: 0 0 4px rgba(255, 77, 79, 0.8);
+    }
+}
+
 .sidebar-nav {
     flex: 1;
     padding: var(--spacing-lg);
@@ -203,6 +267,10 @@
         flex-direction: column;
     }
 
+    .sidebar-resizer {
+        display: none;
+    }
+
     .sidebar {
         width: 100%;
         height: auto;
@@ -245,7 +313,15 @@
 
     .user-profile {
         display: none;
-        /* Hide in header, maybe show in nav? */
+    }
+
+    .sidebar.mobile-open .user-profile {
+        display: flex;
+        width: 100%;
+        margin-top: var(--spacing-md);
+        padding: var(--spacing-sm);
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: var(--border-radius-md);
     }
 
     .sidebar-nav {
@@ -297,6 +373,7 @@
 .sidebar-resizer:active {
     background: rgba(102, 126, 234, 0.5);
 }
+
 /* Skip Navigation Link */
 .skip-link {
     position: absolute;
@@ -317,5 +394,6 @@
 }
 
 main:focus {
-    outline: none; /* Hide default outline on main content, rely on inner elements */
+    outline: none;
+    /* Hide default outline on main content, rely on inner elements */
 }

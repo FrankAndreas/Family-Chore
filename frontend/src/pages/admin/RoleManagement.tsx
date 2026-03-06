@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getRoles, updateRole, createRole, deleteRole, getRoleUsers } from '../../api';
 import type { Role } from '../../types';
-import LoadingSpinner from '../../components/LoadingSpinner';
+import { SkeletonLoader } from '../../components/SkeletonLoader';
 import './Dashboard.css';
 
 interface RoleUser {
@@ -230,7 +230,19 @@ const RoleManagement: React.FC = () => {
         }
     };
 
-    if (loading) return <LoadingSpinner fullPage />;
+    if (loading) {
+        return (
+            <div className="page-container fade-in">
+                <header className="page-header">
+                    <SkeletonLoader type="title" className="mb-2" />
+                    <SkeletonLoader type="text" className="w-64" />
+                </header>
+                <div className="roles-grid">
+                    <SkeletonLoader type="card" count={4} />
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="page-container fade-in">

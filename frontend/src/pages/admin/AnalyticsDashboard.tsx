@@ -5,9 +5,10 @@ import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
     PieChart, Pie, Cell
 } from 'recharts';
-import type { WeeklyStats, DistributionStat, HeatmapResponse, AnalyticsSummary, User } from '../../api';
+import type { WeeklyStats, DistributionStat, HeatmapResponse, AnalyticsSummary } from '../../api';
 import { getWeeklyStats, getPointsDistribution, getHeatmapData, getAnalyticsSummary } from '../../api';
-import LoadingSpinner from '../../components/LoadingSpinner';
+import type { User } from '../../types';
+import { SkeletonLoader } from '../../components/SkeletonLoader';
 import { useToast } from '../../hooks/useToast';
 import Toast from '../../components/Toast';
 import StatCards from '../../components/StatCards';
@@ -79,7 +80,26 @@ const AnalyticsDashboard: React.FC = () => {
     }
 
     if (loading) {
-        return <LoadingSpinner fullPage message={t('common.loading')} />;
+        return (
+            <div className="page-container analytics-dashboard fade-in">
+                <header className="page-header mb-4">
+                    <SkeletonLoader type="title" className="mb-2" />
+                    <SkeletonLoader type="text" className="w-64" />
+                </header>
+
+                {/* Summary Stat Cards */}
+                <div className="stats-grid" style={{ marginBottom: '2rem' }}>
+                    <SkeletonLoader type="card" count={4} />
+                </div>
+
+                <div className="analytics-grid">
+                    <div className="glass-panel chart-card" style={{ minHeight: '400px' }}>
+                        <SkeletonLoader type="title" className="mb-4" />
+                        <SkeletonLoader type="card" className="h-full" style={{ minHeight: '300px' }} />
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     // Extract unique user names from weekly data keys (excluding 'date') for BarChart lines
@@ -207,7 +227,20 @@ const AnalyticsDashboard: React.FC = () => {
                         />
                     </div>
                     {heatmapLoading ? (
-                        <LoadingSpinner message={t('common.loading')} />
+                        <div className="glass-panel" style={{ minHeight: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{ width: '100%', padding: '2rem' }}>
+                                <SkeletonLoader type="title" className="mb-4" />
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                    {Array.from({ length: 12 }).map((_, i) => (
+                                        <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            {Array.from({ length: 7 }).map((_, j) => (
+                                                <div key={j} style={{ width: '15px', height: '15px', borderRadius: '4px', background: 'rgba(255,255,255,0.05)' }} />
+                                            ))}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
                     ) : (
                         <div className="heatmap-grid-container">
                             {heatmapData.users.map(user => (

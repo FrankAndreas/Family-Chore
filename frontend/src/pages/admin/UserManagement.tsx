@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { getUsers, createUser, getRoles, penalizeUser, updateUser, resetUserPassword, deleteUser } from '../../api';
 import type { User, Role } from '../../types';
-import LoadingSpinner from '../../components/LoadingSpinner';
+import { SkeletonLoader } from '../../components/SkeletonLoader';
 import './Dashboard.css';
 
 const UserManagement: React.FC = () => {
@@ -154,7 +154,19 @@ const UserManagement: React.FC = () => {
         }
     };
 
-    if (loading) return <LoadingSpinner fullPage />;
+    if (loading) {
+        return (
+            <div className="page-container fade-in">
+                <header className="page-header">
+                    <SkeletonLoader type="title" className="mb-2" />
+                    <SkeletonLoader type="text" className="w-64" />
+                </header>
+                <div className="users-grid">
+                    <SkeletonLoader type="card" count={4} />
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="page-container fade-in">

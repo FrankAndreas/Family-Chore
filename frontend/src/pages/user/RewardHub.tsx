@@ -5,7 +5,7 @@ import { getRewards, createReward, setUserGoal, redeemReward, updateReward, dele
 import type { Reward, User } from '../../types';
 import { TIER_THRESHOLDS } from '../../constants';
 import { triggerConfetti } from '../../utils/confetti';
-import LoadingSpinner from '../../components/LoadingSpinner';
+import { SkeletonLoader } from '../../components/SkeletonLoader';
 import Modal from '../../components/Modal';
 import Toast from '../../components/Toast';
 import { useToast } from '../../hooks/useToast';
@@ -14,10 +14,11 @@ import './RewardHub.css';
 
 interface DashboardContext {
     currentUser: User;
+    refreshUser: () => Promise<void>;
 }
 
 const RewardHub: React.FC = () => {
-    const { currentUser } = useOutletContext<DashboardContext>();
+    const { currentUser, refreshUser } = useOutletContext<DashboardContext>();
     const { t } = useTranslation();
     const [rewards, setRewards] = useState<Reward[]>([]);
     const [loading, setLoading] = useState(true);
@@ -134,6 +135,7 @@ const RewardHub: React.FC = () => {
             await redeemReward(redeemConfirm.reward.id);
             success(t('rewards.toasts.redeem_success', { name: redeemConfirm.reward.name }));
             setRedeemConfirm(null);
+            await refreshUser();
             // Re-fetch rewards instead of full page reload (preserves React state and SSE)
             fetchRewards();
         } catch (err) {
@@ -218,7 +220,21 @@ const RewardHub: React.FC = () => {
     }, [currentUser.lifetime_points, t, success]);
 
     if (loading) {
-        return <LoadingSpinner fullPage message={t('rewards.loading')} />;
+        return (
+            <div className="page-container reward-hub fade-in">
+                <header className="hub-header">
+                    <SkeletonLoader type="title" className="mb-2" />
+                    <SkeletonLoader type="text" className="w-48 mb-4" />
+                </header>
+                <div className="hub-content">
+                    <div className="main-section">
+                        <section className="rewards-grid">
+                            <SkeletonLoader type="card" count={4} />
+                        </section>
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     // Sort rewards by tier and cost

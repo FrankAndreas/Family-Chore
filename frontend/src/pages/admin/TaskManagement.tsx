@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getTasks, createTask, updateTask, deleteTask, getRoles, exportTasks } from '../../api';
 import type { Task, Role } from '../../types';
-import LoadingSpinner from '../../components/LoadingSpinner';
+import { SkeletonLoader } from '../../components/SkeletonLoader';
 import Modal from '../../components/Modal';
 import TaskForm, { type TaskFormData } from '../../components/TaskForm';
 import ImportTasksModal from '../../components/ImportTasksModal';
@@ -209,7 +209,19 @@ const TaskManagement: React.FC = () => {
         }
     };
 
-    if (loading) return <LoadingSpinner fullPage message="Loading tasks..." />;
+    if (loading) {
+        return (
+            <div className="page-container fade-in">
+                <header className="page-header">
+                    <SkeletonLoader type="title" className="mb-2" />
+                    <SkeletonLoader type="text" className="w-64" />
+                </header>
+                <div className="tasks-grid">
+                    <SkeletonLoader type="card" count={6} />
+                </div>
+            </div>
+        );
+    }
 
     // Get schedule icon and label
     const getScheduleInfo = (type: string) => {

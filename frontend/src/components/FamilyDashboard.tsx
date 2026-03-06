@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { getPendingTasks, getUsers, getRewards, completeTask, redeemRewardSplit, getAllTransactions } from '../api';
 import type { TaskInstance, User, Reward, Transaction } from '../types';
+import { useDebounce } from '../hooks/useDebounce';
 import './FamilyDashboard.css';
 
 interface ClaimModalProps {
@@ -221,7 +222,13 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
         }
     }, []);
 
-    const [filters, setFilters] = useState({});
+    const [searchTerm, setSearchTerm] = useState('');
+    const debouncedSearch = useDebounce(searchTerm, 300);
+    const [filters, setFilters] = useState<Record<string, unknown>>({});
+
+    useEffect(() => {
+        setFilters(prev => ({ ...prev, search: debouncedSearch || undefined }));
+    }, [debouncedSearch]);
 
     const refreshTransactions = useCallback(async (newFilters = {}) => {
         const updatedFilters = { ...filters, ...newFilters };
@@ -301,7 +308,7 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
             refreshTransactions(); // Refresh history if needed
         } catch (error) {
             console.error("Failed to complete task", error);
-            alert("Error completing task");
+            setToast("Error completing task. Please try again.");
         }
     };
 
@@ -528,8 +535,9 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
                             <input
                                 type="text"
                                 placeholder="Search..."
-                                onChange={(e) => refreshTransactions({ search: e.target.value || undefined })}
+                                onChange={(e) => setSearchTerm(e.target.value)}
                                 className="filter-input"
+                                value={searchTerm}
                             />
                         </div>
 

@@ -51,7 +51,8 @@
     outline: none;
 }
 
-.heatmap-cell:hover, .heatmap-cell:focus-visible {
+.heatmap-cell:hover,
+.heatmap-cell:focus-visible {
     transform: scale(1.4);
     box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
     z-index: 2;
@@ -230,4 +231,26 @@
     font-size: 0.82rem;
     color: var(--text-secondary);
     text-align: center;
+}
+
+/* Fix mobile tooltip overflow */
+@media (max-width: 768px) {
+
+    .heatmap-tooltip,
+    .heatmap-popup {
+        left: 50% !important;
+        width: 90vw;
+        max-width: 320px;
+        white-space: normal;
+    }
+
+    .heatmap-tooltip {
+        bottom: 20px !important;
+        top: auto !important;
+        transform: translateX(-50%) translateY(0) !important;
+    }
+
+    .heatmap-popup {
+        transform: translateX(-50%) translateY(10px) !important;
+    }
 }

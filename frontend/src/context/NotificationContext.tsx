@@ -28,6 +28,7 @@ interface NotificationContextType {
     pushSubscribed: boolean;
     subscribeToPush: () => Promise<boolean>;
     unsubscribeFromPush: () => Promise<boolean>;
+    sseConnected: boolean;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -43,6 +44,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [isPushSupported, setIsPushSupported] = useState(false);
     const [pushSubscribed, setPushSubscribed] = useState(false);
+    const [sseConnected, setSseConnected] = useState(false);
     const { showToast } = useToast();
 
     const refreshNotifications = useCallback(async () => {
@@ -80,6 +82,14 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         const token = localStorage.getItem('auth_token') || '';
         const eventSource = new EventSource(`${API_BASE}/events?token=${encodeURIComponent(token)}`);
 
+        eventSource.onopen = () => {
+            setSseConnected(true);
+        };
+
+        eventSource.onerror = () => {
+            setSseConnected(false);
+        };
+
         eventSource.onmessage = (event) => {
             const data = JSON.parse(event.data);
 
@@ -93,10 +103,13 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
             } else if (data.type === 'task_assigned' && data.data?.user_id === currentUser.id) {
                 showToast(`New task assigned: ${data.data.task_name}`, 'info');
                 refreshNotifications();
+            } else if (data.type === 'connected') {
+                setSseConnected(true);
             }
         };
 
         return () => {
+            setSseConnected(false);
             eventSource.close();
         };
     }, [currentUser, refreshNotifications, showToast]);
@@ -182,7 +195,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
             isPushSupported,
             pushSubscribed,
             subscribeToPush,
-            unsubscribeFromPush
+            unsubscribeFromPush,
+            sseConnected
         }}>
             {children}
         </NotificationContext.Provider>

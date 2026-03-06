@@ -15,6 +15,7 @@ import AnalyticsDashboard from './pages/admin/AnalyticsDashboard';
 import SettingsPage from './pages/SettingsPage';
 import NotFoundPage from './pages/NotFoundPage';
 import type { User } from './types';
+import { getUsers } from './api';
 import './App.css';
 import './index.css';
 
@@ -27,6 +28,20 @@ function App() {
 
   const handleLogout = () => {
     setCurrentUser(null);
+  };
+
+  const refreshUser = async () => {
+    if (!currentUser) return;
+    try {
+      const res = await getUsers();
+      const user = res.data.find((u: User) => u.id === currentUser.id);
+      if (user) {
+        setCurrentUser(user);
+        localStorage.setItem('user', JSON.stringify(user)); // ensure local storage is sync
+      }
+    } catch (err) {
+      console.error('Failed to refresh user', err);
+    }
   };
 
   // If not logged in, show login page
@@ -47,7 +62,7 @@ function App() {
             <Routes>
               <Route
                 path="/"
-                element={<DashboardLayout currentUser={currentUser} onLogout={handleLogout} />}
+                element={<DashboardLayout currentUser={currentUser} onLogout={handleLogout} refreshUser={refreshUser} />}
               >
                 {/* Redirect root to appropriate dashboard */}
                 <Route

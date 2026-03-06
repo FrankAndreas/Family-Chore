@@ -4,16 +4,19 @@ import { useTranslation } from 'react-i18next';
 import type { User } from '../types';
 import './DashboardLayout.css';
 import { NotificationCenter } from '../components/NotificationCenter';
+import { useNotifications } from '../context/NotificationContext';
 
 interface DashboardLayoutProps {
     currentUser: User;
     onLogout: () => void;
+    refreshUser: () => Promise<void>;
 }
 
-const DashboardLayout: React.FC<DashboardLayoutProps> = ({ currentUser, onLogout }) => {
+const DashboardLayout: React.FC<DashboardLayoutProps> = ({ currentUser, onLogout, refreshUser }) => {
     const navigate = useNavigate();
     const location = useLocation();
     const { t } = useTranslation();
+    const { sseConnected } = useNotifications();
     const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
     // Sidebar Resizing Logic
@@ -94,7 +97,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ currentUser, onLogout
                         <div className="avatar">{currentUser.nickname[0]}</div>
                         <div className="user-info">
                             <span className="user-name">{currentUser.nickname}</span>
-                            <span className="user-role">{currentUser.role.name}</span>
+                            <div className="role-and-status">
+                                <span className="user-role">{currentUser.role.name}</span>
+                                <span className={`connection-status ${sseConnected ? 'online' : 'offline'}`} title={sseConnected ? 'Live updates active' : 'Live updates disconnected'}>
+                                    <span className="status-dot"></span>
+                                    {sseConnected ? 'Online' : 'Offline'}
+                                </span>
+                            </div>
                         </div>
                         <NotificationCenter />
                     </div>
@@ -197,7 +206,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ currentUser, onLogout
                         </ol>
                     </nav>
                 )}
-                <Outlet context={{ currentUser }} />
+                <Outlet context={{ currentUser, refreshUser }} />
             </main>
         </div >
     );

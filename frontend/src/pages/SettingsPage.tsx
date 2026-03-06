@@ -81,22 +81,21 @@ const SettingsPage: React.FC = () => {
 
                 <div className="section glass-panel">
                     <h3>🔔 Notifications</h3>
-                    <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>Configure how you receive updates and reminders.</p>
+                    <p className="text-secondary mb-3">Configure how you receive updates and reminders.</p>
 
-                    <div className="form-group" style={{ marginTop: '1rem' }}>
+                    <div className="form-group mt-3">
                         <label>Email Address</label>
                         <input
                             type="email"
-                            className="filter-input"
-                            style={{ width: '100%', maxWidth: '400px', display: 'block', marginTop: '5px' }}
+                            className="filter-input w-full max-w-sm block mt-1"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="Enter your email"
                         />
                     </div>
 
-                    <div className="form-group" style={{ marginTop: '15px' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                    <div className="form-group mt-3">
+                        <label className="flex-center gap-1 cursor-pointer">
                             <input
                                 type="checkbox"
                                 checked={notificationsEnabled}
@@ -104,14 +103,14 @@ const SettingsPage: React.FC = () => {
                             />
                             Enable Email Notifications
                         </label>
-                        <small style={{ display: 'block', marginTop: '5px', color: 'var(--text-secondary)' }}>Receive daily reminders and approval requests.</small>
+                        <small className="block mt-1 text-secondary">Receive daily reminders and approval requests.</small>
                     </div>
 
                     {isPushSupported ? (
-                        <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div className="mt-4 pt-4 border-t flex-between">
                             <div>
                                 <h4>Push Notifications</h4>
-                                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9em' }}>
+                                <p className="text-secondary text-sm">
                                     {pushSubscribed
                                         ? "Notifications are enabled for this device."
                                         : "Enable notifications to stay updated on chores and rewards."}
@@ -125,14 +124,13 @@ const SettingsPage: React.FC = () => {
                             </button>
                         </div>
                     ) : (
-                        <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
+                        <p className="text-secondary mt-2">
                             Push notifications are not supported by this browser.
                         </p>
                     )}
 
                     <button
-                        className="btn btn-primary"
-                        style={{ marginTop: '20px' }}
+                        className="btn btn-primary mt-4"
                         onClick={handleSaveSettings}
                         disabled={isSavingSettings}
                     >
@@ -140,9 +138,9 @@ const SettingsPage: React.FC = () => {
                     </button>
                 </div>
 
-                <div className="section glass-panel" style={{ marginTop: '2rem' }}>
+                <div className="section glass-panel mt-5">
                     <h3>🚧 More Settings Coming Soon</h3>
-                    <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
+                    <p className="text-secondary mt-2">
                         Profile customization, notification preferences, and more.
                     </p>
                 </div>

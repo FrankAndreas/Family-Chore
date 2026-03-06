@@ -2,9 +2,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getUsers, getTasks, triggerDailyReset, getAllTransactions, getReviewQueue, reviewTask } from '../../api';
 import type { User, Task, Transaction, TransactionFilters, TaskInstance } from '../../types';
-import LoadingSpinner from '../../components/LoadingSpinner';
+import { SkeletonLoader } from '../../components/SkeletonLoader';
 import Toast from '../../components/Toast';
 import { useToast } from '../../hooks/useToast';
+import { useDebounce } from '../../hooks/useDebounce';
 import './Dashboard.css';
 
 const AdminDashboard: React.FC = () => {
@@ -22,7 +23,13 @@ const AdminDashboard: React.FC = () => {
     const [rejectModal, setRejectModal] = useState<{ instanceId: number; show: boolean } | null>(null);
     const [rejectReason, setRejectReason] = useState('');
 
+    const [searchTerm, setSearchTerm] = useState('');
+    const debouncedSearch = useDebounce(searchTerm, 300);
     const [filters, setFilters] = useState<TransactionFilters>({});
+
+    useEffect(() => {
+        setFilters(prev => ({ ...prev, search: debouncedSearch || undefined }));
+    }, [debouncedSearch]);
 
     const fetchData = useCallback(async () => {
         try {
@@ -103,7 +110,33 @@ const AdminDashboard: React.FC = () => {
         return users.find(u => u.id === userId)?.nickname || `User #${userId}`;
     };
 
-    if (loading) return <LoadingSpinner fullPage message="Loading dashboard..." />;
+    if (loading) {
+        return (
+            <div className="page-container fade-in">
+                <header className="page-header mb-xl">
+                    <SkeletonLoader type="title" className="mb-2" />
+                    <SkeletonLoader type="text" className="w-64" />
+                </header>
+                <div className="stats-grid mb-xl">
+                    <SkeletonLoader type="stat" count={4} />
+                </div>
+                <div className="dashboard-sections">
+                    <div className="section glass-card">
+                        <SkeletonLoader type="title" className="mb-4" />
+                        <div className="flex flex-col gap-3">
+                            <SkeletonLoader type="card" count={3} />
+                        </div>
+                    </div>
+                    <div className="section glass-card">
+                        <SkeletonLoader type="title" className="mb-4" />
+                        <div className="flex flex-col gap-3">
+                            <SkeletonLoader type="text" count={5} />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     // Calculate stats
     const totalUsers = users.length;
@@ -276,9 +309,9 @@ const AdminDashboard: React.FC = () => {
                     <input
                         type="text"
                         placeholder="Search description..."
-                        onChange={(e) => setFilters((prev: TransactionFilters) => ({ ...prev, search: e.target.value || undefined }))}
+                        onChange={(e) => setSearchTerm(e.target.value)}
                         className="filter-input"
-                        value={filters.search || ''}
+                        value={searchTerm}
                     />
                 </div>
 

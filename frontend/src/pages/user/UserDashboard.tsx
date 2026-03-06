@@ -2,13 +2,15 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { getUserDailyTasks, completeTask, getTasks, getUserTransactions, uploadTaskPhoto } from '../../api';
 import type { TaskInstance, Task, User, Transaction, TransactionFilters } from '../../types';
-import LoadingSpinner from '../../components/LoadingSpinner';
+import { SkeletonLoader } from '../../components/SkeletonLoader';
 import Toast from '../../components/Toast';
 import { useToast } from '../../hooks/useToast';
+import { useDebounce } from '../../hooks/useDebounce';
 import '../admin/Dashboard.css';
 
 interface DashboardContext {
     currentUser: User;
+    refreshUser: () => Promise<void>;
 }
 
 // Extended TaskInstance with task details
@@ -17,7 +19,7 @@ interface TaskInstanceWithDetails extends TaskInstance {
 }
 
 const UserDashboard: React.FC = () => {
-    const { currentUser } = useOutletContext<DashboardContext>();
+    const { currentUser, refreshUser } = useOutletContext<DashboardContext>();
     const [tasks, setTasks] = useState<TaskInstanceWithDetails[]>([]);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loading, setLoading] = useState(true);
@@ -26,7 +28,13 @@ const UserDashboard: React.FC = () => {
     const [photoUrls, setPhotoUrls] = useState<Record<number, File | null>>({});
     const { toasts, removeToast, success, error: showError } = useToast();
 
+    const [searchTerm, setSearchTerm] = useState('');
+    const debouncedSearch = useDebounce(searchTerm, 300);
     const [filters, setFilters] = useState<TransactionFilters>({});
+
+    useEffect(() => {
+        setFilters(prev => ({ ...prev, search: debouncedSearch || undefined }));
+    }, [debouncedSearch]);
 
     const fetchData = useCallback(async () => {
         setLoading(true);
@@ -88,6 +96,7 @@ const UserDashboard: React.FC = () => {
                 setPhotoUrls(prev => { const next = { ...prev }; delete next[instance.id]; return next; });
             } else {
                 success('Task completed! Points awarded. 🎉');
+                await refreshUser();
             }
             fetchData(); // Refresh list to show updated status
         } catch (err) {
@@ -102,7 +111,18 @@ const UserDashboard: React.FC = () => {
         return new Date(dateString).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
     };
 
-    if (!currentUser) return <LoadingSpinner fullPage message="Loading..." />;
+    if (!currentUser) return (
+        <div className="page-container fade-in">
+            <header className="dashboard-header mb-4">
+                <SkeletonLoader type="avatar" className="mb-2" />
+                <SkeletonLoader type="title" className="mb-2" />
+                <SkeletonLoader type="text" className="w-64" />
+            </header>
+            <div className="dashboard-content">
+                <SkeletonLoader type="card" count={3} />
+            </div>
+        </div>
+    );
 
     // const completedTasks = tasks.filter(t => t.status === 'COMPLETED'); // Keep logic for now but unused
 
@@ -124,14 +144,14 @@ const UserDashboard: React.FC = () => {
             <header className="page-header">
                 <h1 className="page-title">My Dashboard</h1>
                 <p className="page-subtitle">Welcome, <span className="highlight-text">{currentUser.nickname}</span>! You have {currentUser.current_points} points.</p>
-                <div className="gamification-badges" style={{ display: 'flex', gap: '10px', marginTop: '10px', justifyContent: 'center' }}>
+                <div className="gamification-badges flex-center gap-2 mt-2" style={{ justifyContent: 'center' }}>
                     {currentUser.current_streak > 0 && (
-                        <span className="badge badge-warning" style={{ fontSize: '1.1em', padding: '5px 10px' }}>
+                        <span className="badge badge-warning text-lg px-2 py-1">
                             🔥 {currentUser.current_streak} Day Streak!
                         </span>
                     )}
                     {currentUser.last_task_date !== new Date().toISOString().split('T')[0] && (
-                        <span className="badge badge-success" style={{ fontSize: '1.1em', padding: '5px 10px' }}>
+                        <span className="badge badge-success text-lg px-2 py-1">
                             🎁 +5 Daily Bonus Available!
                         </span>
                     )}
@@ -154,7 +174,12 @@ const UserDashboard: React.FC = () => {
             </div>
 
             {loading ? (
-                <LoadingSpinner message={activeTab === 'tasks' ? "Loading tasks..." : "Loading history..."} />
+                <div className="dashboard-content dashboard-sections">
+                    <div className="section glass-panel">
+                        <SkeletonLoader type="title" className="mb-3" />
+                        <SkeletonLoader type="card" count={3} />
+                    </div>
+                </div>
             ) : (
                 <div className="dashboard-content">
                     {activeTab === 'tasks' && (
@@ -186,29 +211,15 @@ const UserDashboard: React.FC = () => {
                                                                 💰 {calculatedPoints} points
                                                             </span>
                                                             {isInReview && (
-                                                                <span className="badge badge-warning" style={{ marginLeft: '10px' }}>
+                                                                <span className="badge badge-warning ml-2">
                                                                     ⏳ In Review
                                                                 </span>
                                                             )}
                                                         </div>
                                                         {task?.requires_photo_verification && !isInReview && (
-                                                            <div className="photo-upload-section" style={{ marginTop: '1rem' }}>
+                                                            <div className="photo-upload-section mt-3">
                                                                 <label
-                                                                    className="dropzone-container"
-                                                                    style={{
-                                                                        display: 'flex',
-                                                                        flexDirection: 'column',
-                                                                        alignItems: 'center',
-                                                                        justifyContent: 'center',
-                                                                        border: '2px dashed var(--border-color)',
-                                                                        borderRadius: '8px',
-                                                                        padding: '1.5rem',
-                                                                        cursor: 'pointer',
-                                                                        backgroundColor: 'var(--bg-secondary)',
-                                                                        transition: 'all 0.2s ease',
-                                                                        textAlign: 'center',
-                                                                        gap: '0.5rem'
-                                                                    }}
+                                                                    className="dropzone-container flex-col-center border-dashed border-2 rounded-md p-4 bg-secondary cursor-pointer max-w-sm w-full mx-auto"
                                                                     onDragOver={(e) => {
                                                                         e.preventDefault();
                                                                         e.currentTarget.style.borderColor = 'var(--primary-color)';
@@ -297,9 +308,9 @@ const UserDashboard: React.FC = () => {
                                 <input
                                     type="text"
                                     placeholder="Search description..."
-                                    onChange={(e) => setFilters((prev: TransactionFilters) => ({ ...prev, search: e.target.value || undefined }))}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
                                     className="filter-input"
-                                    value={filters.search || ''}
+                                    value={searchTerm}
                                 />
                             </div>
 
