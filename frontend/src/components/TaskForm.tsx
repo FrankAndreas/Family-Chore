@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Role } from '../types';
 
 export interface TaskFormData {
@@ -34,6 +35,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
     submitting = false,
 
 }) => {
+    const { t } = useTranslation();
     const [nameError, setNameError] = React.useState('');
     const [descError, setDescError] = React.useState('');
     const [pointsError, setPointsError] = React.useState('');
@@ -230,7 +232,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
                                 />
                                 {minDaysError && <small className="error-text" style={{ color: '#ff4d4f', marginTop: '4px', display: 'block' }}>{minDaysError}</small>}
                                 <small style={{ color: 'var(--text-secondary)', fontSize: 'var(--font-size-xs)' }}>
-                                    Wait at least <strong>{formData.recurrenceMinDays}</strong> {formData.recurrenceMinDays === 1 ? 'day' : 'days'} after completion
+                                    Wait at least <strong>{formData.recurrenceMinDays}</strong> {t('tasks.days_count', { count: formData.recurrenceMinDays })} after completion
                                 </small>
                             </div>
 
@@ -252,7 +254,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
                                     required
                                 />
                                 <small style={{ color: 'var(--text-secondary)', fontSize: 'var(--font-size-xs)' }}>
-                                    Should be done within <strong>{formData.recurrenceMaxDays}</strong> {formData.recurrenceMaxDays === 1 ? 'day' : 'days'}
+                                    Should be done within <strong>{formData.recurrenceMaxDays}</strong> {t('tasks.days_count', { count: formData.recurrenceMaxDays })}
                                 </small>
                             </div>
                         </div>

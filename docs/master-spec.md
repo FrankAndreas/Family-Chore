@@ -293,6 +293,17 @@ ChoreSpec is a family-oriented chore gamification system. It transforms househol
 - **Then** SQLAlchemy connects to the local SQLite file
 - **And** the application functions normally, preserving backward compatibility.
 
+### 4.10 BDD Scenarios (i18n Pluralization)
+**Scenario: Displaying singular time units**
+- **Given** a user is viewing a UI element with a value of 1 (e.g., a streak of 1 day, or a recurrence of 1 day)
+- **When** the UI renders the localized string
+- **Then** the application uses the singular form (e.g., "1 Tag" in German, "1 day" in English).
+
+**Scenario: Displaying plural time units**
+- **Given** a user is viewing a UI element with a value greater than 1 or equal to 0 (e.g., a streak of 3 days)
+- **When** the UI renders the localized string
+- **Then** the application uses the plural form via i18next `count` interpolation (e.g., "3 Tage" in German, "3 days" in English).
+
 ---
 
 ## 5. Current Implementation Delta (vs. MVP Spec)

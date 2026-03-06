@@ -61,7 +61,7 @@ const StatCards: React.FC<StatCardsProps> = ({ summary }) => {
                 <div className="stat-card__body">
                     <span className="stat-card__value">{topName}</span>
                     <span className="stat-card__label">
-                        {topCount} {t('analytics.tasks_lowercase', 'tasks')} ·{' '}
+                        {topCount} {t('analytics.tasks_count', { count: topCount })} ·{' '}
                         {t('analytics.top_performer', 'Top Performer')}
                     </span>
                 </div>
@@ -72,7 +72,7 @@ const StatCards: React.FC<StatCardsProps> = ({ summary }) => {
                 <div className="stat-card__icon">🔥</div>
                 <div className="stat-card__body">
                     <span className="stat-card__value">
-                        {bestStreak} {t('analytics.days', 'days')}
+                        {bestStreak} {t('analytics.days_count', { count: bestStreak })}
                     </span>
                     <span className="stat-card__label">
                         {streakName} · {t('analytics.best_streak', 'Best Streak')}

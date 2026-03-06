@@ -60,13 +60,17 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We h
 - **Docker Infrastructure**: Modified `docker-compose.yml` to provision a persistent `postgres:15-alpine` container and wired the backend to connect natively.
 - **Testing**: `run_tests.sh` isolates the test suite from Alembic locking via `TESTING=True` env variable, relying on in-memory SQLite schema creation. Migration scripts excluded from `flake8` to prevent PEP8 noise.
 
+## 🔄 Recent Changes (2026-03-06 i18n Pluralization)
+- **i18next Plural Logic**: Upgraded `en.json` and `de.json` to utilize native `_one` and `_other` suffix keys for `day` vs `days`, `task` vs `tasks`, and `Day Streak!`.
+- **Component Refactoring**: Stripped hardcoded JavaScript ternary singular/plural logic from `StatCards.tsx`, `TaskForm.tsx`, `Heatmap.tsx`, and `UserDashboard.tsx`. These now inject `{ count: number }` directly into the `useTranslation` hook so it intelligently renders the grammatically correct language version.
+
 ## 📍 System State
 - **Backend**: Port 8000. **142 tests passed**. Flake8 and Mypy clean. Schema v1.9 tracked via Alembic.
 - **Frontend**: Port 8080 (Docker), 5173 (local). ESLint clean. Build successful. Fully internationalized (EN/DE).
 - **Docker**: Secure PostgreSQL + FastAPI configuration operational.
 
 ## 🚧 Active Tasks (Next Priority)
-1. **Pluralization**: Handle singular/plural forms (e.g., "1 Tag" vs "2 Tage") via i18next `count` interpolation.
+- None actively identified. Awaiting next user directive.
 
 ## ⚠️ Known Issues / Watchlist
 - ~~**S5**: `/uploads/` directory is publicly accessible without authentication.~~ ✅ Resolved.

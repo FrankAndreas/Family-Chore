@@ -48,3 +48,20 @@
 ## ⚠️ Edge Cases & Notes:
 - SQLite enforces `check_same_thread: False`, handled conditionally via `DATABASE_URL.startswith("sqlite")`.
 - Old Python migration scripts successfully deprecated in favor of `alembic` tracking.
+
+---
+
+# QA Report: i18n Pluralization (EN and DE)
+
+## ✅ Tests Passed: 142
+- **Automated Regression Suite (Backend)**: 142 tests passed, confirming no backend regressions caused by frontend string changes.
+- **Frontend Linting/Typing**: `npm run lint` and `npx tsc --noEmit` passed cleanly.
+- **Manual Verification (English)**: Verified component rendering handles "1 day" and "3 days" singular/plural grammar correctly using i18n count interpolation.
+- **Manual Verification (German)**: Verified component rendering handles "1 Tag" and "3 Tage" appropriately for stat cards, forms, and heatmaps.
+
+## ❌ Tests Failed: 0
+- No failures observed.
+
+## ⚠️ Edge Cases & Notes:
+- Removed hardcoded JavaScript ternary logic (e.g. `value === 1 ? 'day' : 'days'`) in favor of native `useTranslation` capabilities.
+- Added `_one` and `_other` keys for strict plural support across `days`, `tasks`, and `dayStreak`.

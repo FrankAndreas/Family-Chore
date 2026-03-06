@@ -33,7 +33,7 @@ const Heatmap: React.FC<HeatmapProps> = ({ days, nickname, userId }) => {
             setTooltip({
                 x: rect.left + rect.width / 2,
                 y: rect.top - 8,
-                text: `${day.date}: ${day.count} ${t('analytics.tasks_lowercase', 'tasks')}`,
+                text: `${day.date}: ${day.count} ${t('analytics.tasks_count', { count: day.count })}`,
             });
         },
         [t, popup],
@@ -100,7 +100,7 @@ const Heatmap: React.FC<HeatmapProps> = ({ days, nickname, userId }) => {
                                 onClick={(e) => handleCellClick(e, day)}
                                 onFocus={(e) => handleMouseEnter(e, day)}
                                 onBlur={handleMouseLeave}
-                                aria-label={`${day.date}: ${day.count} ${t('analytics.tasks_lowercase', 'tasks')}`}
+                                aria-label={`${day.date}: ${day.count} ${t('analytics.tasks_count', { count: day.count })}`}
                                 disabled={day.count === 0}
                             >
                                 <span className="sr-only">{day.count}</span>
