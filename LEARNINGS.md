@@ -459,6 +459,19 @@ This file captures accumulated knowledge from development sessions. The Libraria
 
 ---
 
+---
+
+## 📅 2026-03-06: UX Refactoring & Agent Environment Limitations
+
+### Session Context
+- **PhotoPreview ObjectURLs**: A common React memory leak occurs when `URL.createObjectURL(file)` is called inside a parent component iteration without an explicit lifecycle. Delegating this to a dedicated `<PhotoPreview file={file} />` component with its own `useEffect` setup/teardown perfectly manages the browser's blob registry.
+- **Frontend Debouncing**: When building search inputs over large client-side data, a 300ms `useDebounce` hook wrapping the input state prevents React from re-rendering the entire DOM/Table 10+ times per second while the user is actively typing. 
+- **Pagination**: Implemented front-end boundaries (`limit`, `skip`/`page`) on History arrays so that scrolling appends transactions naturally instead of crashing the browser with thousands of DOM nodes.
+
+### Gotchas
+- **Browser Subagent Timeouts**: If a headless browser automation script (`google-chrome --headless=new --dump-dom "http://localhost:5173"`) works natively in the terminal but times out when invoked by the AI's internal Browser MCP, it is a configuration/sandbox bug within the agent framework, not a missing OS dependency. Do not chase phantom missing libraries if `ldd` and a manual raw execution both pass cleanly.
+- `eslint-disable-next-line react-hooks/exhaustive-deps`: Sometimes intentionally omitting a dependency (like a filter state) from a pagination `useEffect` is the only way to prevent infinite refetching loops. Warn reviewers when doing this.
+
 ## Template for Future Entries
 
 ```markdown

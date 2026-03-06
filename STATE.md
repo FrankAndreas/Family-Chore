@@ -43,9 +43,15 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We h
 - **Frontend**: Updated `api.ts`, `RewardHub.tsx`, `NotificationContext.tsx`, `FamilyDashboard.tsx` to match new backend API contracts.
 - **Tests**: All 142 passing. BDD feature file and unit tests updated for new error messages and removed `user_id` params.
 
+## 🔄 Recent Changes (2026-03-06 UX Polish & i18n Completion)
+- **Internationalization**: Fully extracted all remaining hardcoded English strings into `en.json` and `de.json` across all admin and user dashboards, modals, settings, and forms.
+- **UX performance**: Implemented bounded pagination (Load More) for history tabs to prevent excessive DOM rendering on accounts with long transaction histories.
+- **Debounced Search**: Integrated a custom `useDebounce` hook (300ms delay) for the transaction filtering inputs, vastly reducing rapid React re-renders and potential API spam.
+- **Memory Management**: Fixed an `ObjectURL` memory leak in `UserDashboard` where photo thumbnails weren't properly revoked if unmounted quickly. Delegated lifecycle solely to `PhotoPreview` components.
+
 ## 📍 System State
 - **Backend**: Port 8000. **142 tests passed**. Flake8 and Mypy clean. Schema v1.9.
-- **Frontend**: Port 8080 (Docker), 5173 (local). ESLint clean. Build successful.
+- **Frontend**: Port 8080 (Docker), 5173 (local). ESLint clean. Build successful. Fully internationalized (EN/DE).
 - **Docker**: Secure configuration operational.
 
 ## 🚧 Active Tasks (Next Priority)
