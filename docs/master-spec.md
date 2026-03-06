@@ -268,6 +268,18 @@ ChoreSpec is a family-oriented chore gamification system. It transforms househol
 - **Then** all labels including StatCards, TimeRangeSelector, and Heatmap are displayed in German
 - **And** date formatting in the Heatmap popup respects the German locale.
 
+### 4.8 BDD Scenarios (Security S5: Secure File Uploads)
+**Scenario: Unauthorized access to uploaded files**
+- **Given** an unauthenticated client session
+- **When** the client attempts to access a file via the `/uploads/{filename}` endpoint
+- **Then** the system rejects the request with a 401 Unauthorized error.
+
+**Scenario: Authorized access to uploaded files using JWT cookie**
+- **Given** an authenticated user (browser session with an HttpOnly `access_token` cookie or a valid Bearer token)
+- **When** the browser attempts to load an `<img>` tag with `src="/uploads/photo.jpg"`
+- **Then** the backend verifies the user's authentication
+- **And** serves the file successfully with a 200 OK status.
+
 ---
 
 ## 5. Current Implementation Delta (vs. MVP Spec)

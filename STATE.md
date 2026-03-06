@@ -49,18 +49,22 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We h
 - **Debounced Search**: Integrated a custom `useDebounce` hook (300ms delay) for the transaction filtering inputs, vastly reducing rapid React re-renders and potential API spam.
 - **Memory Management**: Fixed an `ObjectURL` memory leak in `UserDashboard` where photo thumbnails weren't properly revoked if unmounted quickly. Delegated lifecycle solely to `PhotoPreview` components.
 
+## 🔄 Recent Changes (2026-03-06 Security S5: Auth Uploads)
+- **Backend Route**: Removed the public `StaticFiles` mount for `/uploads/` and replaced it with a custom FastAPI endpoint secured by `Depends(get_current_user)`.
+- **HttpOnly Cookies**: Upgraded `auth.py` to issue an `HttpOnly` cookie containing the `access_token` upon login. Upgraded `dependencies.py` to extract this cookie as a fallback if the `Authorization` header is missing.
+- **Frontend Axios**: Enabled `withCredentials: true` globally so cross-origin requests attach the secure cookie, allowing standard `<img src="/uploads/XYZ">` tags to seamlessly bypass 401s in authenticated sessions.
+
 ## 📍 System State
 - **Backend**: Port 8000. **142 tests passed**. Flake8 and Mypy clean. Schema v1.9.
 - **Frontend**: Port 8080 (Docker), 5173 (local). ESLint clean. Build successful. Fully internationalized (EN/DE).
 - **Docker**: Secure configuration operational.
 
 ## 🚧 Active Tasks (Next Priority)
-1. **S5**: Restrict `/uploads/` to authenticated users (currently public).
-2. **Database Migration**: Transition from SQLite to PostgreSQL for production stability.
-3. **Pluralization**: Handle singular/plural forms (e.g., "1 Tag" vs "2 Tage") via i18next `count` interpolation.
+1. **Database Migration**: Transition from SQLite to PostgreSQL for production stability.
+2. **Pluralization**: Handle singular/plural forms (e.g., "1 Tag" vs "2 Tage") via i18next `count` interpolation.
 
 ## ⚠️ Known Issues / Watchlist
-- **S5**: `/uploads/` directory is publicly accessible without authentication.
+- ~~**S5**: `/uploads/` directory is publicly accessible without authentication.~~ ✅ Resolved.
 - ~~**IDOR vulnerabilities**: S7–S10, S13 — user_id params allowed cross-user access.~~ ✅ Resolved.
 - ~~**Login enumeration**: S12 — distinct error messages leaked user existence.~~ ✅ Resolved.
 - ~~**SSE/Backup endpoints unauthenticated**: S3, S4.~~ ✅ Resolved.

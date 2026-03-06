@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 import logging
 
@@ -11,7 +11,7 @@ router = APIRouter(tags=["Auth"])
 
 
 @router.post("/login/", response_model=schemas.Token)
-def login(user_credentials: schemas.UserLogin, db: Session = Depends(get_db)):
+def login(user_credentials: schemas.UserLogin, response: Response, db: Session = Depends(get_db)):
     logger.info(f"Login attempt for user: {user_credentials.nickname}")
     user = crud.get_user_by_nickname(db, nickname=user_credentials.nickname)
     if not user:
@@ -43,6 +43,14 @@ def login(user_credentials: schemas.UserLogin, db: Session = Depends(get_db)):
         f"Login successful for user: {user_credentials.nickname} (ID: {user.id})")
 
     access_token = security.create_access_token(data={"sub": str(user.id)})
+
+    # Set the HttpOnly cookie for static file access
+    response.set_cookie(
+        key="access_token",
+        value=f"Bearer {access_token}",
+        httponly=True,
+        samesite="lax"
+    )
 
     return {
         "access_token": access_token,

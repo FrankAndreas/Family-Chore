@@ -1,7 +1,6 @@
-from fastapi import Depends, FastAPI
-from fastapi.staticfiles import StaticFiles
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
 from contextlib import asynccontextmanager
 import logging
 import asyncio
@@ -16,7 +15,7 @@ from .routers import analytics, notifications, auth, users, roles, tasks, reward
 from .migrations.manager import MigrationManager
 from .backup import BackupManager
 from .notifications_service import send_email_sync, send_push_to_user_sync
-from .dependencies import get_current_admin_user
+from .dependencies import get_current_admin_user, get_current_user
 from .security import verify_token
 from .events import broadcaster
 
@@ -205,9 +204,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Ensure uploads directory exists and mount it
+# Ensure uploads directory exists
 os.makedirs("uploads", exist_ok=True)
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
+
+@app.get("/uploads/{filename}", tags=["System"])
+def get_uploaded_file(filename: str, current_user: models.User = Depends(get_current_user)):
+    """Serve uploaded files only to authenticated users."""
+    file_path = os.path.join("uploads", filename)
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="File not found")
+    return FileResponse(file_path)
+
 
 # Include Routers
 app.include_router(auth.router)

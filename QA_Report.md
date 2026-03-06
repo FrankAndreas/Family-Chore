@@ -13,3 +13,20 @@
 - Database migration script tested and functioning. Plain-text PINs correctly upgraded in `chorespec_mvp.db`.
 - Using `bcrypt` via `passlib` requires type-casting the sqlalchemy string columns during model query, handled properly in the auth router.
 - `Requires photo verification` column and other prior schema types unaffected.
+
+---
+
+# QA Report: S5 Secure File Uploads (/uploads/)
+
+## ✅ Tests Passed: 142
+- **Automated Regression Suite**: 142 tests passed perfectly across all modules.
+- **Manual API Test 1 (Unauthenticated)**: GET `/uploads/test_photo.jpg` accurately rejected with HTTP 401 Unauthorized `{"detail": "Not authenticated"}`.
+- **Manual API Test 2 (Authenticated Header)**: GET `/uploads/test_photo.jpg` passed with `Authorization: Bearer <token>` returning HTTP 200 OK.
+- **Manual API Test 3 (Authenticated Cookie)**: GET `/uploads/test_photo.jpg` passed with `Cookie: access_token=Bearer <token>` returning HTTP 200 OK.
+
+## ❌ Tests Failed: 0
+- No failures observed.
+
+## ⚠️ Edge Cases & Notes:
+- The `FastAPI` file serving route now directly invokes `os.path.exists()` ensuring non-existent files smoothly return 404 instead of throwing internal server errors.
+- Cross-origin credentials correctly enabled (`withCredentials=true`) in the frontend Axios client. 
