@@ -23,7 +23,7 @@ function DeleteRoleModal({ role, users, roles, onConfirm, onCancel }: DeleteModa
 
     return (
         <div className="modal-overlay" onClick={onCancel}>
-            <div className="modal-content glass-card" onClick={e => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+            <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '500px' }}>
                 <h2 style={{ color: '#ef4444', marginBottom: '1rem' }}>⚠️ Delete Role: {role.name}</h2>
 
                 {users.length > 0 ? (

@@ -14,7 +14,7 @@ interface ClaimModalProps {
 function ClaimModal({ taskName, users, onSelectUser, onClose }: ClaimModalProps) {
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content glass-card" onClick={e => e.stopPropagation()}>
+            <div className="modal-content" onClick={e => e.stopPropagation()}>
                 <h2>Who did it?</h2>
                 <p>Completing: <strong>{taskName}</strong></p>
 
@@ -112,7 +112,7 @@ function SplitRedeemModal({ reward, users, onConfirm, onClose, redeeming }: Spli
 
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content glass-card split-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-content split-modal" onClick={e => e.stopPropagation()}>
                 <h2>🎁 Split Redemption</h2>
                 <p className="reward-title"><strong>{reward.name}</strong> — {reward.cost_points} pts</p>
 

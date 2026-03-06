@@ -104,32 +104,6 @@
     }
 }
 
-/* Dark mode */
-@media (prefers-color-scheme: dark) {
-    .modal-content {
-        background: rgba(30, 30, 46, 0.98);
-        border-color: rgba(255, 255, 255, 0.1);
-    }
-
-    .modal-header {
-        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
-        border-bottom-color: rgba(255, 255, 255, 0.1);
-    }
-
-    .modal-header h2 {
-        color: #f0f0f0;
-    }
-
-    .modal-close {
-        color: #aaa;
-    }
-
-    .modal-close:hover {
-        background: rgba(255, 255, 255, 0.1);
-        color: #fff;
-    }
-}
-
 /* Mobile responsive */
 @media (max-width: 768px) {
     .modal-overlay {
