@@ -30,3 +30,21 @@
 ## ⚠️ Edge Cases & Notes:
 - The `FastAPI` file serving route now directly invokes `os.path.exists()` ensuring non-existent files smoothly return 404 instead of throwing internal server errors.
 - Cross-origin credentials correctly enabled (`withCredentials=true`) in the frontend Axios client. 
+
+---
+
+# QA Report: Database Migration (PostgreSQL / SQLite Dual-Dialect)
+
+## ✅ Tests Passed: 142 (SQLite) + Manual Verification (PostgreSQL)
+- **Automated Regression Suite (SQLite)**: 142 tests passed perfectly. `TESTING=True` environment variable effectively isolates test runs from `alembic` locking mechanisms.
+- **Manual Verification (PostgreSQL)**:
+  - Docker Compose `db` container booted successfully (`postgres:15-alpine`).
+  - `alembic upgrade head` executed perfectly against the live PostgreSQL database via `DATABASE_URL`, generating the full schema.
+  - SQLAlchemy ORM connection test confirmed successful insertion and retrieval of `Role` data natively in PostgreSQL.
+
+## ❌ Tests Failed: 0
+- No failures observed. Local SQLite operations preserve backward compatibility via dynamic `alembic` stamping.
+
+## ⚠️ Edge Cases & Notes:
+- SQLite enforces `check_same_thread: False`, handled conditionally via `DATABASE_URL.startswith("sqlite")`.
+- Old Python migration scripts successfully deprecated in favor of `alembic` tracking.

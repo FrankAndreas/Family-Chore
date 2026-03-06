@@ -1,4 +1,17 @@
 services:
+  db:
+    image: postgres:15-alpine
+    container_name: chorespec-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: chorespec_admin
+      POSTGRES_PASSWORD: chorespec_password
+      POSTGRES_DB: chorespec
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
   backend:
     build:
       context: .
@@ -11,8 +24,11 @@ services:
       - chores_data:/app/data
       - chores_uploads:/app/uploads
       - chores_backups:/app/backups
+    depends_on:
+      - db
     environment:
-      - DATABASE_URL=sqlite:///./data/chorespec.db
+      - DATABASE_URL=postgresql://chorespec_admin:chorespec_password@db:5432/chorespec
+      # Legacy SQLite fallback: - DATABASE_URL=sqlite:///./data/chorespec.db
       # --- Production Secrets (uncomment and set for deployment) ---
       # - JWT_SECRET_KEY=<generate-a-64-char-hex-string>
       # - VAPID_PRIVATE_KEY=<path-or-pem-content>
@@ -46,6 +62,7 @@ services:
     restart: unless-stopped
 
 volumes:
+  postgres_data:
   chores_data:
   chores_uploads:
   chores_backups:

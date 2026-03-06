@@ -106,7 +106,7 @@ ChoreSpec is a family-oriented chore gamification system. It transforms househol
 ## 3. Technical Implementation
 
 ### 3.1 Backend (FastAPI + SQLAlchemy)
-- **Database**: SQLite (`chorespec_mvp.db`).
+- **Database**: PostgreSQL (Production) / SQLite (Local MVP Legacy). The system must effortlessly switch between the two database engines based on the `DATABASE_URL` environment variable configuration. It utilizes Alembic for schema migrations and SQLAlchemy ORM for database-agnostic queries where possible.
 - **Real-time Engine**: 
   - **SSE (Server-Sent Events)**: Broadcasters for `task_created`, `task_deleted`, and `task_completed` events.
   - **Background Scheduler**: `APScheduler` performs a "Daily Reset" at 00:00 every night.
@@ -279,6 +279,19 @@ ChoreSpec is a family-oriented chore gamification system. It transforms househol
 - **When** the browser attempts to load an `<img>` tag with `src="/uploads/photo.jpg"`
 - **Then** the backend verifies the user's authentication
 - **And** serves the file successfully with a 200 OK status.
+
+### 4.9 BDD Scenarios (Infrastructure: PostgreSQL Migration)
+**Scenario: System boot with PostgreSQL via configuration**
+- **Given** the backend environment is configured
+- **When** the `DATABASE_URL` is set to a PostgreSQL connection string (e.g., `postgresql://...`)
+- **Then** SQLAlchemy connects to the PostgreSQL instance
+- **And** Alembic migrations automatically apply the latest schema without SQLite-specific syntax errors.
+
+**Scenario: System boot with SQLite via configuration**
+- **Given** the backend environment is configured
+- **When** the `DATABASE_URL` is set to a SQLite connection string (e.g., `sqlite:///...`) or unset (falling back to default SQLite)
+- **Then** SQLAlchemy connects to the local SQLite file
+- **And** the application functions normally, preserving backward compatibility.
 
 ---
 

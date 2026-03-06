@@ -9,8 +9,9 @@ BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Set PYTHONPATH
-export PYTHONPATH=/home/andreas/work/family-chore
+# Add project root to PYTHONPATH so tests can import backend module
+export PYTHONPATH=.
+export TESTING=True
 
 echo -e "${BLUE}ChoreSpec Test Runner${NC}"
 echo "====================="

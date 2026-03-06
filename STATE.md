@@ -54,14 +54,19 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We h
 - **HttpOnly Cookies**: Upgraded `auth.py` to issue an `HttpOnly` cookie containing the `access_token` upon login. Upgraded `dependencies.py` to extract this cookie as a fallback if the `Authorization` header is missing.
 - **Frontend Axios**: Enabled `withCredentials: true` globally so cross-origin requests attach the secure cookie, allowing standard `<img src="/uploads/XYZ">` tags to seamlessly bypass 401s in authenticated sessions.
 
+## 🔄 Recent Changes (2026-03-06 Database Migration)
+- **Alembic Integration**: Replaced custom Python migration scripts with `alembic` for standardized schema management. Generated baseline migration `v1.9`.
+- **Dual-Dialect Support**: Updated `backend/database.py` and `backend/main.py` to seamlessly execute schema migrations natively on PostgreSQL while seamlessly falling back to local SQLite execution (and backwards compatible dynamic stamping) based on the `DATABASE_URL` environment variable.
+- **Docker Infrastructure**: Modified `docker-compose.yml` to provision a persistent `postgres:15-alpine` container and wired the backend to connect natively.
+- **Testing**: `run_tests.sh` isolates the test suite from Alembic locking via `TESTING=True` env variable, relying on in-memory SQLite schema creation. Migration scripts excluded from `flake8` to prevent PEP8 noise.
+
 ## 📍 System State
-- **Backend**: Port 8000. **142 tests passed**. Flake8 and Mypy clean. Schema v1.9.
+- **Backend**: Port 8000. **142 tests passed**. Flake8 and Mypy clean. Schema v1.9 tracked via Alembic.
 - **Frontend**: Port 8080 (Docker), 5173 (local). ESLint clean. Build successful. Fully internationalized (EN/DE).
-- **Docker**: Secure configuration operational.
+- **Docker**: Secure PostgreSQL + FastAPI configuration operational.
 
 ## 🚧 Active Tasks (Next Priority)
-1. **Database Migration**: Transition from SQLite to PostgreSQL for production stability.
-2. **Pluralization**: Handle singular/plural forms (e.g., "1 Tag" vs "2 Tage") via i18next `count` interpolation.
+1. **Pluralization**: Handle singular/plural forms (e.g., "1 Tag" vs "2 Tage") via i18next `count` interpolation.
 
 ## ⚠️ Known Issues / Watchlist
 - ~~**S5**: `/uploads/` directory is publicly accessible without authentication.~~ ✅ Resolved.

@@ -5,6 +5,8 @@ pydantic
 python-multipart
 passlib[bcrypt]>=1.7.4
 bcrypt>=4.0.0,<4.1  # Pin bcrypt: passlib 1.7.4 is incompatible with bcrypt >=4.1
+alembic>=1.13.0
+psycopg2-binary>=2.9.9
 
 # Testing dependencies
 pytest==7.4.3

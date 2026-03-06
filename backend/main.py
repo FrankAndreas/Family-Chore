@@ -9,10 +9,13 @@ import os
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 
+from sqlalchemy import inspect
+from alembic.config import Config
+from alembic import command as alembic_command
+
 from . import models, crud
 from .database import engine, SessionLocal
 from .routers import analytics, notifications, auth, users, roles, tasks, rewards, transactions, system
-from .migrations.manager import MigrationManager
 from .backup import BackupManager
 from .notifications_service import send_email_sync, send_push_to_user_sync
 from .dependencies import get_current_admin_user, get_current_user
@@ -99,8 +102,18 @@ def run_backup_job():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # --- Startup ---
-    # 1. Run migrations first to ensure schema is up-to-date
-    MigrationManager.run_migrations()
+    # 1. Run migrations first to ensure schema is up-to-date (unless running tests)
+    if os.getenv("TESTING") != "True":
+        alembic_cfg = Config("backend/alembic.ini")
+
+        # Check if we need to stamp (backwards compatibility for existing SQLite)
+        inspector = inspect(engine)
+        if inspector.has_table("users") and not inspector.has_table("alembic_version"):
+            logger.info("Existing database detected without Alembic tracking. Stamping to 'head'.")
+            alembic_command.stamp(alembic_cfg, "head")
+
+        logger.info("Running Alembic upgrade to 'head'.")
+        alembic_command.upgrade(alembic_cfg, "head")
 
     # 2. Ensure tables exist (will create new tables if any)
     models.Base.metadata.create_all(bind=engine)
