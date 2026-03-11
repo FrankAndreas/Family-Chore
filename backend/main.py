@@ -107,8 +107,12 @@ async def lifespan(app: FastAPI):
         alembic_cfg = Config("backend/alembic.ini")
 
         # Check if we need to stamp (backwards compatibility for existing SQLite)
-        inspector = inspect(engine)
-        if inspector.has_table("users") and not inspector.has_table("alembic_version"):
+        with engine.connect() as conn:
+            inspector = inspect(conn)
+            has_users = inspector.has_table("users")
+            has_version = inspector.has_table("alembic_version")
+
+        if has_users and not has_version:
             logger.info("Existing database detected without Alembic tracking. Stamping to 'head'.")
             alembic_command.stamp(alembic_cfg, "head")
 

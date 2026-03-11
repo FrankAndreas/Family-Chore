@@ -522,3 +522,14 @@ This file captures accumulated knowledge from development sessions. The Libraria
 ### Gotchas
 - [Gotcha 1]
 ```
+
+## 📅 2026-03-07: React SPA Routing & Axios Interceptor Logic
+
+### Session Context
+- **React Router vs Conditional Rendering**: If a SPA conditionally renders a Login component at the root level (`currentUser === null`) rather than using a dedicated React Router `Route path="/login"`, invoking `window.location.href = '/login'` throws a 404/NotFound error. The correct approach to drop user context and force a reset is `window.location.reload()`.
+- **Axios Custom Configs**: To suppress an interceptor on a per-request basis, use TypeScript generic declaration merging (`declare module 'axios'`) to add custom boolean flags inside `AxiosRequestConfig` (e.g. `skipAuthRedirect: true`). 
+- **Graceful Degradation**: Shared UI components like `FamilyDashboard` that fetch protected data streams (`/tasks/`, `/rewards/`) must swallow 401 unauthorized errors silently if they are intended to be viewed by non-logged-in users.
+
+### Gotchas
+- **Mypy vs Linters**: When adding custom properties to Axios configs, ESLint may complain about unused imports (`AxiosRequestConfig`) if they are only utilized inside `declare module` blocks. Prune generic imports carefully.
+- **Database Inspection**: When using SQLAlchemy 2.0 APIs, `inspect(engine)` is deprecated for `has_table` checks. The correct syntax is `with engine.connect() as conn: inspector = inspect(conn)`.

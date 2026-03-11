@@ -1,9 +1,17 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { getPendingTasks, getUsers, getRewards, completeTask, redeemRewardSplit, getAllTransactions } from '../api';
+import api, { completeTask, redeemRewardSplit } from '../api';
 import { useTranslation } from 'react-i18next';
 import type { TaskInstance, User, Reward, Transaction } from '../types';
 import { useDebounce } from '../hooks/useDebounce';
 import './FamilyDashboard.css';
+
+// FamilyDashboard-specific API calls with skipAuthRedirect
+// These may be called without login, so we suppress 401-triggered reloads.
+const getPendingTasksPublic = () => api.get('/tasks/pending', { skipAuthRedirect: true });
+const getUsersPublic = () => api.get('/users/', { skipAuthRedirect: true });
+const getRewardsPublic = () => api.get('/rewards/', { skipAuthRedirect: true });
+const getAllTransactionsPublic = (params: Record<string, unknown> = {}) =>
+    api.get('/transactions', { params: { skip: 0, limit: 100, ...params }, skipAuthRedirect: true });
 
 interface ClaimModalProps {
     taskName: string;
@@ -192,9 +200,9 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
     const loadData = useCallback(async () => {
         try {
             const [tasksRes, usersRes, rewardsRes] = await Promise.all([
-                getPendingTasks(),
-                getUsers(),
-                getRewards()
+                getPendingTasksPublic(),
+                getUsersPublic(),
+                getRewardsPublic()
             ]);
             setTasks(tasksRes.data);
             setUsers(usersRes.data);
@@ -209,7 +217,7 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
 
     const refreshTasks = useCallback(async () => {
         try {
-            const tasksRes = await getPendingTasks();
+            const tasksRes = await getPendingTasksPublic();
             setTasks(tasksRes.data);
             setLastUpdate(new Date());
         } catch (error) {
@@ -219,7 +227,7 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
 
     const refreshData = useCallback(async () => {
         try {
-            const [usersRes, rewardsRes] = await Promise.all([getUsers(), getRewards()]);
+            const [usersRes, rewardsRes] = await Promise.all([getUsersPublic(), getRewardsPublic()]);
             setUsers(usersRes.data);
             setRewards(rewardsRes.data);
             setLastUpdate(new Date());
@@ -244,7 +252,7 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
 
         try {
             const limit = 50;
-            const transactionsRes = await getAllTransactions({
+            const transactionsRes = await getAllTransactionsPublic({
                 skip: (currentPage - 1) * limit,
                 limit,
                 ...updatedFilters

@@ -23,15 +23,26 @@ api.interceptors.request.use((config) => {
     return Promise.reject(error);
 });
 
+// Extend AxiosRequestConfig to support skipAuthRedirect flag
+declare module 'axios' {
+    interface AxiosRequestConfig {
+        skipAuthRedirect?: boolean;
+    }
+}
+
 // Add response interceptor to handle 401s
 api.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response && error.response.status === 401) {
-            if (!error.config.url?.includes('/login')) {
+            // Skip redirect for login requests and requests that opt out (e.g. FamilyDashboard)
+            const skipRedirect = error.config?.skipAuthRedirect || error.config?.url?.includes('/login');
+            if (!skipRedirect) {
                 localStorage.removeItem('user');
                 localStorage.removeItem('auth_token');
-                window.location.href = '/login';
+                // Reload the page so the SPA re-renders from root and shows the Login component
+                // (there is no '/login' route in React Router — Login is rendered conditionally)
+                window.location.reload();
             }
         }
         return Promise.reject(error);

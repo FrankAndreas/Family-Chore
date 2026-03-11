@@ -70,6 +70,12 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We h
 - **Image Descriptiveness**: Replaced generic `alt="Preview"` tags with contextually aware alternatives (e.g. "Task completion verification photo") inside `UserDashboard.tsx` for visual impairment tools.
 - **QA Verifications**: All modifications structurally verified via `npm run lint` and `npx tsc --noEmit` without introducing regressions or layout degradation.
 
+## 🔄 Recent Changes (2026-03-07 UI Routing & API Fixes)
+- **Axios Interceptor**: Refactored the global 401 response interceptor in `api.ts` to execute `window.location.reload()` instead of redirecting to a non-existent React Router `/login` path, eliminating SPA crash-loops after authentication timeouts.
+- **API Config Extension**: Augmented the global `AxiosRequestConfig` interface to support a custom `skipAuthRedirect: boolean` flag, allowing specific frontend components to suppress 401 interceptor logic.
+- **Graceful Unauthenticated Dashboards**: Updated `FamilyDashboard.tsx` to utilize `skipAuthRedirect: true`, allowing the public-facing dashboard to safely swallow 401 errors from protected endpoints and render graceful "All done!" empty states instead of crashing.
+- **SQLAlchemy Resiliency**: Patched `backend/main.py` Alembic initialization block with a safer `inspect(conn)` schema check for SQLite forwards-compatibility.
+
 ## 📍 System State
 - **Backend**: Port 8000. **142 tests passed**. Flake8 and Mypy clean. Schema v1.9 tracked via Alembic.
 - **Frontend**: Port 8080 (Docker), 5173 (local). ESLint clean. Build successful. Fully internationalized (EN/DE). Enhanced WCAG 2.1 compliance.
