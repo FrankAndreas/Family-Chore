@@ -3,6 +3,7 @@ import api, { completeTask, redeemRewardSplit } from '../api';
 import { useTranslation } from 'react-i18next';
 import type { TaskInstance, User, Reward, Transaction } from '../types';
 import { useDebounce } from '../hooks/useDebounce';
+import Modal from './Modal';
 import './FamilyDashboard.css';
 
 // FamilyDashboard-specific API calls with skipAuthRedirect
@@ -23,31 +24,28 @@ interface ClaimModalProps {
 function ClaimModal({ taskName, users, onSelectUser, onClose }: ClaimModalProps) {
     const { t } = useTranslation();
     return (
-        <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content" onClick={e => e.stopPropagation()}>
-                <h2>{t('dashboard.whoDidIt')}</h2>
-                <p>{t('dashboard.completing')} <strong>{taskName}</strong></p>
+        <Modal isOpen={true} onClose={onClose} title={t('dashboard.whoDidIt')}>
+            <p>{t('dashboard.completing')} <strong>{taskName}</strong></p>
 
-                <div className="user-grid">
-                    {users.map(user => (
-                        <button
-                            key={user.id}
-                            className="user-select-card"
-                            onClick={() => onSelectUser(user.id)}
-                        >
-                            <div className="user-avatar" aria-hidden="true">
-                                {user.nickname.charAt(0).toUpperCase()}
-                            </div>
-                            <div className="user-name">{user.nickname}</div>
-                        </button>
-                    ))}
-                </div>
-
-                <button className="btn btn-secondary" style={{ marginTop: '2rem', width: '100%' }} onClick={onClose}>
-                    {t('common.cancel')}
-                </button>
+            <div className="user-grid">
+                {users.map(user => (
+                    <button
+                        key={user.id}
+                        className="user-select-card"
+                        onClick={() => onSelectUser(user.id)}
+                    >
+                        <div className="user-avatar" aria-hidden="true">
+                            {user.nickname.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="user-name">{user.nickname}</div>
+                    </button>
+                ))}
             </div>
-        </div>
+
+            <button className="btn btn-secondary" style={{ marginTop: '2rem', width: '100%' }} onClick={onClose}>
+                {t('common.cancel')}
+            </button>
+        </Modal>
     );
 }
 
@@ -122,58 +120,55 @@ function SplitRedeemModal({ reward, users, onConfirm, onClose, redeeming }: Spli
     };
 
     return (
-        <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content split-modal" onClick={e => e.stopPropagation()}>
-                <h2>{t('dashboard.splitRedemption')}</h2>
-                <p className="reward-title"><strong>{reward.name}</strong> — {reward.cost_points} {t('common.pts')}</p>
+        <Modal isOpen={true} onClose={onClose} title={t('dashboard.splitRedemption')} size="large">
+            <p className="reward-title"><strong>{reward.name}</strong> — {reward.cost_points} {t('common.pts')}</p>
 
-                <div className="preset-buttons">
-                    <button className="btn btn-secondary btn-small" onClick={handleSplitEvenly}>
-                        {t('dashboard.splitEvenly')}
-                    </button>
-                    <button className="btn btn-secondary btn-small" onClick={handleMaxFromEach}>
-                        {t('dashboard.maxFromEach')}
-                    </button>
-                </div>
-
-                <div className="contribution-list">
-                    {users.map(user => (
-                        <div key={user.id} className="contribution-row">
-                            <span className="contrib-user">
-                                {user.nickname}
-                                <span className="contrib-available">({user.current_points} {t('common.pts')})</span>
-                            </span>
-                            <input
-                                type="number"
-                                min={0}
-                                max={user.current_points}
-                                value={contributions[user.id] || 0}
-                                onChange={e => updateContribution(user.id, parseInt(e.target.value) || 0)}
-                                className="contrib-input"
-                            />
-                        </div>
-                    ))}
-                </div>
-
-                <div className={`total-display ${isExact ? 'exact' : remaining < 0 ? 'over' : 'under'}`}>
-                    Total: {totalContribution}/{reward.cost_points} pts
-                    {isExact ? ' ✅' : remaining > 0 ? ` (need ${remaining} more)` : ` (${-remaining} over!)`}
-                </div>
-
-                <div className="modal-actions">
-                    <button className="btn btn-secondary" onClick={onClose} disabled={redeeming}>
-                        Cancel
-                    </button>
-                    <button
-                        className="btn btn-success"
-                        onClick={handleConfirm}
-                        disabled={!isExact || redeeming}
-                    >
-                        {redeeming ? 'Redeeming...' : '🎉 Redeem!'}
-                    </button>
-                </div>
+            <div className="preset-buttons">
+                <button className="btn btn-secondary btn-small" onClick={handleSplitEvenly}>
+                    {t('dashboard.splitEvenly')}
+                </button>
+                <button className="btn btn-secondary btn-small" onClick={handleMaxFromEach}>
+                    {t('dashboard.maxFromEach')}
+                </button>
             </div>
-        </div>
+
+            <div className="contribution-list">
+                {users.map(user => (
+                    <div key={user.id} className="contribution-row">
+                        <span className="contrib-user">
+                            {user.nickname}
+                            <span className="contrib-available">({user.current_points} {t('common.pts')})</span>
+                        </span>
+                        <input
+                            type="number"
+                            min={0}
+                            max={user.current_points}
+                            value={contributions[user.id] || 0}
+                            onChange={e => updateContribution(user.id, parseInt(e.target.value) || 0)}
+                            className="contrib-input"
+                        />
+                    </div>
+                ))}
+            </div>
+
+            <div className={`total-display ${isExact ? 'exact' : remaining < 0 ? 'over' : 'under'}`}>
+                Total: {totalContribution}/{reward.cost_points} pts
+                {isExact ? ' ✅' : remaining > 0 ? ` (need ${remaining} more)` : ` (${-remaining} over!)`}
+            </div>
+
+            <div className="modal-actions">
+                <button className="btn btn-secondary" onClick={onClose} disabled={redeeming}>
+                    Cancel
+                </button>
+                <button
+                    className="btn btn-success"
+                    onClick={handleConfirm}
+                    disabled={!isExact || redeeming}
+                >
+                    {redeeming ? 'Redeeming...' : '🎉 Redeem!'}
+                </button>
+            </div>
+        </Modal>
     );
 }
 
