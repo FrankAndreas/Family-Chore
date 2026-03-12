@@ -20,11 +20,21 @@
     },
     "login": {
         "title": "Welcome to ChoreSpec",
-        "subtitle": "Family Chore Management System",
+        "subtitle": "Transform chores into achievements",
         "nickname": "Nickname",
-        "pin": "PIN (4 digits)",
+        "nicknamePlaceholder": "Enter your nickname",
+        "pin": "PIN",
+        "pinPlaceholder": "4-digit PIN",
         "loginButton": "Login",
+        "loggingIn": "Logging in...",
+        "showPin": "Show PIN",
+        "hidePin": "Hide PIN",
+        "familyDashboard": "🏡 Family Dashboard",
+        "familyDashboardHint": "View the shared family task board without logging in",
         "error": {
+            "nicknameRequired": "Nickname is required",
+            "pinRequired": "PIN is required",
+            "pinFormat": "PIN must be exactly 4 digits",
             "userNotFound": "User not found",
             "incorrectPin": "Incorrect PIN",
             "loginFailed": "Login failed. Please try again."

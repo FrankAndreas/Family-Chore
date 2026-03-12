@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { login } from '../api';
 import type { User } from '../types';
 import FamilyDashboardView from './FamilyDashboard';
@@ -9,6 +10,7 @@ interface LoginProps {
 }
 
 export default function Login({ onLogin }: LoginProps) {
+    const { t } = useTranslation();
     const [nickname, setNickname] = useState('');
     const [pin, setPin] = useState('');
     const [showPin, setShowPin] = useState(false);
@@ -17,6 +19,7 @@ export default function Login({ onLogin }: LoginProps) {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [showFamilyDash, setShowFamilyDash] = useState(false);
+    // const [submitted, setSubmitted] = useState(false); // Commented out: planned for deferred blur validation (F1)
 
     if (showFamilyDash) {
         return <FamilyDashboardView onExit={() => setShowFamilyDash(false)} />;
@@ -25,17 +28,17 @@ export default function Login({ onLogin }: LoginProps) {
     const validate = () => {
         let valid = true;
         if (!nickname.trim()) {
-            setNicknameError('Nickname is required');
+            setNicknameError(t('login.error.nicknameRequired'));
             valid = false;
         } else {
             setNicknameError('');
         }
 
         if (!pin.trim()) {
-            setPinError('PIN is required');
+            setPinError(t('login.error.pinRequired'));
             valid = false;
         } else if (!/^\d{4}$/.test(pin)) {
-            setPinError('PIN must be exactly 4 digits');
+            setPinError(t('login.error.pinFormat'));
             valid = false;
         } else {
             setPinError('');
@@ -56,7 +59,7 @@ export default function Login({ onLogin }: LoginProps) {
             onLogin(response.data.user);
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
-            setError(err.response?.data?.detail || 'Login failed. Please try again.');
+            setError(err.response?.data?.detail || t('login.error.loginFailed'));
         } finally {
             setLoading(false);
         }
@@ -67,12 +70,12 @@ export default function Login({ onLogin }: LoginProps) {
             <div className="login-card glass-card">
                 <div className="login-header">
                     <h1 className="login-title">🎮 ChoreSpec</h1>
-                    <p className="login-subtitle">Transform chores into achievements</p>
+                    <p className="login-subtitle">{t('login.subtitle')}</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="login-form">
                     <div className="form-group">
-                        <label htmlFor="nickname">Nickname</label>
+                        <label htmlFor="nickname">{t('login.nickname')}</label>
                         <input
                             id="nickname"
                             type="text"
@@ -83,7 +86,7 @@ export default function Login({ onLogin }: LoginProps) {
                                 if (nicknameError) setNicknameError('');
                             }}
                             onBlur={validate}
-                            placeholder="Enter your nickname"
+                            placeholder={t('login.nicknamePlaceholder')}
                             required
                             autoFocus
                         />
@@ -91,7 +94,7 @@ export default function Login({ onLogin }: LoginProps) {
                     </div>
 
                     <div className="form-group">
-                        <label htmlFor="pin">PIN</label>
+                        <label htmlFor="pin">{t('login.pin')}</label>
                         <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                             <input
                                 id="pin"
@@ -103,7 +106,7 @@ export default function Login({ onLogin }: LoginProps) {
                                     if (pinError) setPinError('');
                                 }}
                                 onBlur={validate}
-                                placeholder="4-digit PIN"
+                                placeholder={t('login.pinPlaceholder')}
                                 maxLength={4}
                                 pattern="[0-9]{4}"
                                 required
@@ -112,7 +115,7 @@ export default function Login({ onLogin }: LoginProps) {
                             <button
                                 type="button"
                                 onClick={() => setShowPin(!showPin)}
-                                aria-label={showPin ? "Hide PIN" : "Show PIN"}
+                                aria-label={showPin ? t('login.hidePin') : t('login.showPin')}
                                 style={{
                                     position: 'absolute',
                                     right: '10px',
@@ -137,16 +140,25 @@ export default function Login({ onLogin }: LoginProps) {
                         className="btn btn-primary btn-block"
                         disabled={loading}
                     >
-                        {loading ? 'Logging in...' : 'Login'}
+                        {loading ? t('login.loggingIn') : t('login.loginButton')}
                     </button>
                     <div style={{ marginTop: '1rem' }}>
                         <button
                             type="button"
                             className="btn btn-secondary btn-block"
                             onClick={() => setShowFamilyDash(true)}
+                            title={t('login.familyDashboardHint')}
                         >
-                            🏡 Family Dashboard
+                            {t('login.familyDashboard')}
                         </button>
+                        <p className="family-dash-hint" style={{
+                            fontSize: 'var(--font-size-xs)',
+                            color: 'var(--text-muted)',
+                            textAlign: 'center',
+                            marginTop: 'var(--spacing-xs)'
+                        }}>
+                            {t('login.familyDashboardHint')}
+                        </p>
                     </div>
 
                 </form>

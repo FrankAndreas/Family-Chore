@@ -20,11 +20,21 @@
     },
     "login": {
         "title": "Willkommen bei ChoreSpec",
-        "subtitle": "Familien-Aufgaben-Verwaltungssystem",
+        "subtitle": "Verwandle Aufgaben in Erfolge",
         "nickname": "Spitzname",
-        "pin": "PIN (4 Ziffern)",
+        "nicknamePlaceholder": "Spitznamen eingeben",
+        "pin": "PIN",
+        "pinPlaceholder": "4-stellige PIN",
         "loginButton": "Anmelden",
+        "loggingIn": "Anmeldung läuft...",
+        "showPin": "PIN anzeigen",
+        "hidePin": "PIN verbergen",
+        "familyDashboard": "🏡 Familien-Dashboard",
+        "familyDashboardHint": "Gemeinsames Familien-Aufgabenbrett ohne Anmeldung ansehen",
         "error": {
+            "nicknameRequired": "Spitzname ist erforderlich",
+            "pinRequired": "PIN ist erforderlich",
+            "pinFormat": "PIN muss genau 4 Ziffern haben",
             "userNotFound": "Benutzer nicht gefunden",
             "incorrectPin": "Falsche PIN",
             "loginFailed": "Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut."
