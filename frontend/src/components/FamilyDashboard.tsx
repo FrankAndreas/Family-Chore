@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import type { TaskInstance, User, Reward, Transaction } from '../types';
 import { useDebounce } from '../hooks/useDebounce';
 import { useToast } from '../hooks/useToast';
+import { SkeletonLoader } from './SkeletonLoader';
 import Modal from './Modal';
 import Toast from './Toast';
 import './FamilyDashboard.css';
@@ -285,6 +286,17 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [historyPage]);
 
+    const activeTabRef = useRef(activeTab);
+    const refreshTransactionsRef = useRef(refreshTransactions);
+
+    useEffect(() => {
+        activeTabRef.current = activeTab;
+    }, [activeTab]);
+
+    useEffect(() => {
+        refreshTransactionsRef.current = refreshTransactions;
+    }, [refreshTransactions]);
+
     useEffect(() => {
         loadData();
 
@@ -306,11 +318,11 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
             } else if (data.type === 'task_created' || data.type === 'task_completed' || data.type === 'task_deleted') {
                 refreshTasks();
                 // If we're on history tab, refresh that too
-                if (activeTab === 'history') refreshTransactions({}, true);
+                if (activeTabRef.current === 'history') refreshTransactionsRef.current({}, true);
             } else if (data.type === 'reward_redeemed') {
                 refreshData();
                 success(`🎉 ${data.payload?.reward_name || 'Reward'} redeemed!`);
-                if (activeTab === 'history') refreshTransactions({}, true);
+                if (activeTabRef.current === 'history') refreshTransactionsRef.current({}, true);
             }
             setLastUpdate(new Date());
         };
@@ -325,7 +337,8 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
                 eventSourceRef.current.close();
             }
         };
-    }, [activeTab, loadData, refreshData, refreshTasks, refreshTransactions]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [loadData, refreshData, refreshTasks]);
 
     useEffect(() => {
         if (activeTab === 'history') {
@@ -394,7 +407,23 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
 
     const unknownTasks = tasks.filter(t => !users.find(u => u.id === t.user_id));
 
-    if (loading) return <div className="loading">{t('dashboard.loadingBoard')}</div>;
+    if (loading) return (
+        <div className="family-dashboard fade-in">
+            <div className="family-dashboard-header">
+                <div>
+                    <h1 className="mb-2">🏡 {t('dashboard.familyDashboard')}</h1>
+                    <SkeletonLoader type="text" className="w-64" />
+                </div>
+                <SkeletonLoader type="text" className="w-32" style={{ height: '38px', borderRadius: 'var(--radius-md)' }} />
+            </div>
+            <div className="dashboard-content dashboard-sections mt-4">
+                <div className="section glass-panel">
+                    <SkeletonLoader type="title" className="mb-3" />
+                    <SkeletonLoader type="card" count={4} />
+                </div>
+            </div>
+        </div>
+    );
 
     return (
         <div className="family-dashboard">
