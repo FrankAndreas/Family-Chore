@@ -103,6 +103,20 @@ Sometimes points need to be deducted (e.g., missed chores, misbehavior):
 - The last **7 daily backups** are kept. Older backups are automatically deleted.
 - **Manual Trigger**: You can trigger a manual backup via API.
 
+### 9. Keyboard Shortcuts
+Press **?** anywhere in the dashboard to see a help overlay with all available shortcuts:
+
+| Shortcut | Action |
+|----------|--------|
+| `Alt+1` | Go to My Tasks |
+| `Alt+2` | Go to Rewards |
+| `Alt+3` | Go to Settings |
+| `Alt+4` | Go to Admin Dashboard *(Admin only)* |
+| `Alt+5` | Go to Users *(Admin only)* |
+| `?` | Show shortcuts help |
+
+> **Note**: Shortcuts are disabled when typing in form fields.
+
 ---
 
 ## 🧒 For Kids (Users)
