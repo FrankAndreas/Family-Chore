@@ -8,6 +8,7 @@ import Toast from '../../components/Toast';
 import { useToast } from '../../hooks/useToast';
 import { useDebounce } from '../../hooks/useDebounce';
 import '../admin/Dashboard.css';
+import './UserDashboard.css';
 
 interface DashboardContext {
     currentUser: User;
@@ -200,7 +201,7 @@ const UserDashboard: React.FC = () => {
             <header className="page-header">
                 <h1 className="page-title">{t('dashboard.myDashboard', 'My Dashboard')}</h1>
                 <p className="page-subtitle">{t('dashboard.welcome', 'Welcome')}, <span className="highlight-text">{currentUser.nickname}</span>! {t('dashboard.youHave', 'You have')} {currentUser.current_points} {t('dashboard.points', 'points')}.</p>
-                <div className="gamification-badges flex-center gap-2 mt-2" style={{ justifyContent: 'center' }}>
+                <div className="gamification-badges flex-center gap-2 mt-2 center-badges">
                     {currentUser.current_streak > 0 && (
                         <span className="badge badge-warning text-lg px-2 py-1">
                             🔥 {currentUser.current_streak} {t('dashboard.dayStreak', { count: currentUser.current_streak })}
@@ -300,25 +301,25 @@ const UserDashboard: React.FC = () => {
                                                                         type="file"
                                                                         accept="image/*"
                                                                         capture="environment"
-                                                                        style={{ display: 'none' }}
+                                                                        className="hidden-file-input"
                                                                         onChange={(e) => {
                                                                             const file = e.target.files ? e.target.files[0] : null;
                                                                             setPhotoUrls(prev => ({ ...prev, [instance.id]: file }));
                                                                         }}
                                                                     />
                                                                     {photoUrls[instance.id] ? (
-                                                                        <div style={{ position: 'relative', width: '100%', maxWidth: '200px' }}>
+                                                                        <div className="photo-upload-box">
                                                                             <PhotoPreview file={photoUrls[instance.id]!} />
-                                                                            <div style={{ position: 'absolute', top: '4px', right: '4px', background: 'rgba(0,0,0,0.6)', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '12px' }}>
+                                                                            <div className="photo-replace-btn">
                                                                                 ✓
                                                                             </div>
-                                                                            <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Tap to replace photo</div>
+                                                                            <div className="photo-replace-text">Tap to replace photo</div>
                                                                         </div>
                                                                     ) : (
                                                                         <>
-                                                                            <div style={{ fontSize: '2rem' }}>📸</div>
-                                                                            <div style={{ fontWeight: '500' }}>Tap to take photo or drop image here</div>
-                                                                            <small style={{ color: 'var(--text-secondary)' }}>Verification required</small>
+                                                                            <div className="photo-upload-icon">📸</div>
+                                                                            <div className="photo-upload-text">Tap to take photo or drop image here</div>
+                                                                            <small className="photo-upload-hint">Verification required</small>
                                                                         </>
                                                                     )}
                                                                 </label>
@@ -401,7 +402,7 @@ const UserDashboard: React.FC = () => {
                                         </tbody>
                                     </table>
                                     {hasMoreHistory && (
-                                        <div style={{ textAlign: 'center', marginTop: '1rem', paddingBottom: '1rem' }}>
+                                        <div className="load-more-wrapper">
                                             <button className="btn btn-secondary" onClick={loadMoreHistory}>
                                                 Load More
                                             </button>

@@ -73,3 +73,41 @@
     padding-top: var(--spacing-md);
     border-top: 1px solid var(--border-color);
 }
+
+.input-error-text {
+    color: #ff4d4f;
+    margin-top: 4px;
+    display: block;
+}
+
+.pin-input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.pin-input {
+    padding-right: 40px;
+}
+
+.pin-toggle-btn {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 0;
+    color: var(--text-secondary);
+}
+
+.login-family-dash {
+    margin-top: var(--spacing-md);
+}
+
+.family-dash-hint {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: var(--spacing-xs);
+}

@@ -1,0 +1,64 @@
+/* UserDashboard.css */
+
+.task-proof-img {
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    border: 1px solid var(--border-color);
+}
+
+.center-badges {
+    justify-content: center;
+}
+
+.hidden-file-input {
+    display: none;
+}
+
+.photo-upload-box {
+    position: relative;
+    width: 100%;
+    max-width: 200px;
+    margin: 0 auto;
+}
+
+.photo-replace-btn {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+}
+
+.photo-replace-text {
+    margin-top: var(--spacing-xs);
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+}
+
+.photo-upload-icon {
+    font-size: 2rem;
+}
+
+.photo-upload-text {
+    font-weight: 500;
+}
+
+.photo-upload-hint {
+    color: var(--text-secondary);
+    font-size: var(--font-size-xs);
+}
+
+.load-more-wrapper {
+    text-align: center;
+    margin-top: var(--spacing-sm);
+    padding-bottom: var(--spacing-sm);
+}

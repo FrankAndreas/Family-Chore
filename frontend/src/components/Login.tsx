@@ -90,16 +90,16 @@ export default function Login({ onLogin }: LoginProps) {
                             required
                             autoFocus
                         />
-                        {nicknameError && <small className="error-text" style={{ color: '#ff4d4f', marginTop: '4px', display: 'block' }}>{nicknameError}</small>}
+                        {nicknameError && <small className="error-text input-error-text">{nicknameError}</small>}
                     </div>
 
                     <div className="form-group">
                         <label htmlFor="pin">{t('login.pin')}</label>
-                        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                        <div className="pin-input-group">
                             <input
                                 id="pin"
                                 type={showPin ? "text" : "password"}
-                                className={`input ${pinError ? 'input-error' : ''}`}
+                                className={`input pin-input ${pinError ? 'input-error' : ''}`}
                                 value={pin}
                                 onChange={(e) => {
                                     setPin(e.target.value);
@@ -110,27 +110,17 @@ export default function Login({ onLogin }: LoginProps) {
                                 maxLength={4}
                                 pattern="[0-9]{4}"
                                 required
-                                style={{ paddingRight: '40px' }}
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowPin(!showPin)}
                                 aria-label={showPin ? t('login.hidePin') : t('login.showPin')}
-                                style={{
-                                    position: 'absolute',
-                                    right: '10px',
-                                    background: 'none',
-                                    border: 'none',
-                                    cursor: 'pointer',
-                                    fontSize: '1.2rem',
-                                    padding: '0',
-                                    color: 'var(--text-secondary)'
-                                }}
+                                className="pin-toggle-btn"
                             >
                                 {showPin ? '🙈' : '👁️'}
                             </button>
                         </div>
-                        {pinError && <small className="error-text" style={{ color: '#ff4d4f', marginTop: '4px', display: 'block' }}>{pinError}</small>}
+                        {pinError && <small className="error-text input-error-text">{pinError}</small>}
                     </div>
 
                     {error && <div className="error-message" role="alert" aria-live="assertive">{error}</div>}
@@ -142,7 +132,7 @@ export default function Login({ onLogin }: LoginProps) {
                     >
                         {loading ? t('login.loggingIn') : t('login.loginButton')}
                     </button>
-                    <div style={{ marginTop: '1rem' }}>
+                    <div className="login-family-dash">
                         <button
                             type="button"
                             className="btn btn-secondary btn-block"
@@ -151,12 +141,7 @@ export default function Login({ onLogin }: LoginProps) {
                         >
                             {t('login.familyDashboard')}
                         </button>
-                        <p className="family-dash-hint" style={{
-                            fontSize: 'var(--font-size-xs)',
-                            color: 'var(--text-muted)',
-                            textAlign: 'center',
-                            marginTop: 'var(--spacing-xs)'
-                        }}>
+                        <p className="family-dash-hint">
                             {t('login.familyDashboardHint')}
                         </p>
                     </div>

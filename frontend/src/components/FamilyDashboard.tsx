@@ -42,7 +42,7 @@ function ClaimModal({ taskName, users, onSelectUser, onClose }: ClaimModalProps)
                 ))}
             </div>
 
-            <button className="btn btn-secondary" style={{ marginTop: '2rem', width: '100%' }} onClick={onClose}>
+            <button className="btn btn-secondary modal-close-btn" onClick={onClose}>
                 {t('common.cancel')}
             </button>
         </Modal>
@@ -403,7 +403,7 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
             <div className="family-dashboard-header">
                 <div>
                     <h1>🏡 {t('dashboard.familyDashboard')}</h1>
-                    <small style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem' }}>
+                    <small className="dashboard-live-status">
                         {connected ? `🟢 ${t('dashboard.liveUpdates')}` : `🔴 ${t('dashboard.reconnecting')}...`} • {t('dashboard.last')}: {lastUpdate.toLocaleTimeString()}
                     </small>
                 </div>
@@ -443,7 +443,7 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
                         return (
                             <div key={user.id} className="user-group">
                                 <button
-                                    className="user-group-toggle"
+                                    className="user-group-toggle user-group-header"
                                     onClick={() => {
                                         setCollapsedUsers(prev => {
                                             const next = new Set(prev);
@@ -457,34 +457,16 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
                                     }}
                                     aria-expanded={!isCollapsed}
                                     aria-controls={`user-tasks-${user.id}`}
-                                    style={{
-                                        background: 'none',
-                                        border: 'none',
-                                        color: 'inherit',
-                                        cursor: 'pointer',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: 'var(--spacing-xs)',
-                                        width: '100%',
-                                        padding: 'var(--spacing-xs) 0',
-                                        fontSize: 'inherit',
-                                        fontWeight: 'inherit'
-                                    }}
                                 >
                                     <span
-                                        className="collapse-chevron"
-                                        style={{
-                                            transition: 'transform 0.2s ease',
-                                            transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)',
-                                            display: 'inline-block'
-                                        }}
+                                        className={`collapse-chevron ${isCollapsed ? 'is-collapsed' : ''}`}
                                         aria-hidden="true"
                                     >
                                         ▾
                                     </span>
-                                    <h3 style={{ margin: 0 }}>
+                                    <h3 className="user-group-name">
                                         {user.nickname}
-                                        <span style={{ color: 'var(--text-muted)', fontSize: 'var(--font-size-sm)', marginLeft: 'var(--spacing-xs)' }}>
+                                        <span className="user-group-count">
                                             ({userTasks.length})
                                         </span>
                                     </h3>
@@ -663,7 +645,7 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
                                     </tbody>
                                 </table>
                                 {hasMoreHistory && (
-                                    <div style={{ textAlign: 'center', marginTop: '1rem', paddingBottom: '1rem' }}>
+                                    <div className="load-more-wrapper">
                                         <button className="btn btn-secondary" onClick={loadMoreHistory}>
                                             Load More
                                         </button>
