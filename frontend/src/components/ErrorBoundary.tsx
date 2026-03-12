@@ -23,27 +23,69 @@ class ErrorBoundary extends Component<Props, State> {
         console.error('Uncaught error:', error, errorInfo);
     }
 
+    private handleTryAgain = () => {
+        this.setState({ hasError: false, error: null });
+    };
+
+    private handleGoBack = () => {
+        this.setState({ hasError: false, error: null });
+        window.history.back();
+    };
+
     public render() {
         if (this.state.hasError) {
             return (
-                <div className="error-boundary-container flex-col-center border-2 border-dashed border-red-500 rounded-md p-4 bg-secondary max-w-sm w-full mx-auto mt-5 text-center">
-                    <div className="glass-card error-card">
-                        <div className="text-6xl mb-4">😵</div>
-                        <h1 className="text-xl font-bold mb-2 text-danger">Oops! Something went wrong</h1>
-                        <p className="text-secondary mb-3">
-                            We're sorry, but an unexpected error occurred. Please try reloading the page.
+                <div className="error-boundary-container flex-col-center p-4 mx-auto mt-5 text-center" style={{ maxWidth: '480px' }}>
+                    <div className="glass-card" style={{ padding: 'var(--spacing-xl)', width: '100%' }}>
+                        <div style={{ fontSize: '3rem', marginBottom: 'var(--spacing-md)' }} aria-hidden="true">😵</div>
+                        <h1 style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, marginBottom: 'var(--spacing-xs)' }}>
+                            Oops! Something went wrong
+                        </h1>
+                        <p className="text-secondary" style={{ marginBottom: 'var(--spacing-md)' }}>
+                            We&apos;re sorry, but an unexpected error occurred. You can try again, go back, or reload the page.
                         </p>
                         {this.state.error && (
-                            <div className="error-details bg-dark p-3 rounded-md text-sm font-mono mb-3 text-left overflow-auto max-h-32 text-danger border-t border-color">
-                                {this.state.error.toString()}
-                            </div>
+                            <details style={{ marginBottom: 'var(--spacing-md)', textAlign: 'left' }}>
+                                <summary className="text-secondary" style={{ cursor: 'pointer', fontSize: 'var(--font-size-sm)' }}>
+                                    Show error details
+                                </summary>
+                                <div
+                                    className="bg-secondary rounded-md text-sm"
+                                    style={{
+                                        padding: 'var(--spacing-sm)',
+                                        marginTop: 'var(--spacing-xs)',
+                                        fontFamily: 'monospace',
+                                        maxHeight: '8rem',
+                                        overflowY: 'auto',
+                                        borderTop: '1px solid var(--border-color)',
+                                        color: '#ff4d4f',
+                                        wordBreak: 'break-word'
+                                    }}
+                                >
+                                    {this.state.error.toString()}
+                                </div>
+                            </details>
                         )}
-                        <button
-                            onClick={() => window.location.reload()}
-                            className="btn btn-primary w-full mt-3"
-                        >
-                            Reload Page
-                        </button>
+                        <div style={{ display: 'flex', gap: 'var(--spacing-xs)', flexDirection: 'column' }}>
+                            <button
+                                onClick={this.handleTryAgain}
+                                className="btn btn-primary w-full"
+                            >
+                                🔄 Try Again
+                            </button>
+                            <button
+                                onClick={this.handleGoBack}
+                                className="btn btn-secondary w-full"
+                            >
+                                ← Go Back
+                            </button>
+                            <button
+                                onClick={() => window.location.reload()}
+                                className="btn btn-secondary w-full"
+                            >
+                                🔃 Reload Page
+                            </button>
+                        </div>
                     </div>
                 </div>
             );
