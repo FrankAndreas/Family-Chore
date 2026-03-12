@@ -91,13 +91,22 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ currentUser, onLogout
                 <div className="sidebar-header">
                     <div className="header-top">
                         <h1 className="app-title">ChoreSpec</h1>
-                        <button
-                            className="mobile-menu-toggle"
-                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                            aria-label="Toggle menu"
-                        >
-                            {mobileMenuOpen ? '✕' : '☰'}
-                        </button>
+                        <div className="mobile-header-actions">
+                            <span
+                                className={`mobile-connection-status ${sseConnected ? 'online' : 'offline'}`}
+                                title={sseConnected ? t('navigation.live_updates_active', 'Live updates active') : t('navigation.live_updates_disconnected', 'Live updates disconnected')}
+                                aria-label={sseConnected ? t('navigation.live_updates_active', 'Live updates active') : t('navigation.live_updates_disconnected', 'Live updates disconnected')}
+                            >
+                                <span className="status-dot"></span>
+                            </span>
+                            <button
+                                className="mobile-menu-toggle"
+                                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                                aria-label="Toggle menu"
+                            >
+                                {mobileMenuOpen ? '✕' : '☰'}
+                            </button>
+                        </div>
                     </div>
                     <div className="user-profile">
                         <div className="avatar">{currentUser.nickname[0]}</div>
