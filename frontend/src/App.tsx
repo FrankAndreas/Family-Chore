@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ToastProvider } from './context/ToastContext';
 import { NotificationProvider } from './context/NotificationContext';
 import ErrorBoundary from './components/ErrorBoundary';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import Login from './components/Login';
 import DashboardLayout from './layouts/DashboardLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -14,10 +14,21 @@ import RewardHub from './pages/user/RewardHub';
 import AnalyticsDashboard from './pages/admin/AnalyticsDashboard';
 import SettingsPage from './pages/SettingsPage';
 import NotFoundPage from './pages/NotFoundPage';
+import FamilyDashboardView from './components/FamilyDashboard';
 import type { User } from './types';
 import { getUsers } from './api';
 import './App.css';
 import './index.css';
+
+function FamilyDashboardRoute() {
+  const navigate = useNavigate();
+  return <FamilyDashboardView onExit={() => navigate('/')} />;
+}
+
+function LoginRoute({ onLogin }: { onLogin: (user: User) => void }) {
+  const navigate = useNavigate();
+  return <Login onLogin={onLogin} onFamilyDashboard={() => navigate('/family-dashboard')} />;
+}
 
 function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -44,50 +55,48 @@ function App() {
     }
   };
 
-  // If not logged in, show login page
-  if (!currentUser) {
-    return (
-      <ToastProvider>
-        <Login onLogin={handleLogin} />
-      </ToastProvider>
-    );
-  }
-
-  // If logged in, show dashboard with routes
   return (
     <ToastProvider>
-      <NotificationProvider currentUser={currentUser}>
-        <ErrorBoundary>
-          <BrowserRouter>
+      <ErrorBoundary>
+        <BrowserRouter>
+          {!currentUser ? (
             <Routes>
-              <Route
-                path="/"
-                element={<DashboardLayout currentUser={currentUser} onLogout={handleLogout} refreshUser={refreshUser} />}
-              >
-                {/* Redirect root to appropriate dashboard */}
-                <Route
-                  index
-                  element={<Navigate to={currentUser.role.name === 'Admin' ? '/admin' : '/dashboard'} replace />}
-                />
-
-                {/* Admin Routes */}
-                <Route path="admin" element={<AdminDashboard />} />
-                <Route path="admin/users" element={<UserManagement />} />
-                <Route path="admin/tasks" element={<TaskManagement />} />
-                <Route path="admin/roles" element={<RoleManagement />} />
-
-                {/* User Routes */}
-                <Route path="dashboard" element={<UserDashboard />} />
-                <Route path="rewards" element={<RewardHub />} />
-                <Route path="admin/analytics" element={<AnalyticsDashboard />} />
-                <Route path="settings" element={<SettingsPage />} />
-              </Route>
-              {/* Catch all - 404 page */}
-              <Route path="*" element={<NotFoundPage />} />
+              <Route path="/family-dashboard" element={<FamilyDashboardRoute />} />
+              <Route path="*" element={<LoginRoute onLogin={handleLogin} />} />
             </Routes>
-          </BrowserRouter>
-        </ErrorBoundary>
-      </NotificationProvider>
+          ) : (
+            <NotificationProvider currentUser={currentUser}>
+              <Routes>
+                <Route path="/family-dashboard" element={<FamilyDashboardRoute />} />
+                <Route
+                  path="/"
+                  element={<DashboardLayout currentUser={currentUser} onLogout={handleLogout} refreshUser={refreshUser} />}
+                >
+                  {/* Redirect root to appropriate dashboard */}
+                  <Route
+                    index
+                    element={<Navigate to={currentUser.role.name === 'Admin' ? '/admin' : '/dashboard'} replace />}
+                  />
+
+                  {/* Admin Routes */}
+                  <Route path="admin" element={<AdminDashboard />} />
+                  <Route path="admin/users" element={<UserManagement />} />
+                  <Route path="admin/tasks" element={<TaskManagement />} />
+                  <Route path="admin/roles" element={<RoleManagement />} />
+
+                  {/* User Routes */}
+                  <Route path="dashboard" element={<UserDashboard />} />
+                  <Route path="rewards" element={<RewardHub />} />
+                  <Route path="admin/analytics" element={<AnalyticsDashboard />} />
+                  <Route path="settings" element={<SettingsPage />} />
+                </Route>
+                {/* Catch all - 404 page */}
+                <Route path="*" element={<NotFoundPage />} />
+              </Routes>
+            </NotificationProvider>
+          )}
+        </BrowserRouter>
+      </ErrorBoundary>
     </ToastProvider>
   );
 }

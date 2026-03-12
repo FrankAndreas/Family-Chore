@@ -2,14 +2,14 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { login } from '../api';
 import type { User } from '../types';
-import FamilyDashboardView from './FamilyDashboard';
 import './Login.css';
 
 interface LoginProps {
     onLogin: (user: User) => void;
+    onFamilyDashboard?: () => void;
 }
 
-export default function Login({ onLogin }: LoginProps) {
+export default function Login({ onLogin, onFamilyDashboard }: LoginProps) {
     const { t } = useTranslation();
     const [nickname, setNickname] = useState('');
     const [pin, setPin] = useState('');
@@ -18,12 +18,7 @@ export default function Login({ onLogin }: LoginProps) {
     const [pinError, setPinError] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const [showFamilyDash, setShowFamilyDash] = useState(false);
     // const [submitted, setSubmitted] = useState(false); // Commented out: planned for deferred blur validation (F1)
-
-    if (showFamilyDash) {
-        return <FamilyDashboardView onExit={() => setShowFamilyDash(false)} />;
-    }
 
     const validate = () => {
         let valid = true;
@@ -136,7 +131,7 @@ export default function Login({ onLogin }: LoginProps) {
                         <button
                             type="button"
                             className="btn btn-secondary btn-block"
-                            onClick={() => setShowFamilyDash(true)}
+                            onClick={onFamilyDashboard}
                             title={t('login.familyDashboardHint')}
                         >
                             {t('login.familyDashboard')}
