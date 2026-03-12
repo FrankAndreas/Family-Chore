@@ -3,7 +3,9 @@ import api, { completeTask, redeemRewardSplit } from '../api';
 import { useTranslation } from 'react-i18next';
 import type { TaskInstance, User, Reward, Transaction } from '../types';
 import { useDebounce } from '../hooks/useDebounce';
+import { useToast } from '../hooks/useToast';
 import Modal from './Modal';
+import Toast from './Toast';
 import './FamilyDashboard.css';
 
 // FamilyDashboard-specific API calls with skipAuthRedirect
@@ -190,7 +192,7 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
     const [selectedTask, setSelectedTask] = useState<TaskInstance | null>(null);
     const [selectedRedeem, setSelectedRedeem] = useState<Reward | null>(null);
     const [redeeming, setRedeeming] = useState(false);
-    const [toast, setToast] = useState<string | null>(null);
+    const { toasts, removeToast, success, error: showError } = useToast();
     const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
     const [connected, setConnected] = useState(false);
     const [historyPage, setHistoryPage] = useState(1);
@@ -307,8 +309,7 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
                 if (activeTab === 'history') refreshTransactions({}, true);
             } else if (data.type === 'reward_redeemed') {
                 refreshData();
-                setToast(`🎉 ${data.payload?.reward_name || 'Reward'} redeemed!`);
-                setTimeout(() => setToast(null), 3000);
+                success(`🎉 ${data.payload?.reward_name || 'Reward'} redeemed!`);
                 if (activeTab === 'history') refreshTransactions({}, true);
             }
             setLastUpdate(new Date());
@@ -347,7 +348,7 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
             if (activeTab === 'history') refreshTransactions({}, true); // Refresh history if needed
         } catch (error) {
             console.error("Failed to complete task", error);
-            setToast("Error completing task. Please try again.");
+            showError(`Error completing "${selectedTask.task?.name || `Task #${selectedTask.task_id}`}". Please try again.`);
         }
     };
 
@@ -362,15 +363,13 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
         try {
             const result = await redeemRewardSplit(selectedRedeem.id, contributions);
             const contributors = result.data.transactions?.map(t => t.user_name).join(', ') || '';
-            setToast(`🎉 ${selectedRedeem.name} redeemed by ${contributors}!`);
-            setTimeout(() => setToast(null), 4000);
+            success(`🎉 ${selectedRedeem.name} redeemed by ${contributors}!`);
             setSelectedRedeem(null);
             refreshData();
             if (activeTab === 'history') refreshTransactions({}, true);
         } catch (error) {
             console.error("Failed to redeem", error);
-            setToast('❌ Redemption failed. Check contributions?');
-            setTimeout(() => setToast(null), 3000);
+            showError(`❌ Failed to redeem "${selectedRedeem.name}". Check contributions?`);
         } finally {
             setRedeeming(false);
         }
@@ -399,11 +398,18 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
 
     return (
         <div className="family-dashboard">
-            {toast && (
-                <div className="dashboard-toast">
-                    {toast}
-                </div>
-            )}
+            {/* Toast notifications */}
+            <div className="toast-container">
+                {toasts.map(tst => (
+                    <Toast
+                        key={tst.id}
+                        message={tst.message}
+                        type={tst.type}
+                        duration={tst.duration}
+                        onClose={() => removeToast(tst.id)}
+                    />
+                ))}
+            </div>
 
             <div className="family-dashboard-header">
                 <div>

@@ -137,7 +137,7 @@ const UserDashboard: React.FC = () => {
         try {
             const task = instance.taskDetails;
             if (task?.requires_photo_verification && !photoUrls[instance.id] && instance.status !== 'IN_REVIEW') {
-                showError('Please provide a photo URL for this task.');
+                showError(t('dashboard.photoRequiredError', { defaultValue: `Photo verification required for "${task.name}".`, task: task.name }));
                 setCompletingId(null);
                 return;
             }
@@ -158,7 +158,7 @@ const UserDashboard: React.FC = () => {
             fetchData(); // Refresh list to show updated status
         } catch (err) {
             console.error('Failed to complete task', err);
-            showError('Failed to complete task. Please try again.');
+            showError(t('dashboard.errorCompletingTaskContext', { defaultValue: `Error completing "${instance.taskDetails?.name || 'Task'}". Please try again.`, task: instance.taskDetails?.name || 'Task' }));
         } finally {
             setCompletingId(null);
         }
