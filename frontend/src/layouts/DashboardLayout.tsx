@@ -215,7 +215,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ currentUser, onLogout
                             {breadcrumbs.map((bc, idx) => (
                                 <li key={idx} aria-current={idx === breadcrumbs.length - 1 ? 'page' : undefined}>
                                     {bc}
-                                    {idx < breadcrumbs.length - 1 && <span className="breadcrumb-separator" aria-hidden="true">/</span>}
+                                    {idx < breadcrumbs.length - 1 && <span className="breadcrumb-separator" aria-hidden="true">›</span>}
                                 </li>
                             ))}
                         </ol>
