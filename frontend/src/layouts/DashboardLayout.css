@@ -293,6 +293,30 @@
     border-top: 1px solid var(--border-color);
 }
 
+/* Tablet Layout */
+@media (max-width: 1024px) {
+    .sidebar {
+        width: 220px;
+    }
+    
+    .sidebar-header {
+        padding: var(--spacing-md);
+    }
+    
+    .main-content {
+        padding: var(--spacing-lg);
+    }
+}
+
+/* Ultra-Wide Layout */
+@media (min-width: 1440px) {
+    .dashboard-container {
+        max-width: 1600px;
+        margin: 0 auto;
+        box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+    }
+}
+
 @media (max-width: 768px) {
     .dashboard-container {
         flex-direction: column;
