@@ -108,7 +108,19 @@
         "markComplete": "Als erledigt markieren",
         "transactionHistory": "Transaktionsverlauf",
         "searchDescription": "Beschreibung suchen...",
-        "noTransactionsMatchingFilters": "Keine Transaktionen gefunden, die Ihren Filtern entsprechen."
+        "noTransactionsMatchingFilters": "Keine Transaktionen gefunden, die Ihren Filtern entsprechen.",
+        "total": "Gesamt",
+        "needMore": "noch {{count}} nötig",
+        "over": "{{count}} zu viel!",
+        "cancel": "Abbrechen",
+        "redeeming": "Löst ein...",
+        "redeemAction": "🎉 Einlösen!",
+        "redeemReward": "🎁 Einlösen",
+        "doneAction": "✅ Erledigt",
+        "noRewards": "Derzeit keine Belohnungen erschwinglich. Sammle weiter!",
+        "loadMore": "Mehr laden",
+        "dailyBonus": "+5 Tagesbonus verfügbar!",
+        "noDescription": "Keine Beschreibung"
     },
     "tasks": {
         "title": "Aufgabenverwaltung",

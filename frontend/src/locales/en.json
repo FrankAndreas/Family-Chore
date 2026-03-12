@@ -108,7 +108,19 @@
         "markComplete": "Mark Complete",
         "transactionHistory": "Transaction History",
         "searchDescription": "Search description...",
-        "noTransactionsMatchingFilters": "No transactions found matching your filters."
+        "noTransactionsMatchingFilters": "No transactions found matching your filters.",
+        "total": "Total",
+        "needMore": "need {{count}} more",
+        "over": "{{count}} over!",
+        "cancel": "Cancel",
+        "redeeming": "Redeeming...",
+        "redeemAction": "🎉 Redeem!",
+        "redeemReward": "🎁 Redeem",
+        "doneAction": "✅ Done",
+        "noRewards": "No rewards affordable right now. Keep earning!",
+        "loadMore": "Load More",
+        "dailyBonus": "+5 Daily Bonus Available!",
+        "noDescription": "No description"
     },
     "tasks": {
         "title": "Task Management",

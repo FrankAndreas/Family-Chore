@@ -160,20 +160,20 @@ function SplitRedeemModal({ reward, users, onConfirm, onClose, redeeming }: Spli
             </div>
 
             <div className={`total-display ${isExact ? 'exact' : remaining < 0 ? 'over' : 'under'}`}>
-                Total: {totalContribution}/{reward.cost_points} pts
-                {isExact ? ' ✅' : remaining > 0 ? ` (need ${remaining} more)` : ` (${-remaining} over!)`}
+                {t('dashboard.total', 'Total')}: {totalContribution}/{reward.cost_points} {t('common.pts', 'pts')}
+                {isExact ? ' ✅' : remaining > 0 ? ` (${t('dashboard.needMore', { count: remaining, defaultValue: `need ${remaining} more` })})` : ` (${t('dashboard.over', { count: -remaining, defaultValue: `${-remaining} over!` })})`}
             </div>
 
             <div className="modal-actions">
                 <button className="btn btn-secondary" onClick={onClose} disabled={redeeming}>
-                    Cancel
+                    {t('dashboard.cancel', 'Cancel')}
                 </button>
                 <button
                     className="btn btn-success"
                     onClick={handleConfirm}
                     disabled={!isExact || redeeming}
                 >
-                    {redeeming ? 'Redeeming...' : '🎉 Redeem!'}
+                    {redeeming ? t('dashboard.redeeming', 'Redeeming...') : t('dashboard.redeemAction', '🎉 Redeem!')}
                 </button>
             </div>
         </Modal>
@@ -457,7 +457,7 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
                     className={`tab-btn ${activeTab === 'tasks' ? 'active' : ''}`}
                     onClick={() => setActiveTab('tasks')}
                 >
-                    📋 Tasks
+                    📋 {t('navigation.tasks', 'Tasks')}
                 </button>
                 <button
                     className={`tab-btn ${activeTab === 'redeem' ? 'active' : ''}`}
@@ -519,7 +519,7 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
                                                     <h4>{instance.task?.name || `Task #${instance.task_id}`}</h4>
                                                     <p className="task-desc">{instance.task?.description}</p>
                                                     <div className="task-info">
-                                                        <span className="task-points">💎 {instance.task?.base_points} pts</span>
+                                                        <span className="task-points">💎 {instance.task?.base_points} {t('common.pts', 'pts')}</span>
                                                         <span>📅 {instance.due_time.split('T')[0]}</span>
                                                     </div>
                                                 </div>
@@ -527,7 +527,7 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
                                                     className="btn btn-primary btn-complete"
                                                     onClick={() => handleCompleteClick(instance)}
                                                 >
-                                                    ✅ Done
+                                                    {t('dashboard.doneAction', '✅ Done')}
                                                 </button>
                                             </div>
                                         ))}
@@ -576,7 +576,7 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
                             <div key={user.id} className="user-group">
                                 <h3>
                                     {user.nickname}
-                                    <span className="user-points-badge">💎 {user.current_points} pts</span>
+                                    <span className="user-points-badge">💎 {user.current_points} {t('common.pts', 'pts')}</span>
                                 </h3>
                                 <div className="rewards-grid">
                                     {affordable.map(reward => (
@@ -587,14 +587,15 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
                                                     <p className="reward-desc">{reward.description}</p>
                                                 )}
                                                 <div className="reward-cost">
-                                                    💰 {reward.cost_points} pts
+                                                    💰 {reward.cost_points} {t('common.pts', 'pts')}
                                                 </div>
                                             </div>
                                             <button
                                                 className="btn btn-success btn-redeem"
+                                                disabled={redeeming}
                                                 onClick={() => handleRedeemClick(reward)}
                                             >
-                                                🎁 Redeem
+                                                {t('dashboard.redeemReward', '🎁 Redeem')}
                                             </button>
                                         </div>
                                     ))}
@@ -687,7 +688,7 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
                                 {hasMoreHistory && (
                                     <div className="load-more-wrapper">
                                         <button className="btn btn-secondary" onClick={loadMoreHistory}>
-                                            Load More
+                                            {t('dashboard.loadMore', 'Load More')}
                                         </button>
                                     </div>
                                 )}

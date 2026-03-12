@@ -209,7 +209,7 @@ const UserDashboard: React.FC = () => {
                     )}
                     {currentUser.last_task_date !== new Date().toISOString().split('T')[0] && (
                         <span className="badge badge-success text-lg px-2 py-1">
-                            🎁 +5 Daily Bonus Available!
+                            🎁 {t('dashboard.dailyBonus', '+5 Daily Bonus Available!')}
                         </span>
                     )}
                 </div>
@@ -259,7 +259,7 @@ const UserDashboard: React.FC = () => {
                                                 <div key={instance.id} className="task-item-card">
                                                     <div className="task-item-content">
                                                         <h3>{task?.name || `Task #${instance.task_id}`}</h3>
-                                                        <p className="task-description">{task?.description || 'No description'}</p>
+                                                        <p className="task-description">{task?.description || t('dashboard.noDescription', 'No description')}</p>
                                                         <div className="task-meta-info">
                                                             <span className="due-time">
                                                                 🕒 {t('dashboard.due', 'Due')}: {new Date(instance.due_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -401,7 +401,7 @@ const UserDashboard: React.FC = () => {
                                     {hasMoreHistory && (
                                         <div className="load-more-wrapper">
                                             <button className="btn btn-secondary" onClick={loadMoreHistory}>
-                                                Load More
+                                                {t('dashboard.loadMore', 'Load More')}
                                             </button>
                                         </div>
                                     )}
