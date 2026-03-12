@@ -145,6 +145,11 @@ function SplitRedeemModal({ reward, users, onConfirm, onClose, redeeming }: Spli
                             max={user.current_points}
                             value={contributions[user.id] || 0}
                             onChange={e => updateContribution(user.id, parseInt(e.target.value) || 0)}
+                            onKeyDown={(e) => {
+                                if (e.key === '-' || e.key === 'e' || e.key === '+') {
+                                    e.preventDefault();
+                                }
+                            }}
                             className="contrib-input"
                         />
                     </div>

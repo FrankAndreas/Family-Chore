@@ -62,3 +62,13 @@
     margin-top: var(--spacing-sm);
     padding-bottom: var(--spacing-sm);
 }
+
+.dropzone-container {
+    transition: all 0.2s ease;
+}
+
+.dropzone-container:hover,
+.dropzone-container.drag-active {
+    border-color: var(--primary-color);
+    background-color: var(--bg-hover) !important;
+}

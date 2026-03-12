@@ -279,18 +279,15 @@ const UserDashboard: React.FC = () => {
                                                                     className="dropzone-container flex-col-center border-dashed border-2 rounded-md p-4 bg-secondary cursor-pointer max-w-sm w-full mx-auto"
                                                                     onDragOver={(e) => {
                                                                         e.preventDefault();
-                                                                        e.currentTarget.style.borderColor = 'var(--primary-color)';
-                                                                        e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+                                                                        e.currentTarget.classList.add('drag-active');
                                                                     }}
                                                                     onDragLeave={(e) => {
                                                                         e.preventDefault();
-                                                                        e.currentTarget.style.borderColor = 'var(--border-color)';
-                                                                        e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+                                                                        e.currentTarget.classList.remove('drag-active');
                                                                     }}
                                                                     onDrop={(e) => {
                                                                         e.preventDefault();
-                                                                        e.currentTarget.style.borderColor = 'var(--border-color)';
-                                                                        e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+                                                                        e.currentTarget.classList.remove('drag-active');
                                                                         const file = e.dataTransfer.files ? e.dataTransfer.files[0] : null;
                                                                         if (file && file.type.startsWith('image/')) {
                                                                             setPhotoUrls(prev => ({ ...prev, [instance.id]: file }));
@@ -313,13 +310,13 @@ const UserDashboard: React.FC = () => {
                                                                             <div className="photo-replace-btn">
                                                                                 ✓
                                                                             </div>
-                                                                            <div className="photo-replace-text">Tap to replace photo</div>
+                                                                            <div className="photo-replace-text">{t('dashboard.photoReplace', 'Tap to replace photo')}</div>
                                                                         </div>
                                                                     ) : (
                                                                         <>
                                                                             <div className="photo-upload-icon">📸</div>
-                                                                            <div className="photo-upload-text">Tap to take photo or drop image here</div>
-                                                                            <small className="photo-upload-hint">Verification required</small>
+                                                                            <div className="photo-upload-text">{t('dashboard.photoTake', 'Tap to take photo or drop image here')}</div>
+                                                                            <small className="photo-upload-hint">{t('dashboard.photoRequired', 'Verification required')}</small>
                                                                         </>
                                                                     )}
                                                                 </label>

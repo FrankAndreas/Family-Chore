@@ -18,7 +18,7 @@ export default function Login({ onLogin, onFamilyDashboard }: LoginProps) {
     const [pinError, setPinError] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    // const [submitted, setSubmitted] = useState(false); // Commented out: planned for deferred blur validation (F1)
+    const [submitted, setSubmitted] = useState(false);
 
     const validate = () => {
         let valid = true;
@@ -43,6 +43,7 @@ export default function Login({ onLogin, onFamilyDashboard }: LoginProps) {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setSubmitted(true);
         if (!validate()) return;
 
         setError('');
@@ -54,18 +55,24 @@ export default function Login({ onLogin, onFamilyDashboard }: LoginProps) {
             onLogin(response.data.user);
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
-            setError(err.response?.data?.detail || t('login.error.loginFailed'));
+            setError(err.response?.data?.detail || t('login.error.default'));
         } finally {
             setLoading(false);
         }
     };
 
+    const handleBlur = () => {
+        if (submitted) {
+            validate();
+        }
+    };
+
     return (
         <div className="login-container">
-            <div className="login-card glass-card">
+            <div className="login-box glass-panel">
                 <div className="login-header">
-                    <h1 className="login-title">🎮 ChoreSpec</h1>
-                    <p className="login-subtitle">{t('login.subtitle')}</p>
+                    <h2>{t('login.title')}</h2>
+                    <p>{t('login.subtitle')}</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="login-form">
@@ -80,7 +87,7 @@ export default function Login({ onLogin, onFamilyDashboard }: LoginProps) {
                                 setNickname(e.target.value);
                                 if (nicknameError) setNicknameError('');
                             }}
-                            onBlur={validate}
+                            onBlur={handleBlur}
                             placeholder={t('login.nicknamePlaceholder')}
                             required
                             autoFocus
@@ -100,7 +107,7 @@ export default function Login({ onLogin, onFamilyDashboard }: LoginProps) {
                                     setPin(e.target.value);
                                     if (pinError) setPinError('');
                                 }}
-                                onBlur={validate}
+                                onBlur={handleBlur}
                                 placeholder={t('login.pinPlaceholder')}
                                 maxLength={4}
                                 pattern="[0-9]{4}"
