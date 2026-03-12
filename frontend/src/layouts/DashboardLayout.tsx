@@ -5,6 +5,8 @@ import type { User } from '../types';
 import './DashboardLayout.css';
 import { NotificationCenter } from '../components/NotificationCenter';
 import { useNotifications } from '../context/NotificationContext';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
+import Modal from '../components/Modal';
 
 interface DashboardLayoutProps {
     currentUser: User;
@@ -18,6 +20,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ currentUser, onLogout
     const { t } = useTranslation();
     const { sseConnected } = useNotifications();
     const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+    const [showShortcutsHelp, setShowShortcutsHelp] = React.useState(false);
+
+    // Keyboard shortcuts
+    const shortcuts = useKeyboardShortcuts(
+        currentUser.role.name === 'Admin',
+        () => setShowShortcutsHelp(true)
+    );
 
     // Sidebar Resizing Logic
     const [sidebarWidth, setSidebarWidth] = React.useState(280);
@@ -223,6 +232,49 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ currentUser, onLogout
                 )}
                 <Outlet context={{ currentUser, refreshUser }} />
             </main>
+
+            {showShortcutsHelp && (
+                <Modal
+                    isOpen={showShortcutsHelp}
+                    onClose={() => setShowShortcutsHelp(false)}
+                    title={t('navigation.keyboard_shortcuts', 'Keyboard Shortcuts')}
+                    size="small"
+                >
+                    <div className="shortcuts-help">
+                        {shortcuts.map((s, i) => (
+                            <div key={i} style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                padding: 'var(--spacing-xs) 0',
+                                borderBottom: '1px solid var(--border-color)'
+                            }}>
+                                <span style={{ color: 'var(--text-secondary)', fontSize: 'var(--font-size-sm)' }}>
+                                    {s.description}
+                                </span>
+                                <kbd style={{
+                                    background: 'var(--bg-tertiary, rgba(255,255,255,0.1))',
+                                    padding: '2px 8px',
+                                    borderRadius: 'var(--radius-sm)',
+                                    fontSize: 'var(--font-size-xs)',
+                                    fontFamily: 'monospace',
+                                    border: '1px solid var(--border-color)'
+                                }}>
+                                    {s.altKey ? 'Alt+' : ''}{s.ctrlKey ? 'Ctrl+' : ''}{s.key}
+                                </kbd>
+                            </div>
+                        ))}
+                        <p style={{
+                            color: 'var(--text-muted)',
+                            fontSize: 'var(--font-size-xs)',
+                            marginTop: 'var(--spacing-sm)',
+                            textAlign: 'center'
+                        }}>
+                            {t('navigation.press_question', 'Press ? to show this help')}
+                        </p>
+                    </div>
+                </Modal>
+            )}
         </div >
     );
 };
