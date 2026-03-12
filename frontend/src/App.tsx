@@ -79,7 +79,7 @@ function App() {
                 {/* User Routes */}
                 <Route path="dashboard" element={<UserDashboard />} />
                 <Route path="rewards" element={<RewardHub />} />
-                <Route path="analytics" element={<AnalyticsDashboard />} />
+                <Route path="admin/analytics" element={<AnalyticsDashboard />} />
                 <Route path="settings" element={<SettingsPage />} />
               </Route>
               {/* Catch all - 404 page */}

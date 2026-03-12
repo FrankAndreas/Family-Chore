@@ -82,7 +82,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ currentUser, onLogout
         if (path.startsWith('/admin/users')) return [t('navigation.admin'), t('navigation.users')];
         if (path.startsWith('/admin/tasks')) return [t('navigation.admin'), t('navigation.tasks')];
         if (path.startsWith('/admin/roles')) return [t('navigation.admin'), t('navigation.roles')];
-        if (path === '/analytics') return [t('navigation.admin'), t('analytics.title')];
+        if (path === '/admin/analytics') return [t('navigation.admin'), t('analytics.title')];
         return [];
     };
 
@@ -161,8 +161,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ currentUser, onLogout
                                 <span aria-hidden="true">⚙️</span> {t('navigation.roles')}
                             </button>
                             <button
-                                className={`nav-item ${isActive('/analytics') ? 'active' : ''}`}
-                                onClick={() => handleNavigation('/analytics')}
+                                className={`nav-item ${isActive('/admin/analytics') ? 'active' : ''}`}
+                                onClick={() => handleNavigation('/admin/analytics')}
                             >
                                 <span aria-hidden="true">📈</span> {t('analytics.title')}
                             </button>
@@ -182,6 +182,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ currentUser, onLogout
                     >
                         <span aria-hidden="true">🎁</span> {t('navigation.rewards')}
                     </button>
+                    <div className="nav-section-title">{t('navigation.general', 'GENERAL')}</div>
                     <button
                         className={`nav-item ${isActive('/settings') ? 'active' : ''}`}
                         onClick={() => handleNavigation('/settings')}
