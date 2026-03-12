@@ -190,6 +190,7 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
     const [connected, setConnected] = useState(false);
     const [historyPage, setHistoryPage] = useState(1);
     const [hasMoreHistory, setHasMoreHistory] = useState(true);
+    const [collapsedUsers, setCollapsedUsers] = useState<Set<number>>(new Set());
     const eventSourceRef = useRef<EventSource | null>(null);
 
     const loadData = useCallback(async () => {
@@ -437,30 +438,79 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
                     {users.map(user => {
                         const userTasks = groupedTasks[user.id] || [];
                         if (userTasks.length === 0) return null;
+                        const isCollapsed = collapsedUsers.has(user.id);
 
                         return (
                             <div key={user.id} className="user-group">
-                                <h3>{user.nickname}'s Tasks</h3>
-                                <div className="tasks-grid">
-                                    {userTasks.map(instance => (
-                                        <div key={instance.id} className="task-card glass-card">
-                                            <div>
-                                                <h4>{instance.task?.name || `Task #${instance.task_id}`}</h4>
-                                                <p className="task-desc">{instance.task?.description}</p>
-                                                <div className="task-info">
-                                                    <span className="task-points">💎 {instance.task?.base_points} pts</span>
-                                                    <span>📅 {instance.due_time.split('T')[0]}</span>
+                                <button
+                                    className="user-group-toggle"
+                                    onClick={() => {
+                                        setCollapsedUsers(prev => {
+                                            const next = new Set(prev);
+                                            if (next.has(user.id)) {
+                                                next.delete(user.id);
+                                            } else {
+                                                next.add(user.id);
+                                            }
+                                            return next;
+                                        });
+                                    }}
+                                    aria-expanded={!isCollapsed}
+                                    aria-controls={`user-tasks-${user.id}`}
+                                    style={{
+                                        background: 'none',
+                                        border: 'none',
+                                        color: 'inherit',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 'var(--spacing-xs)',
+                                        width: '100%',
+                                        padding: 'var(--spacing-xs) 0',
+                                        fontSize: 'inherit',
+                                        fontWeight: 'inherit'
+                                    }}
+                                >
+                                    <span
+                                        className="collapse-chevron"
+                                        style={{
+                                            transition: 'transform 0.2s ease',
+                                            transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)',
+                                            display: 'inline-block'
+                                        }}
+                                        aria-hidden="true"
+                                    >
+                                        ▾
+                                    </span>
+                                    <h3 style={{ margin: 0 }}>
+                                        {user.nickname}
+                                        <span style={{ color: 'var(--text-muted)', fontSize: 'var(--font-size-sm)', marginLeft: 'var(--spacing-xs)' }}>
+                                            ({userTasks.length})
+                                        </span>
+                                    </h3>
+                                </button>
+                                {!isCollapsed && (
+                                    <div className="tasks-grid" id={`user-tasks-${user.id}`}>
+                                        {userTasks.map(instance => (
+                                            <div key={instance.id} className="task-card glass-card">
+                                                <div>
+                                                    <h4>{instance.task?.name || `Task #${instance.task_id}`}</h4>
+                                                    <p className="task-desc">{instance.task?.description}</p>
+                                                    <div className="task-info">
+                                                        <span className="task-points">💎 {instance.task?.base_points} pts</span>
+                                                        <span>📅 {instance.due_time.split('T')[0]}</span>
+                                                    </div>
                                                 </div>
+                                                <button
+                                                    className="btn btn-primary btn-complete"
+                                                    onClick={() => handleCompleteClick(instance)}
+                                                >
+                                                    ✅ Done
+                                                </button>
                                             </div>
-                                            <button
-                                                className="btn btn-primary btn-complete"
-                                                onClick={() => handleCompleteClick(instance)}
-                                            >
-                                                ✅ Done
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         );
                     })}
