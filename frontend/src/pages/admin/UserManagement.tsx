@@ -3,6 +3,7 @@ import { useOutletContext } from 'react-router-dom';
 import { getUsers, createUser, getRoles, penalizeUser, updateUser, resetUserPassword, deleteUser } from '../../api';
 import type { User, Role } from '../../types';
 import { SkeletonLoader } from '../../components/SkeletonLoader';
+import '../../styles/SharedDashboard.css';
 import './Dashboard.css';
 
 const UserManagement: React.FC = () => {

@@ -9,7 +9,7 @@ import { SkeletonLoader } from '../../components/SkeletonLoader';
 import Modal from '../../components/Modal';
 import Toast from '../../components/Toast';
 import { useToast } from '../../hooks/useToast';
-import '../admin/Dashboard.css';
+import '../../styles/SharedDashboard.css';
 import './RewardHub.css';
 
 interface DashboardContext {

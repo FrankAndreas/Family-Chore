@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getRoles, updateRole, createRole, deleteRole, getRoleUsers } from '../../api';
 import type { Role } from '../../types';
 import { SkeletonLoader } from '../../components/SkeletonLoader';
+import '../../styles/SharedDashboard.css';
 import './Dashboard.css';
 
 interface RoleUser {

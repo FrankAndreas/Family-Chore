@@ -40,9 +40,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ currentUser, onLogout
         setIsResizing(false);
     }, []);
 
-    const resize = React.useCallback((mouseMoveEvent: MouseEvent) => {
+    const resize = React.useCallback((e: MouseEvent | TouchEvent) => {
         if (isResizing) {
-            const newWidth = mouseMoveEvent.clientX;
+            const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+            const newWidth = clientX;
             if (newWidth > 200 && newWidth < 480) { // Min/Max constraints
                 setSidebarWidth(newWidth);
             }
@@ -53,14 +54,20 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ currentUser, onLogout
         if (isResizing) {
             window.addEventListener('mousemove', resize);
             window.addEventListener('mouseup', stopResizing);
+            window.addEventListener('touchmove', resize as EventListener, { passive: false });
+            window.addEventListener('touchend', stopResizing);
         } else {
             window.removeEventListener('mousemove', resize);
             window.removeEventListener('mouseup', stopResizing);
+            window.removeEventListener('touchmove', resize as EventListener);
+            window.removeEventListener('touchend', stopResizing);
         }
 
         return () => {
             window.removeEventListener('mousemove', resize);
             window.removeEventListener('mouseup', stopResizing);
+            window.removeEventListener('touchmove', resize as EventListener);
+            window.removeEventListener('touchend', stopResizing);
         };
     }, [isResizing, resize, stopResizing]);
 
@@ -215,6 +222,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ currentUser, onLogout
                 <div
                     className="sidebar-resizer"
                     onMouseDown={startResizing}
+                    onTouchStart={startResizing}
                 />
             </aside >
 

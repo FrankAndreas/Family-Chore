@@ -7,7 +7,7 @@ import { updateUser } from '../api';
 import Toast from '../components/Toast';
 import { useToast } from '../hooks/useToast';
 import type { User } from '../types';
-import './admin/Dashboard.css'; // Reuse dashboard styles
+import '../styles/SharedDashboard.css';
 
 interface ContextType {
     currentUser: User | null;

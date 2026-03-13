@@ -1,6 +1,7 @@
 :root {
   /* Color Palette - Modern & Premium */
-  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --primary-color: #667eea;
+  --primary-gradient: linear-gradient(135deg, var(--primary-color) 0%, #764ba2 100%);
   --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
   --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
   --warning-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
@@ -129,7 +130,7 @@ body {
 
 .input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--primary-color);
   box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.4);
   background: rgba(255, 255, 255, 0.08);
 }

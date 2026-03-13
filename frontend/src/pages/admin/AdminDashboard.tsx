@@ -6,6 +6,7 @@ import { SkeletonLoader } from '../../components/SkeletonLoader';
 import Toast from '../../components/Toast';
 import { useToast } from '../../hooks/useToast';
 import { useDebounce } from '../../hooks/useDebounce';
+import '../../styles/SharedDashboard.css';
 import './Dashboard.css';
 
 const AdminDashboard: React.FC = () => {

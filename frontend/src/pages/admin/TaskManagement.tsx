@@ -6,6 +6,7 @@ import Modal from '../../components/Modal';
 import TaskForm, { type TaskFormData } from '../../components/TaskForm';
 import ImportTasksModal from '../../components/ImportTasksModal';
 import { useToast } from '../../context/ToastContext';
+import '../../styles/SharedDashboard.css';
 import './Dashboard.css';
 
 const TaskManagement: React.FC = () => {

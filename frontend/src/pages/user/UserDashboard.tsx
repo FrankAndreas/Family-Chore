@@ -7,7 +7,7 @@ import { SkeletonLoader } from '../../components/SkeletonLoader';
 import Toast from '../../components/Toast';
 import { useToast } from '../../hooks/useToast';
 import { useDebounce } from '../../hooks/useDebounce';
-import '../admin/Dashboard.css';
+import '../../styles/SharedDashboard.css';
 import './UserDashboard.css';
 
 interface DashboardContext {

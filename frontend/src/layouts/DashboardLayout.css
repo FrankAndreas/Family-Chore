@@ -158,6 +158,7 @@
     align-items: center;
     gap: var(--spacing-md);
     padding: var(--spacing-md);
+    min-height: 44px; /* WCAG minimum touch target size */
     border-radius: var(--radius-md);
     color: var(--text-secondary);
     background: transparent;
