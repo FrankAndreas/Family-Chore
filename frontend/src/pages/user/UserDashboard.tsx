@@ -200,7 +200,11 @@ const UserDashboard: React.FC = () => {
 
             <header className="page-header">
                 <h1 className="page-title">{t('dashboard.myDashboard', 'My Dashboard')}</h1>
-                <p className="page-subtitle">{t('dashboard.welcome', 'Welcome')}, <span className="highlight-text">{currentUser.nickname}</span>! {t('dashboard.youHave', 'You have')} {currentUser.current_points} {t('dashboard.points', 'points')}.</p>
+                <p className="page-subtitle">
+                    {t('dashboard.welcome', { defaultValue: 'Welcome, {{name}}!', name: currentUser.nickname })} 
+                    {' '}
+                    {t('dashboard.youHave', 'You have')} {currentUser.current_points} {t('dashboard.points', 'points')}.
+                </p>
                 <div className="gamification-badges flex-center gap-2 mt-2 center-badges">
                     {currentUser.current_streak > 0 && (
                         <span className="badge badge-warning text-lg px-2 py-1">
