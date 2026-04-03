@@ -12,6 +12,13 @@ import { useToast } from '../../hooks/useToast';
 import '../../styles/SharedDashboard.css';
 import './RewardHub.css';
 
+// Extracted sub-components (C2 decomposition)
+import TierProgressBar from './RewardHub/TierProgressBar';
+import CurrentGoal from './RewardHub/CurrentGoal';
+import RewardCard from './RewardHub/RewardCard';
+import RewardForm from './RewardHub/RewardForm';
+import type { RewardFormData } from './RewardHub/RewardForm';
+
 interface DashboardContext {
     currentUser: User;
     refreshUser: () => Promise<void>;
@@ -27,7 +34,7 @@ const RewardHub: React.FC = () => {
     const [submitting, setSubmitting] = useState(false);
     const { toasts, removeToast, success, error } = useToast();
 
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<RewardFormData>({
         name: '',
         description: '',
         cost_points: 0,
@@ -99,10 +106,6 @@ const RewardHub: React.FC = () => {
         }
     };
 
-    const handleDeleteReward = (reward: Reward) => {
-        setRewardToDelete(reward);
-    };
-
     const openEditForm = (reward: Reward) => {
         setFormData({
             name: reward.name,
@@ -144,10 +147,6 @@ const RewardHub: React.FC = () => {
         } finally {
             setRedeeming(false);
         }
-    };
-
-    const handleRedeemCancel = () => {
-        setRedeemConfirm(null);
     };
 
     const getProgressPercentage = (cost: number): number => {
@@ -249,7 +248,6 @@ const RewardHub: React.FC = () => {
         ? rewards.find(r => r.id === currentUser.current_goal_reward_id)
         : null;
 
-
     return (
         <div className="page-container reward-hub fade-in">
             {/* Delete Confirmation Modal */}
@@ -289,6 +287,72 @@ const RewardHub: React.FC = () => {
                 </div>
             </Modal>
 
+            {/* Edit Reward Modal — uses shared Modal component for accessibility (fixes A1/N4 regression) */}
+            <Modal
+                isOpen={!!editingReward}
+                onClose={() => setEditingReward(null)}
+                title={t('rewards.edit_form.title', 'Edit Reward')}
+                size="large"
+            >
+                <RewardForm
+                    formData={formData}
+                    onChange={setFormData}
+                    onSubmit={handleEditReward}
+                    onCancel={() => setEditingReward(null)}
+                    submitting={submitting}
+                    submitButtonText={t('common.save', 'Save')}
+                />
+            </Modal>
+
+            {/* Redemption Confirmation Modal — uses shared Modal component for accessibility */}
+            <Modal
+                isOpen={!!redeemConfirm?.show}
+                onClose={() => setRedeemConfirm(null)}
+                title={t('rewards.confirm_redeem_title')}
+            >
+                {redeemConfirm && (
+                    <div>
+                        <p>{t('rewards.confirm_redeem_message', {
+                            name: redeemConfirm.reward.name,
+                            points: redeemConfirm.reward.cost_points
+                        })}</p>
+
+                        <div className="redemption-math mb-lg glass-panel-inner">
+                            <div className="math-row">
+                                <span>{t('rewards.modal.current_balance', 'Current Balance')}:</span>
+                                <span>{currentUser.current_points} pts</span>
+                            </div>
+                            <div className="math-row">
+                                <span>{t('rewards.modal.reward_cost', 'Reward Cost')}:</span>
+                                <span className="negative">- {redeemConfirm.reward.cost_points} pts</span>
+                            </div>
+                            <hr className="math-divider" />
+                            <div className="math-row total">
+                                <span>{t('rewards.modal.remaining_balance', 'Remaining Balance')}:</span>
+                                <span>{currentUser.current_points - redeemConfirm.reward.cost_points} pts</span>
+                            </div>
+                        </div>
+
+                        <div className="modal-actions">
+                            <button
+                                className="btn btn-secondary"
+                                onClick={() => setRedeemConfirm(null)}
+                                disabled={redeeming}
+                            >
+                                {t('common.cancel')}
+                            </button>
+                            <button
+                                className="btn btn-success"
+                                onClick={handleRedeemConfirm}
+                                disabled={redeeming}
+                            >
+                                {redeeming ? t('common.loading') : t('rewards.confirm_redeem_button')}
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </Modal>
+
             {/* Toast notifications */}
             <div className="toast-container">
                 {toasts.map(toast => (
@@ -319,130 +383,32 @@ const RewardHub: React.FC = () => {
                 )}
             </header>
 
-            {/* Tier Progress Bar */}
-            <div className="tier-progress-container glass-panel">
-                <div className="tier-header">
-                    <h2>
-                        <span style={{ fontSize: '24px', cursor: 'pointer' }} onClick={triggerConfetti}>
-                            {tierStats.current === 'Gold' ? '🥇' : tierStats.current === 'Silver' ? '🥈' : '🥉'}
-                        </span>
-                        {t('rewards.tier_progress.title', { tier: tierStats.current })}
-                    </h2>
-                    <span className="tier-info">
-                        {tierStats.current === 'Gold'
-                            ? t('rewards.tier_progress.max_level')
-                            : `${currentUser.lifetime_points} / ${tierStats.target} LP`}
-                    </span>
-                </div>
-                <div className="tier-progress-bar">
-                    <div
-                        className="tier-progress-fill"
-                        style={{ width: `${tierStats.percent}%` }}
-                    ></div>
-                </div>
-            </div>
+            <TierProgressBar
+                tierStats={tierStats}
+                lifetimePoints={currentUser.lifetime_points}
+            />
 
-            {/* Current Goal Display */}
             {userGoal && (
-                <div className="current-goal glass-panel mb-lg">
-                    <div className="goal-header">
-                        <h2>{t('rewards.card.goal_indicator')}</h2>
-                        {canAfford(userGoal.cost_points) && (
-                            <div className="ready-badge pulse">{t('rewards.current_goal.ready')}</div>
-                        )}
-                    </div>
-                    <div className="goal-content">
-                        <div className="goal-info">
-                            <h3>{userGoal.name}</h3>
-                            <p>{userGoal.description}</p>
-                            <div className="goal-stats">
-                                <span className="cost">{t('rewards.card.points_val', { points: userGoal.cost_points })}</span>
-                                {getTierBadge(userGoal.tier_level)}
-                            </div>
-                        </div>
-                        <div className="goal-progress">
-                            <div className="progress-stats">
-                                <span>{currentUser.current_points} / {userGoal.cost_points}</span>
-                                <span>{getProgressPercentage(userGoal.cost_points)}%</span>
-                            </div>
-                            <div className="progress-bar">
-                                <div
-                                    className="progress-fill"
-                                    style={{ width: `${getProgressPercentage(userGoal.cost_points)}%` }}
-                                ></div>
-                            </div>
-                            <div className="points-needed">
-                                {canAfford(userGoal.cost_points)
-                                    ? t('rewards.current_goal.achieved')
-                                    : t('rewards.current_goal.points_needed', { points: userGoal.cost_points - currentUser.current_points })
-                                }
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <CurrentGoal
+                    goal={userGoal}
+                    currentPoints={currentUser.current_points}
+                    canAfford={canAfford(userGoal.cost_points)}
+                    getProgressPercentage={getProgressPercentage}
+                    getTierBadge={getTierBadge}
+                />
             )}
 
             {/* Create Reward Form */}
             {showCreateForm && (
                 <div className="glass-panel mb-lg">
                     <h2>{t('rewards.create_form.title')}</h2>
-                    <form onSubmit={handleCreateReward} className="create-reward-form">
-                        <div className="form-grid">
-                            <div className="form-group">
-                                <label>{t('rewards.create_form.name_label')}</label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={formData.name}
-                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    placeholder={t('rewards.create_form.name_placeholder')}
-                                />
-                            </div>
-
-                            <div className="form-group">
-                                <label>{t('rewards.create_form.cost_label')}</label>
-                                <input
-                                    type="number"
-                                    required
-                                    min="1"
-                                    value={formData.cost_points}
-                                    onChange={(e) => setFormData({ ...formData, cost_points: parseInt(e.target.value) })}
-                                    placeholder="50"
-                                />
-                            </div>
-
-                            <div className="form-group">
-                                <label>{t('rewards.create_form.tier_label')}</label>
-                                <select
-                                    value={formData.tier_level}
-                                    onChange={(e) => setFormData({ ...formData, tier_level: parseInt(e.target.value) })}
-                                >
-                                    <option value={1}>{t('rewards.create_form.tiers.bronze', '🥉 Bronze (Small rewards)')}</option>
-                                    <option value={2}>{t('rewards.create_form.tiers.silver', '🥈 Silver (Medium rewards)')}</option>
-                                    <option value={3}>{t('rewards.create_form.tiers.gold', '🥇 Gold (Big rewards)')}</option>
-                                </select>
-                            </div>
-
-                            <div className="form-group full-width">
-                                <label>{t('rewards.create_form.description_label')}</label>
-                                <textarea
-                                    value={formData.description}
-                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                    placeholder={t('rewards.create_form.description_placeholder')}
-                                    rows={3}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="form-actions">
-                            <button type="button" className="btn btn-secondary" onClick={() => setShowCreateForm(false)}>
-                                {t('rewards.cancel_button')}
-                            </button>
-                            <button type="submit" className="btn btn-primary" disabled={submitting}>
-                                {submitting ? t('rewards.create_form.submitting') : t('rewards.create_form.submit_button')}
-                            </button>
-                        </div>
-                    </form>
+                    <RewardForm
+                        formData={formData}
+                        onChange={setFormData}
+                        onSubmit={handleCreateReward}
+                        onCancel={() => setShowCreateForm(false)}
+                        submitting={submitting}
+                    />
                 </div>
             )}
 
@@ -482,7 +448,6 @@ const RewardHub: React.FC = () => {
                                 const affordable = canAfford(reward.cost_points);
                                 const isCurrentGoal = userGoal?.id === reward.id;
 
-                                // Locked logic
                                 const requiredPoints = reward.tier_level === 3 ? TIER_THRESHOLDS.GOLD
                                     : reward.tier_level === 2 ? TIER_THRESHOLDS.SILVER
                                         : TIER_THRESHOLDS.BRONZE;
@@ -490,197 +455,26 @@ const RewardHub: React.FC = () => {
                                 const isLocked = !isAdmin && currentUser.lifetime_points < requiredPoints;
 
                                 return (
-                                    <div
+                                    <RewardCard
                                         key={reward.id}
-                                        className={`reward-card glass-panel ${affordable && !isLocked ? 'affordable pulse-affordable' : ''} ${isCurrentGoal ? 'current-goal' : ''} ${isLocked ? 'locked' : ''}`}
-                                    >
-                                        {isLocked && (
-                                            <div className="locked-overlay">
-                                                🔒 {t('rewards.card.locked_label')}
-                                            </div>
-                                        )}
-
-                                        {isCurrentGoal && <div className="goal-indicator">{t('rewards.card.goal_indicator')}</div>}
-
-                                        <div className="reward-header">
-                                            <h3>{reward.name}</h3>
-                                            <div className="reward-header-actions">
-                                                {getTierBadge(reward.tier_level)}
-                                                {isAdmin && (
-                                                    <div className="admin-actions">
-                                                        <button
-                                                            className="icon-btn edit-btn"
-                                                            onClick={() => openEditForm(reward)}
-                                                            title="Edit Reward"
-                                                        >
-                                                            ✏️
-                                                        </button>
-                                                        <button
-                                                            className="icon-btn delete-btn"
-                                                            onClick={() => handleDeleteReward(reward)}
-                                                            title="Delete Reward"
-                                                        >
-                                                            🗑️
-                                                        </button>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        <p className="reward-description">{reward.description || t('rewards.card.no_description')}</p>
-
-                                        <div className="reward-cost">
-                                            <span className="cost-label">{t('rewards.card.cost_label')}</span>
-                                            <span className="cost-value">{t('rewards.card.points_val', { points: reward.cost_points })}</span>
-                                        </div>
-
-                                        <div className="reward-progress">
-                                            <div className="progress-bar">
-                                                <div
-                                                    className="progress-fill"
-                                                    style={{ width: `${progress}%` }}
-                                                ></div>
-                                            </div>
-                                            <span className="progress-text">{progress}%</span>
-                                        </div>
-
-                                        {!isCurrentGoal && (
-                                            <button
-                                                className="btn btn-secondary btn-block"
-                                                onClick={() => handleSetGoal(reward.id)}
-                                            >
-                                                {t('rewards.card.set_goal_button')}
-                                            </button>
-                                        )}
-
-                                        {affordable && !isLocked && (
-                                            <button
-                                                className="btn btn-success btn-block mt-sm"
-                                                onClick={() => handleRedeemClick(reward)}
-                                            >
-                                                🎉 {t('rewards.redeem_button')}
-                                            </button>
-                                        )}
-
-                                        {affordable && !isLocked && (
-                                            <div className="affordable-badge">{t('rewards.card.can_afford_badge')}</div>
-                                        )}
-                                    </div>
+                                        reward={reward}
+                                        affordable={affordable}
+                                        isLocked={isLocked}
+                                        isCurrentGoal={isCurrentGoal}
+                                        isAdmin={isAdmin}
+                                        progress={progress}
+                                        getTierBadge={getTierBadge}
+                                        onSetGoal={handleSetGoal}
+                                        onRedeem={handleRedeemClick}
+                                        onEdit={openEditForm}
+                                        onDelete={(r) => setRewardToDelete(r)}
+                                    />
                                 );
                             })}
                         </div>
                     </div>
                 );
             })}
-
-            {/* Edit Reward Form Modal */}
-            {editingReward && (
-                <div className="modal-overlay" onClick={() => setEditingReward(null)}>
-                    <div className="modal-content glass-panel" onClick={e => e.stopPropagation()}>
-                        <h2>{t('rewards.edit_form.title', 'Edit Reward')}</h2>
-                        <form onSubmit={handleEditReward} className="create-reward-form">
-                            <div className="form-grid">
-                                <div className="form-group">
-                                    <label>{t('rewards.create_form.name_label')}</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={formData.name}
-                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    />
-                                </div>
-
-                                <div className="form-group">
-                                    <label>{t('rewards.create_form.cost_label')}</label>
-                                    <input
-                                        type="number"
-                                        required
-                                        min="1"
-                                        value={formData.cost_points}
-                                        onChange={(e) => setFormData({ ...formData, cost_points: parseInt(e.target.value) })}
-                                    />
-                                </div>
-
-                                <div className="form-group">
-                                    <label>{t('rewards.create_form.tier_label')}</label>
-                                    <select
-                                        value={formData.tier_level}
-                                        onChange={(e) => setFormData({ ...formData, tier_level: parseInt(e.target.value) })}
-                                    >
-                                        <option value={1}>{t('rewards.create_form.tiers.bronze', '🥉 Bronze (Small rewards)')}</option>
-                                        <option value={2}>{t('rewards.create_form.tiers.silver', '🥈 Silver (Medium rewards)')}</option>
-                                        <option value={3}>{t('rewards.create_form.tiers.gold', '🥇 Gold (Big rewards)')}</option>
-                                    </select>
-                                </div>
-
-                                <div className="form-group full-width">
-                                    <label>{t('rewards.create_form.description_label')}</label>
-                                    <textarea
-                                        value={formData.description}
-                                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                        rows={3}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="form-actions mt-lg">
-                                <button type="button" className="btn btn-secondary" onClick={() => setEditingReward(null)} disabled={submitting}>
-                                    {t('rewards.cancel_button')}
-                                </button>
-                                <button type="submit" className="btn btn-primary" disabled={submitting}>
-                                    {submitting ? t('common.loading', 'Loading...') : t('common.save', 'Save')}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {/* Redemption Confirmation Modal */}
-            {redeemConfirm && redeemConfirm.show && (
-                <div className="modal-overlay" onClick={handleRedeemCancel}>
-                    <div className="modal-content glass-panel" onClick={e => e.stopPropagation()}>
-                        <h2>{t('rewards.confirm_redeem_title')}</h2>
-                        <p>{t('rewards.confirm_redeem_message', {
-                            name: redeemConfirm.reward.name,
-                            points: redeemConfirm.reward.cost_points
-                        })}</p>
-
-                        <div className="redemption-math mb-lg glass-panel-inner">
-                            <div className="math-row">
-                                <span>{t('rewards.modal.current_balance', 'Current Balance')}:</span>
-                                <span>{currentUser.current_points} pts</span>
-                            </div>
-                            <div className="math-row">
-                                <span>{t('rewards.modal.reward_cost', 'Reward Cost')}:</span>
-                                <span className="negative">- {redeemConfirm.reward.cost_points} pts</span>
-                            </div>
-                            <hr className="math-divider" />
-                            <div className="math-row total">
-                                <span>{t('rewards.modal.remaining_balance', 'Remaining Balance')}:</span>
-                                <span>{currentUser.current_points - redeemConfirm.reward.cost_points} pts</span>
-                            </div>
-                        </div>
-
-                        <div className="modal-actions">
-                            <button
-                                className="btn btn-secondary"
-                                onClick={handleRedeemCancel}
-                                disabled={redeeming}
-                            >
-                                {t('common.cancel')}
-                            </button>
-                            <button
-                                className="btn btn-success"
-                                onClick={handleRedeemConfirm}
-                                disabled={redeeming}
-                            >
-                                {redeeming ? t('common.loading') : t('rewards.confirm_redeem_button')}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };

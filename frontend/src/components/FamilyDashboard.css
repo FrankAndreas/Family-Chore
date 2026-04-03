@@ -344,6 +344,18 @@
   border-color: var(--primary-color);
 }
 
+/* Hide browser number input spinners for cleaner UX (F2) */
+.contrib-input::-webkit-outer-spin-button,
+.contrib-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.contrib-input[type=number] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
 .total-display {
   padding: 1rem;
   border-radius: 12px;

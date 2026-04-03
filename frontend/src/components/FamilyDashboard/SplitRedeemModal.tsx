@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Modal from '../Modal';
 import type { User, Reward } from '../../types';
@@ -95,12 +95,19 @@ export default function SplitRedeemModal({ reward, users, onConfirm, onClose, re
                         </span>
                         <input
                             type="number"
+                            inputMode="numeric"
                             min={0}
                             max={user.current_points}
                             value={contributions[user.id] || 0}
                             onChange={e => updateContribution(user.id, parseInt(e.target.value) || 0)}
                             onKeyDown={(e) => {
                                 if (e.key === '-' || e.key === 'e' || e.key === '+') {
+                                    e.preventDefault();
+                                }
+                            }}
+                            onPaste={(e) => {
+                                const pastedText = e.clipboardData.getData('text');
+                                if (!/^\d+$/.test(pastedText)) {
                                     e.preventDefault();
                                 }
                             }}

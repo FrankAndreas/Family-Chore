@@ -87,6 +87,21 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We h
 - **Admin Dashboard i18n**: Translated hardcoded English subtitles in `AdminDashboard.tsx`, `UserManagement.tsx`, `RoleManagement.tsx`, and `TaskManagement.tsx` using `useTranslation` hooks. Updated `en.json`/`de.json` with `dashboard.subtitle`, `users.subtitle`, `roles.subtitle`, `tasks.subtitle` keys.
 - **Commit**: `7b2ec06`
 
+## 🔄 Recent Changes (2026-04-03 N1/F2/C2 UX Medium-Priority Fixes)
+- **N1 (SSE Mobile Indicator)**: Verified already resolved — `mobile-connection-status` dot visible on mobile viewport via `DashboardLayout.tsx` + CSS `@media (max-width: 768px)` rule.
+- **F2 (SplitRedeemModal Negative Input)**: Added `inputMode="numeric"`, `onPaste` handler to block non-numeric paste, CSS to hide browser number spinners on `.contrib-input`. Fixed unused React import lint.
+- **C2 (RewardHub Decomposition)**: Decomposed 689-line `RewardHub.tsx` into 482-line parent + 4 sub-components in `RewardHub/` directory:
+  - `TierProgressBar.tsx` (42 lines) — tier progress display with confetti trigger
+  - `CurrentGoal.tsx` (54 lines) — current goal card with progress bar
+  - `RewardCard.tsx` (110 lines) — individual reward card (locked/affordable/goal states)
+  - `RewardForm.tsx` (85 lines) — shared create/edit reward form (replaces duplicated form code)
+  - **Also fixed A1/N4 regression**: Replaced raw `div.modal-overlay` inline modals with shared `Modal` component for proper accessibility (focus trap, ARIA, Escape key).
+- **C2 (TaskManagement Decomposition)**: Decomposed 521-line `TaskManagement.tsx` into 395-line parent + 3 sub-components in `TaskManagement/` directory:
+  - `TaskCard.tsx` (87 lines) — individual task card with schedule badge and actions
+  - `TaskRoleGroup.tsx` (70 lines) — role group header + task grid
+  - `DeleteTaskModal.tsx` (45 lines) — delete confirmation modal
+- **Quality**: ESLint clean, TypeScript `--noEmit` clean, browser-verified.
+
 ## 📍 System State
 - **Backend**: Port 8000. **142 tests passed**. Flake8 and Mypy clean. Schema v1.9 tracked via Alembic.
 - **Frontend**: Port 8080 (Docker), 5173 (local). ESLint clean. Build successful. Fully internationalized (EN/DE). Enhanced WCAG 2.1 compliance.
@@ -95,26 +110,27 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We h
 ## 🚧 Remaining UX Review Items
 **Source**: `docs/reviews/ux-review-2026-03-11.md`
 
-All Priority P0–P4 items are complete. Remaining lower-severity items:
+All Priority P0–P4 and all Medium items are complete. Remaining low-severity items:
 
 | ID | Severity | Description | Status |
 |----|----------|-------------|--------|
-| N1 | 🟡 Medium | SSE indicator hidden on mobile (collapsed sidebar) | Open |
+| N1 | 🟡 Medium | SSE indicator hidden on mobile (collapsed sidebar) | ✅ Done (verified existing fix) |
+| F2 | 🟡 Medium | SplitRedeemModal number inputs accept negative visually | ✅ Done |
+| C2 | 🟡 Medium | Other oversized components (RewardHub, TaskManagement) | ✅ Done |
 | N3 | 🟢 Low | ErrorBoundary only offers "Reload Page" | Open |
 | N6 | 🟢 Low | Family Dashboard button context unclear | Open |
 | N7 | 🟢 Low | No keyboard shortcuts or bulk actions | Open |
-| F2 | 🟡 Medium | SplitRedeemModal number inputs accept negative visually | Open |
 | F3 | 🟢 Low | Photo drop-zone inline handlers/untranslated text | Open |
-| C2 | 🟡 Medium | Other oversized components (UserDashboard 422L, TaskMgmt 23KB, etc.) | Open |
 | T3 | 🟢 Low | No swipe gestures for mobile | Open |
 
 ## ⚠️ Known Issues / Watchlist
 - All security issues (S1–S13) ✅ Resolved
 - All IDOR vulnerabilities ✅ Resolved
 - All P0–P4 priority UX fixes ✅ Resolved
+- All 🟡 Medium UX fixes ✅ Resolved
 
 ---
 
 ## 🔜 Next Session Prompt
 > **Start a new conversation and say:**
-> "Review `STATE.md` and `docs/reviews/ux-review-2026-03-11.md`. All P0–P4 UX fixes are done including the C1 FamilyDashboard decomposition. Let's tackle the remaining medium-priority items (N1, F2, C2)."
+> "Review `STATE.md` and `docs/reviews/ux-review-2026-03-11.md`. All P0–P4 and Medium-priority UX fixes are done. Consider tackling the remaining Low-severity items (N3, N6, N7, F3, T3) or moving on to new features."

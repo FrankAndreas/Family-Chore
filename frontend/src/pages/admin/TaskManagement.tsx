@@ -10,6 +10,10 @@ import { useTranslation } from 'react-i18next';
 import '../../styles/SharedDashboard.css';
 import './Dashboard.css';
 
+// Extracted sub-components (C2 decomposition)
+import DeleteTaskModal from './TaskManagement/DeleteTaskModal';
+import TaskRoleGroup from './TaskManagement/TaskRoleGroup';
+
 const TaskManagement: React.FC = () => {
     const { t } = useTranslation();
     const [tasks, setTasks] = useState<Task[]>([]);
@@ -97,7 +101,7 @@ const TaskManagement: React.FC = () => {
         setEditingTask(task);
         fillFormWithTask(task);
         setShowEditModal(true);
-        setShowAddForm(false);  // Close add form if open
+        setShowAddForm(false);
     };
 
     const handleCancelEdit = () => {
@@ -107,15 +111,12 @@ const TaskManagement: React.FC = () => {
     };
 
     const handleCopyTask = (task: Task) => {
-        // Pre-fill the form with the task's data and open add form
         fillFormWithTask(task);
 
-        // Generate unique copy name
-        const baseName = task.name.replace(/ \(Copy( \d+)?\)$/, ''); // Remove existing copy suffix
+        const baseName = task.name.replace(/ \(Copy( \d+)?\)$/, '');
         let copyName = `${baseName} (Copy)`;
         let counter = 2;
 
-        // Check if name already exists and increment counter
         while (tasks.some(t => t.name === copyName)) {
             copyName = `${baseName} (Copy ${counter})`;
             counter++;
@@ -125,10 +126,6 @@ const TaskManagement: React.FC = () => {
         setShowAddForm(true);
         setShowEditModal(false);
         showToast('Task copied to form. Edit and save as new task.', 'success');
-    };
-
-    const handleDeleteTask = (task: Task) => {
-        setTaskToDelete(task);
     };
 
     const handleExport = async () => {
@@ -146,6 +143,19 @@ const TaskManagement: React.FC = () => {
         } catch (err) {
             console.error('Failed to export tasks', err);
             showToast('Failed to export tasks', 'error');
+        }
+    };
+
+    const handleDeleteConfirm = async (task: Task) => {
+        try {
+            await deleteTask(task.id);
+            showToast(`Task "${task.name}" deleted successfully`, 'success');
+            fetchData();
+        } catch (err) {
+            console.error('Failed to delete task', err);
+            showToast('Failed to delete task', 'error');
+        } finally {
+            setTaskToDelete(null);
         }
     };
 
@@ -212,6 +222,16 @@ const TaskManagement: React.FC = () => {
         }
     };
 
+    // Get schedule icon and label
+    const getScheduleInfo = (type: string) => {
+        switch (type) {
+            case 'daily': return { icon: '📅', label: 'Daily', color: '#3b82f6' };
+            case 'weekly': return { icon: '📆', label: 'Weekly', color: '#8b5cf6' };
+            case 'recurring': return { icon: '🔄', label: 'Recurring', color: '#10b981' };
+            default: return { icon: '📋', label: type, color: '#6b7280' };
+        }
+    };
+
     if (loading) {
         return (
             <div className="page-container fade-in">
@@ -226,57 +246,21 @@ const TaskManagement: React.FC = () => {
         );
     }
 
-    // Get schedule icon and label
-    const getScheduleInfo = (type: string) => {
-        switch (type) {
-            case 'daily': return { icon: '📅', label: 'Daily', color: '#3b82f6' };
-            case 'weekly': return { icon: '📆', label: 'Weekly', color: '#8b5cf6' };
-            case 'recurring': return { icon: '🔄', label: 'Recurring', color: '#10b981' };
-            default: return { icon: '📋', label: type, color: '#6b7280' };
-        }
-    };
+    // Create groups: null role first, then each role
+    const allFamilyTasks = tasks.filter(t => !t.assigned_role_id);
+    const roleGroups = roles.map(role => ({
+        role,
+        tasks: tasks.filter(t => t.assigned_role_id === role.id)
+    })).filter(g => g.tasks.length > 0);
 
     return (
         <div className="page-container fade-in">
             {/* Delete Confirmation Modal */}
-            <Modal
-                isOpen={!!taskToDelete}
+            <DeleteTaskModal
+                task={taskToDelete}
                 onClose={() => setTaskToDelete(null)}
-                title="Confirm Deletion"
-            >
-                <div>
-                    <p style={{ color: '#333' }}>
-                        Are you sure you want to delete <strong>"{taskToDelete?.name}"</strong>?
-                    </p>
-                    <p style={{ color: '#c53030', marginTop: '0.5rem', fontSize: '0.9rem' }}>
-                        This will also delete all related task instances and cannot be undone.
-                    </p>
-                    <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', justifyContent: 'flex-end' }}>
-                        <button className="btn btn-secondary" onClick={() => setTaskToDelete(null)}>
-                            Cancel
-                        </button>
-                        <button
-                            className="btn"
-                            style={{ backgroundColor: '#ef4444', color: 'white' }}
-                            onClick={async () => {
-                                if (!taskToDelete) return;
-                                try {
-                                    await deleteTask(taskToDelete.id);
-                                    showToast(`Task "${taskToDelete.name}" deleted successfully`, 'success');
-                                    fetchData();
-                                } catch (err) {
-                                    console.error('Failed to delete task', err);
-                                    showToast('Failed to delete task', 'error');
-                                } finally {
-                                    setTaskToDelete(null);
-                                }
-                            }}
-                        >
-                            Delete Task
-                        </button>
-                    </div>
-                </div>
-            </Modal>
+                onConfirm={handleDeleteConfirm}
+            />
 
             {/* Edit Task Modal */}
             <Modal
@@ -373,146 +357,37 @@ const TaskManagement: React.FC = () => {
                 </div>
             )}
 
-            {/* Group tasks by role - "All Family Members" first */}
-            {(() => {
-                // Create groups: null role first, then each role
-                const allFamilyTasks = tasks.filter(t => !t.assigned_role_id);
-                const roleGroups = roles.map(role => ({
-                    role,
-                    tasks: tasks.filter(t => t.assigned_role_id === role.id)
-                })).filter(g => g.tasks.length > 0);
+            {/* All Family Members section */}
+            <TaskRoleGroup
+                title={t('tasks.allFamilyMembers', 'All Family Members')}
+                titleColor="#10b981"
+                titleEmoji="🏠"
+                badgeBackground="rgba(16, 185, 129, 0.2)"
+                tasks={allFamilyTasks}
+                roles={roles}
+                getScheduleInfo={getScheduleInfo}
+                onEdit={handleEditClick}
+                onCopy={handleCopyTask}
+                onDelete={(task) => setTaskToDelete(task)}
+            />
 
-                return (
-                    <>
-                        {/* All Family Members section */}
-                        {allFamilyTasks.length > 0 && (
-                            <div className="role-group" style={{ marginBottom: '2rem' }}>
-                                <h3 style={{
-                                    color: '#10b981',
-                                    marginBottom: '1rem',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.5rem'
-                                }}>
-                                    🏠 All Family Members
-                                    <span style={{
-                                        background: 'rgba(16, 185, 129, 0.2)',
-                                        padding: '0.25rem 0.75rem',
-                                        borderRadius: '12px',
-                                        fontSize: '0.875rem'
-                                    }}>
-                                        {allFamilyTasks.length} tasks
-                                    </span>
-                                </h3>
-                                <div className="tasks-grid">
-                                    {allFamilyTasks.map(task => renderTaskCard(task))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Role-specific sections */}
-                        {roleGroups.map(({ role, tasks: roleTasks }) => (
-                            <div key={role.id} className="role-group" style={{ marginBottom: '2rem' }}>
-                                <h3 style={{
-                                    color: '#8b5cf6',
-                                    marginBottom: '1rem',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.5rem'
-                                }}>
-                                    👤 {role.name}
-                                    <span style={{
-                                        background: 'rgba(139, 92, 246, 0.2)',
-                                        padding: '0.25rem 0.75rem',
-                                        borderRadius: '12px',
-                                        fontSize: '0.875rem'
-                                    }}>
-                                        {roleTasks.length} tasks • {role.multiplier_value}x
-                                    </span>
-                                </h3>
-                                <div className="tasks-grid">
-                                    {roleTasks.map(task => renderTaskCard(task))}
-                                </div>
-                            </div>
-                        ))}
-                    </>
-                );
-
-                function renderTaskCard(task: Task) {
-                    const role = task.assigned_role_id ? roles.find(r => r.id === task.assigned_role_id) : null;
-                    const assignedTo = role ? role.name : '🏠 All Family Members';
-                    const scheduleInfo = getScheduleInfo(task.schedule_type);
-
-                    return (
-                        <div key={task.id} className="task-card glass-panel">
-                            <div className="task-header">
-                                <div className="task-icon">{scheduleInfo.icon}</div>
-                                <div className="task-info">
-                                    <h3>{task.name}</h3>
-                                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.25rem' }}>
-                                        <span className="role-badge">{assignedTo}</span>
-                                        <span
-                                            className="schedule-badge"
-                                            style={{
-                                                background: `linear-gradient(135deg, ${scheduleInfo.color}22, ${scheduleInfo.color}11)`,
-                                                border: `1px solid ${scheduleInfo.color}44`,
-                                                color: scheduleInfo.color,
-                                                padding: '0.125rem 0.5rem',
-                                                borderRadius: '12px',
-                                                fontSize: '0.75rem',
-                                                fontWeight: '600'
-                                            }}
-                                        >
-                                            {scheduleInfo.icon} {scheduleInfo.label}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div className="task-points">
-                                    <span className="points-value">{task.base_points}</span>
-                                    <span className="points-label">pts</span>
-                                </div>
-                            </div>
-                            <p className="task-description">{task.description}</p>
-                            <div className="task-footer">
-                                <div className="task-meta">
-                                    {task.schedule_type === 'daily' && (
-                                        <span>🕒 Due at {task.default_due_time}</span>
-                                    )}
-                                    {task.schedule_type === 'weekly' && (
-                                        <span>📅 Every {task.default_due_time}</span>
-                                    )}
-                                    {task.schedule_type === 'recurring' && (
-                                        <span>⏳ Cooldown: {task.recurrence_min_days}-{task.recurrence_max_days} days</span>
-                                    )}
-                                </div>
-                                <div className="task-actions" style={{ display: 'flex', gap: '0.5rem', marginLeft: 'auto' }}>
-                                    <button
-                                        className="btn btn-ghost btn-sm"
-                                        onClick={() => handleCopyTask(task)}
-                                        title="Copy Task"
-                                    >
-                                        📋
-                                    </button>
-                                    <button
-                                        className="btn btn-ghost btn-sm"
-                                        onClick={() => handleDeleteTask(task)}
-                                        title="Delete Task"
-                                        style={{ color: '#ef4444' }}
-                                    >
-                                        🗑️
-                                    </button>
-                                    <button
-                                        className="btn btn-secondary btn-sm"
-                                        onClick={() => handleEditClick(task)}
-                                    >
-                                        ✏️ Edit
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    );
-                }
-            })()}
+            {/* Role-specific sections */}
+            {roleGroups.map(({ role, tasks: roleTasks }) => (
+                <TaskRoleGroup
+                    key={role.id}
+                    title={role.name}
+                    titleColor="#8b5cf6"
+                    titleEmoji="👤"
+                    badgeBackground="rgba(139, 92, 246, 0.2)"
+                    tasks={roleTasks}
+                    roles={roles}
+                    subtitle={`${role.multiplier_value}x`}
+                    getScheduleInfo={getScheduleInfo}
+                    onEdit={handleEditClick}
+                    onCopy={handleCopyTask}
+                    onDelete={(task) => setTaskToDelete(task)}
+                />
+            ))}
         </div>
     );
 };
