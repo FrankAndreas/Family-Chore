@@ -5,9 +5,16 @@ import type { TaskInstance, User, Reward, Transaction } from '../types';
 import { useDebounce } from '../hooks/useDebounce';
 import { useToast } from '../hooks/useToast';
 import { SkeletonLoader } from './SkeletonLoader';
-import Modal from './Modal';
+// import Modal from './Modal'; // Moved to sub-components
 import Toast from './Toast';
 import './FamilyDashboard.css';
+
+// Extracted sub-components (C1 decomposition)
+import ClaimModal from './FamilyDashboard/ClaimModal';
+import SplitRedeemModal from './FamilyDashboard/SplitRedeemModal';
+import TasksTab from './FamilyDashboard/TasksTab';
+import RedeemTab from './FamilyDashboard/RedeemTab';
+import HistoryTab from './FamilyDashboard/HistoryTab';
 
 // FamilyDashboard-specific API calls with skipAuthRedirect
 // These may be called without login, so we suppress 401-triggered reloads.
@@ -17,168 +24,8 @@ const getRewardsPublic = () => api.get('/rewards/', { skipAuthRedirect: true });
 const getAllTransactionsPublic = (params: Record<string, unknown> = {}) =>
     api.get('/transactions', { params: { skip: 0, limit: 100, ...params }, skipAuthRedirect: true });
 
-interface ClaimModalProps {
-    taskName: string;
-    users: User[];
-    onSelectUser: (userId: number) => void;
-    onClose: () => void;
-}
-
-function ClaimModal({ taskName, users, onSelectUser, onClose }: ClaimModalProps) {
-    const { t } = useTranslation();
-    return (
-        <Modal isOpen={true} onClose={onClose} title={t('dashboard.whoDidIt')}>
-            <p>{t('dashboard.completing')} <strong>{taskName}</strong></p>
-
-            <div className="user-grid">
-                {users.map(user => (
-                    <button
-                        key={user.id}
-                        className="user-select-card"
-                        onClick={() => onSelectUser(user.id)}
-                    >
-                        <div className="user-avatar" aria-hidden="true">
-                            {user.nickname.charAt(0).toUpperCase()}
-                        </div>
-                        <div className="user-name">{user.nickname}</div>
-                    </button>
-                ))}
-            </div>
-
-            <button className="btn btn-secondary modal-close-btn" onClick={onClose}>
-                {t('common.cancel')}
-            </button>
-        </Modal>
-    );
-}
-
-interface SplitRedeemModalProps {
-    reward: Reward;
-    users: User[];
-    onConfirm: (contributions: { user_id: number; points: number }[]) => void;
-    onClose: () => void;
-    redeeming: boolean;
-}
-
-function SplitRedeemModal({ reward, users, onConfirm, onClose, redeeming }: SplitRedeemModalProps) {
-    const { t } = useTranslation();
-    const [contributions, setContributions] = useState<{ [userId: number]: number }>(
-        () => Object.fromEntries(users.map(u => [u.id, 0]))
-    );
-
-    const totalContribution = Object.values(contributions).reduce((sum, pts) => sum + pts, 0);
-    const remaining = reward.cost_points - totalContribution;
-    const isExact = remaining === 0;
-
-    const updateContribution = (userId: number, points: number) => {
-        const user = users.find(u => u.id === userId);
-        if (!user) return;
-        const clamped = Math.max(0, Math.min(points, user.current_points));
-        setContributions(prev => ({ ...prev, [userId]: clamped }));
-    };
-
-    const handleSplitEvenly = () => {
-        const eligibleUsers = users.filter(u => u.current_points > 0);
-        if (eligibleUsers.length === 0) return;
-
-        const perUser = Math.floor(reward.cost_points / eligibleUsers.length);
-        let leftover = reward.cost_points % eligibleUsers.length;
-
-        const newContribs: { [userId: number]: number } = {};
-        users.forEach(u => {
-            if (u.current_points === 0) {
-                newContribs[u.id] = 0;
-            } else {
-                let contrib = Math.min(perUser, u.current_points);
-                if (leftover > 0 && contrib < u.current_points) {
-                    contrib++;
-                    leftover--;
-                }
-                newContribs[u.id] = contrib;
-            }
-        });
-        setContributions(newContribs);
-    };
-
-    const handleMaxFromEach = () => {
-        let remaining = reward.cost_points;
-        const newContribs: { [userId: number]: number } = {};
-        const sorted = [...users].sort((a, b) => b.current_points - a.current_points);
-
-        sorted.forEach(user => {
-            const take = Math.min(user.current_points, remaining);
-            newContribs[user.id] = take;
-            remaining -= take;
-        });
-
-        setContributions(newContribs);
-    };
-
-    const handleConfirm = () => {
-        const contribs = Object.entries(contributions).map(([userId, points]) => ({
-            user_id: parseInt(userId),
-            points
-        }));
-        onConfirm(contribs);
-    };
-
-    return (
-        <Modal isOpen={true} onClose={onClose} title={t('dashboard.splitRedemption')} size="large">
-            <p className="reward-title"><strong>{reward.name}</strong> — {reward.cost_points} {t('common.pts')}</p>
-
-            <div className="preset-buttons">
-                <button className="btn btn-secondary btn-small" onClick={handleSplitEvenly}>
-                    {t('dashboard.splitEvenly')}
-                </button>
-                <button className="btn btn-secondary btn-small" onClick={handleMaxFromEach}>
-                    {t('dashboard.maxFromEach')}
-                </button>
-            </div>
-
-            <div className="contribution-list">
-                {users.map(user => (
-                    <div key={user.id} className="contribution-row">
-                        <span className="contrib-user">
-                            {user.nickname}
-                            <span className="contrib-available">({user.current_points} {t('common.pts')})</span>
-                        </span>
-                        <input
-                            type="number"
-                            min={0}
-                            max={user.current_points}
-                            value={contributions[user.id] || 0}
-                            onChange={e => updateContribution(user.id, parseInt(e.target.value) || 0)}
-                            onKeyDown={(e) => {
-                                if (e.key === '-' || e.key === 'e' || e.key === '+') {
-                                    e.preventDefault();
-                                }
-                            }}
-                            className="contrib-input"
-                        />
-                    </div>
-                ))}
-            </div>
-
-            <div className={`total-display ${isExact ? 'exact' : remaining < 0 ? 'over' : 'under'}`}>
-                {t('dashboard.total', 'Total')}: {totalContribution}/{reward.cost_points} {t('common.pts', 'pts')}
-                {isExact ? ' ✅' : remaining > 0 ? ` (${t('dashboard.needMore', { count: remaining, defaultValue: `need ${remaining} more` })})` : ` (${t('dashboard.over', { count: -remaining, defaultValue: `${-remaining} over!` })})`}
-            </div>
-
-            <div className="modal-actions">
-                <button className="btn btn-secondary" onClick={onClose} disabled={redeeming}>
-                    {t('dashboard.cancel', 'Cancel')}
-                </button>
-                <button
-                    className="btn btn-success"
-                    onClick={handleConfirm}
-                    disabled={!isExact || redeeming}
-                >
-                    {redeeming ? t('dashboard.redeeming', 'Redeeming...') : t('dashboard.redeemAction', '🎉 Redeem!')}
-                </button>
-            </div>
-        </Modal>
-    );
-}
+// --- Inline ClaimModal and SplitRedeemModal removed ---
+// Moved to ./FamilyDashboard/ClaimModal.tsx and ./FamilyDashboard/SplitRedeemModal.tsx
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
@@ -388,17 +235,7 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
         }
     };
 
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
-    };
-
-    const getUserName = (userId: number) => {
-        return users.find(u => u.id === userId)?.nickname || `User #${userId}`;
-    };
-
-    const getAffordableRewards = (user: User) => {
-        return rewards.filter(r => user.current_points >= r.cost_points);
-    };
+    // formatDate, getUserName, getAffordableRewards moved to sub-components
 
     const groupedTasks = users.reduce((acc, user) => {
         acc[user.id] = tasks.filter(t => t.user_id === user.id);
@@ -474,228 +311,36 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
             </div>
 
             {activeTab === 'tasks' && (
-                <div className="tab-content fade-in">
-                    {users.map(user => {
-                        const userTasks = groupedTasks[user.id] || [];
-                        if (userTasks.length === 0) return null;
-                        const isCollapsed = collapsedUsers.has(user.id);
-
-                        return (
-                            <div key={user.id} className="user-group">
-                                <button
-                                    className="user-group-toggle user-group-header"
-                                    onClick={() => {
-                                        setCollapsedUsers(prev => {
-                                            const next = new Set(prev);
-                                            if (next.has(user.id)) {
-                                                next.delete(user.id);
-                                            } else {
-                                                next.add(user.id);
-                                            }
-                                            return next;
-                                        });
-                                    }}
-                                    aria-expanded={!isCollapsed}
-                                    aria-controls={`user-tasks-${user.id}`}
-                                >
-                                    <span
-                                        className={`collapse-chevron ${isCollapsed ? 'is-collapsed' : ''}`}
-                                        aria-hidden="true"
-                                    >
-                                        ▾
-                                    </span>
-                                    <h3 className="user-group-name">
-                                        {user.nickname}
-                                        <span className="user-group-count">
-                                            ({userTasks.length})
-                                        </span>
-                                    </h3>
-                                </button>
-                                {!isCollapsed && (
-                                    <div className="tasks-grid" id={`user-tasks-${user.id}`}>
-                                        {userTasks.map(instance => (
-                                            <div key={instance.id} className="task-card glass-card">
-                                                <div>
-                                                    <h4>{instance.task?.name || `Task #${instance.task_id}`}</h4>
-                                                    <p className="task-desc">{instance.task?.description}</p>
-                                                    <div className="task-info">
-                                                        <span className="task-points">💎 {instance.task?.base_points} {t('common.pts', 'pts')}</span>
-                                                        <span>📅 {instance.due_time.split('T')[0]}</span>
-                                                    </div>
-                                                </div>
-                                                <button
-                                                    className="btn btn-primary btn-complete"
-                                                    onClick={() => handleCompleteClick(instance)}
-                                                >
-                                                    {t('dashboard.doneAction', '✅ Done')}
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })}
-
-                    {unknownTasks.length > 0 && (
-                        <div className="user-group">
-                            <h3>{t('dashboard.unassignedOther', 'Unassigned / Other')}</h3>
-                            <div className="tasks-grid">
-                                {unknownTasks.map(instance => (
-                                    <div key={instance.id} className="task-card glass-card">
-                                        <h4>{instance.task?.name}</h4>
-                                        <button
-                                            className="btn btn-primary"
-                                            onClick={() => handleCompleteClick(instance)}
-                                        >
-                                            {t('dashboard.done', 'Done')}
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {tasks.length === 0 && (
-                        <div className="empty-state">
-                            <div className="empty-state-icon">🎉</div>
-                            <h3>{t('dashboard.allCaughtUpTitle')}</h3>
-                            <p>{t('tasks.noPendingTasks')}</p>
-                        </div>
-                    )}
-                </div>
+                <TasksTab
+                    users={users}
+                    groupedTasks={groupedTasks}
+                    unknownTasks={unknownTasks}
+                    tasks={tasks}
+                    collapsedUsers={collapsedUsers}
+                    setCollapsedUsers={setCollapsedUsers}
+                    handleCompleteClick={handleCompleteClick}
+                />
             )}
 
             {activeTab === 'redeem' && (
-                <div className="tab-content fade-in">
-                    {users.map(user => {
-                        const affordable = getAffordableRewards(user);
-                        if (affordable.length === 0) return null;
-
-                        return (
-                            <div key={user.id} className="user-group">
-                                <h3>
-                                    {user.nickname}
-                                    <span className="user-points-badge">💎 {user.current_points} {t('common.pts', 'pts')}</span>
-                                </h3>
-                                <div className="rewards-grid">
-                                    {affordable.map(reward => (
-                                        <div key={reward.id} className="reward-card glass-card">
-                                            <div className="reward-info">
-                                                <h4>{reward.name}</h4>
-                                                {reward.description && (
-                                                    <p className="reward-desc">{reward.description}</p>
-                                                )}
-                                                <div className="reward-cost">
-                                                    💰 {reward.cost_points} {t('common.pts', 'pts')}
-                                                </div>
-                                            </div>
-                                            <button
-                                                className="btn btn-success btn-redeem"
-                                                disabled={redeeming}
-                                                onClick={() => handleRedeemClick(reward)}
-                                            >
-                                                {t('dashboard.redeemReward', '🎁 Redeem')}
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        );
-                    })}
-
-                    {users.every(u => getAffordableRewards(u).length === 0) && (
-                        <div className="empty-state">
-                            <div className="empty-state-icon">😢</div>
-                            <h3>{t('dashboard.noAffordableRewardsTitle', 'No affordable rewards yet')}</h3>
-                            <p>{t('dashboard.noAffordableRewardsDesc', 'Complete more tasks to earn points!')}</p>
-                        </div>
-                    )}
-                </div>
+                <RedeemTab
+                    users={users}
+                    rewards={rewards}
+                    redeeming={redeeming}
+                    handleRedeemClick={handleRedeemClick}
+                />
             )}
 
             {activeTab === 'history' && (
-                <div className="tab-content fade-in">
-                    <div className="glass-card history-panel">
-                        <h2>📜 {t('dashboard.recentActivity', 'Recent Activity')}</h2>
-
-                        {/* Filters */}
-                        <div className="filters-bar">
-                            <select
-                                onChange={(e) => refreshTransactions({ user_id: e.target.value ? Number(e.target.value) : undefined }, true)}
-                                className="filter-select"
-                            >
-                                <option value="">{t('dashboard.allUsers', 'All Users')}</option>
-                                {users.map(u => <option key={u.id} value={u.id}>{u.nickname}</option>)}
-                            </select>
-
-                            <select
-                                onChange={(e) => refreshTransactions({ txn_type: e.target.value || undefined }, true)}
-                                className="filter-select"
-                            >
-                                <option value="">{t('dashboard.allActivity', 'All Activity')}</option>
-                                <option value="EARN">{t('dashboard.earned', 'Earned')}</option>
-                                <option value="REDEEM">{t('dashboard.redeemed', 'Redeemed')}</option>
-                            </select>
-
-                            <input
-                                type="text"
-                                placeholder={t('dashboard.search', 'Search...')}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="filter-input"
-                                value={searchTerm}
-                            />
-                        </div>
-
-                        {transactions.length === 0 ? (
-                            <div className="empty-state">
-                                <div className="empty-state-icon">📭</div>
-                                <h3>{t('dashboard.noHistoryFound', 'No History Found')}</h3>
-                                <p>{t('dashboard.noActivityMatchingFilters', 'No recent activity matching your filters.')}</p>
-                            </div>
-                        ) : (
-                            <div className="table-container">
-                                <table className="data-table">
-                                    <thead>
-                                        <tr>
-                                            <th>{t('history.time')}</th>
-                                            <th>{t('history.who')}</th>
-                                            <th>{t('history.action')}</th>
-                                            <th>{t('history.points')}</th>
-                                            <th>{t('history.details')}</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {transactions.map(tx => (
-                                            <tr key={tx.id}>
-                                                <td>{formatDate(tx.timestamp)}</td>
-                                                <td><strong>{getUserName(tx.user_id)}</strong></td>
-                                                <td>
-                                                    <span className={`badge ${tx.type === 'EARN' ? 'badge-success' : 'badge-warning'}`}>
-                                                        <span aria-hidden="true">{tx.type === 'EARN' ? '📈 ' : '📉 '}</span>{tx.type === 'EARN' ? t('dashboard.earnType', 'EARN') : t('dashboard.redeemType', 'REDEEM')}
-                                                    </span>
-                                                </td>
-                                                <td className={tx.awarded_points >= 0 ? 'text-success' : 'text-danger'}>
-                                                    {tx.awarded_points > 0 ? '+' : ''}{tx.awarded_points}
-                                                </td>
-                                                <td>
-                                                    {tx.description || (tx.type === 'EARN' ? t('dashboard.completedTaskDef', 'Completed task') : t('dashboard.redeemedRewardDef', 'Redeemed reward'))}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                                {hasMoreHistory && (
-                                    <div className="load-more-wrapper">
-                                        <button className="btn btn-secondary" onClick={loadMoreHistory}>
-                                            {t('dashboard.loadMore', 'Load More')}
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                </div>
+                <HistoryTab
+                    users={users}
+                    transactions={transactions}
+                    refreshTransactions={refreshTransactions}
+                    searchTerm={searchTerm}
+                    setSearchTerm={setSearchTerm}
+                    hasMoreHistory={hasMoreHistory}
+                    loadMoreHistory={loadMoreHistory}
+                />
             )}
 
             {selectedTask && (
