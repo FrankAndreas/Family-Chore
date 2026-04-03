@@ -76,22 +76,45 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We h
 - **Graceful Unauthenticated Dashboards**: Updated `FamilyDashboard.tsx` to utilize `skipAuthRedirect: true`, allowing the public-facing dashboard to safely swallow 401 errors from protected endpoints and render graceful "All done!" empty states instead of crashing.
 - **SQLAlchemy Resiliency**: Patched `backend/main.py` Alembic initialization block with a safer `inspect(conn)` schema check for SQLite forwards-compatibility.
 
+## 🔄 Recent Changes (2026-04-03 C1 FamilyDashboard Decomposition)
+- **Component Extraction**: Decomposed the 723-line `FamilyDashboard.tsx` monolith into 5 focused sub-components in a new `frontend/src/components/FamilyDashboard/` directory:
+  - `ClaimModal.tsx` (39 lines) — task completion user picker modal
+  - `SplitRedeemModal.tsx` (132 lines) — split-cost reward redemption modal
+  - `TasksTab.tsx` (125 lines) — tasks tab with collapsible user groups
+  - `RedeemTab.tsx` (71 lines) — rewards tab with affordable reward filtering
+  - `HistoryTab.tsx` (117 lines) — transaction history with filters and pagination
+- **Parent Controller**: `FamilyDashboard.tsx` reduced to 367 lines, managing only SSE connections, API calls, state, and prop routing.
+- **Admin Dashboard i18n**: Translated hardcoded English subtitles in `AdminDashboard.tsx`, `UserManagement.tsx`, `RoleManagement.tsx`, and `TaskManagement.tsx` using `useTranslation` hooks. Updated `en.json`/`de.json` with `dashboard.subtitle`, `users.subtitle`, `roles.subtitle`, `tasks.subtitle` keys.
+- **Commit**: `7b2ec06`
+
 ## 📍 System State
 - **Backend**: Port 8000. **142 tests passed**. Flake8 and Mypy clean. Schema v1.9 tracked via Alembic.
 - **Frontend**: Port 8080 (Docker), 5173 (local). ESLint clean. Build successful. Fully internationalized (EN/DE). Enhanced WCAG 2.1 compliance.
 - **Docker**: Secure PostgreSQL + FastAPI configuration operational.
 
-## 🚧 Active Tasks (Next Priority)
-- None actively identified. Awaiting next user directive.
+## 🚧 Remaining UX Review Items
+**Source**: `docs/reviews/ux-review-2026-03-11.md`
+
+All Priority P0–P4 items are complete. Remaining lower-severity items:
+
+| ID | Severity | Description | Status |
+|----|----------|-------------|--------|
+| N1 | 🟡 Medium | SSE indicator hidden on mobile (collapsed sidebar) | Open |
+| N3 | 🟢 Low | ErrorBoundary only offers "Reload Page" | Open |
+| N6 | 🟢 Low | Family Dashboard button context unclear | Open |
+| N7 | 🟢 Low | No keyboard shortcuts or bulk actions | Open |
+| F2 | 🟡 Medium | SplitRedeemModal number inputs accept negative visually | Open |
+| F3 | 🟢 Low | Photo drop-zone inline handlers/untranslated text | Open |
+| C2 | 🟡 Medium | Other oversized components (UserDashboard 422L, TaskMgmt 23KB, etc.) | Open |
+| T3 | 🟢 Low | No swipe gestures for mobile | Open |
 
 ## ⚠️ Known Issues / Watchlist
-- ~~**S5**: `/uploads/` directory is publicly accessible without authentication.~~ ✅ Resolved.
-- ~~**IDOR vulnerabilities**: S7–S10, S13 — user_id params allowed cross-user access.~~ ✅ Resolved.
-- ~~**Login enumeration**: S12 — distinct error messages leaked user existence.~~ ✅ Resolved.
-- ~~**SSE/Backup endpoints unauthenticated**: S3, S4.~~ ✅ Resolved.
+- All security issues (S1–S13) ✅ Resolved
+- All IDOR vulnerabilities ✅ Resolved
+- All P0–P4 priority UX fixes ✅ Resolved
 
 ---
 
 ## 🔜 Next Session Prompt
 > **Start a new conversation and say:**
-> "Review STATE.md — Security hardening is complete. Let's tackle the next priority."
+> "Review `STATE.md` and `docs/reviews/ux-review-2026-03-11.md`. All P0–P4 UX fixes are done including the C1 FamilyDashboard decomposition. Let's tackle the remaining medium-priority items (N1, F2, C2)."
