@@ -6,10 +6,12 @@ import Modal from '../../components/Modal';
 import TaskForm, { type TaskFormData } from '../../components/TaskForm';
 import ImportTasksModal from '../../components/ImportTasksModal';
 import { useToast } from '../../context/ToastContext';
+import { useTranslation } from 'react-i18next';
 import '../../styles/SharedDashboard.css';
 import './Dashboard.css';
 
 const TaskManagement: React.FC = () => {
+    const { t } = useTranslation();
     const [tasks, setTasks] = useState<Task[]>([]);
     const [roles, setRoles] = useState<Role[]>([]);
     const [loading, setLoading] = useState(true);
@@ -309,7 +311,7 @@ const TaskManagement: React.FC = () => {
                 <div className="header-content">
                     <div>
                         <h1 className="page-title">Task Management</h1>
-                        <p className="page-subtitle">Create and manage household chores</p>
+                        <p className="page-subtitle">{t('tasks.subtitle', 'Create and manage household chores')}</p>
                     </div>
                     <div className="header-actions" style={{ display: 'flex', gap: '0.5rem' }}>
                         <button

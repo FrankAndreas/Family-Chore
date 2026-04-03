@@ -54,6 +54,7 @@
     "dashboard": {
         "title": "Dashboard",
         "welcome": "Welcome, {{name}}!",
+        "subtitle": "Overview of family performance and system status",
         "whoDidIt": "Who did it?",
         "completing": "Completing:",
         "splitRedemption": "🎁 Split Redemption",
@@ -260,12 +261,13 @@
         "messages": {
             "created": "User created successfully! 🎉",
             "createFailed": "Failed to create user",
-            "loadFailed": "Failed to load users"
+            "loadFailed": "Failed to load users",
+            "familyAdminDesc": "Gives full access to the family dashboard. Needed to see the Chores section as an adult."
         }
     },
     "roles": {
         "title": "Role Management",
-        "subtitle": "Configure point multipliers",
+        "subtitle": "Configure point multipliers for each family role",
         "multiplier": "Multiplier",
         "edit": "Edit",
         "currentValue": "Current: {{value}}x",

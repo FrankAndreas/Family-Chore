@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getRoles, updateRole, createRole, deleteRole, getRoleUsers } from '../../api';
 import type { Role } from '../../types';
+import { useTranslation } from 'react-i18next';
 import { SkeletonLoader } from '../../components/SkeletonLoader';
 import '../../styles/SharedDashboard.css';
 import './Dashboard.css';
@@ -116,6 +117,7 @@ function DeleteRoleModal({ role, users, roles, onConfirm, onCancel }: DeleteModa
 }
 
 const RoleManagement: React.FC = () => {
+    const { t } = useTranslation();
     const [roles, setRoles] = useState<Role[]>([]);
     const [loading, setLoading] = useState(true);
     const [editingId, setEditingId] = useState<number | null>(null);
@@ -250,7 +252,7 @@ const RoleManagement: React.FC = () => {
             <header className="page-header">
                 <div>
                     <h1 className="page-title">Role Management</h1>
-                    <p className="page-subtitle">Configure point multipliers for each family role</p>
+                    <p className="page-subtitle">{t('roles.subtitle', 'Configure point multipliers for each family role')}</p>
                 </div>
                 <button
                     className="btn btn-primary"

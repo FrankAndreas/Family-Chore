@@ -3,10 +3,12 @@ import { useOutletContext } from 'react-router-dom';
 import { getUsers, createUser, getRoles, penalizeUser, updateUser, resetUserPassword, deleteUser } from '../../api';
 import type { User, Role } from '../../types';
 import { SkeletonLoader } from '../../components/SkeletonLoader';
+import { useTranslation } from 'react-i18next';
 import '../../styles/SharedDashboard.css';
 import './Dashboard.css';
 
 const UserManagement: React.FC = () => {
+    const { t } = useTranslation();
     const { currentUser } = useOutletContext<{ currentUser: User }>();
     const [users, setUsers] = useState<User[]>([]);
     const [roles, setRoles] = useState<Role[]>([]);
@@ -175,7 +177,7 @@ const UserManagement: React.FC = () => {
                 <div className="header-content">
                     <div>
                         <h1 className="page-title">User Management</h1>
-                        <p className="page-subtitle">Manage family members and their roles</p>
+                        <p className="page-subtitle">{t('users.subtitle', 'Manage family members and their roles')}</p>
                     </div>
                     <button
                         className="btn btn-primary"

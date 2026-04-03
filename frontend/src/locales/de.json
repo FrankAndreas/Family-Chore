@@ -37,7 +37,8 @@
             "pinFormat": "PIN muss genau 4 Ziffern haben",
             "userNotFound": "Benutzer nicht gefunden",
             "incorrectPin": "Falsche PIN",
-            "loginFailed": "Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut."
+            "loginFailed": "Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut.",
+            "familyAdminDesc": "Gewährt vollen Zugriff auf das Familien-Dashboard. Wird benötigt, um den Bereich Aufgaben als Erwachsener zu sehen."
         }
     },
     "navigation": {
@@ -54,6 +55,7 @@
     "dashboard": {
         "title": "Dashboard",
         "welcome": "Willkommen, {{name}}!",
+        "subtitle": "Übersicht über Familienleistung und Systemstatus",
         "whoDidIt": "Wer hat es gemacht?",
         "completing": "Abschluss:",
         "splitRedemption": "🎁 Geteilte Einlösung",
@@ -258,7 +260,7 @@
     },
     "users": {
         "title": "Benutzerverwaltung",
-        "subtitle": "Familienemitglieder verwalten",
+        "subtitle": "Familienmitglieder und deren Rollen verwalten",
         "addNew": "+ Neuer Benutzer",
         "fields": {
             "nickname": "Spitzname",
@@ -270,12 +272,13 @@
         "messages": {
             "created": "Benutzer erfolgreich erstellt! 🎉",
             "createFailed": "Benutzer konnte nicht erstellt werden",
-            "loadFailed": "Benutzer konnten nicht geladen werden"
+            "loadFailed": "Benutzer konnten nicht geladen werden",
+            "adminInfo": "Der Status des Hauptadministrators kann nicht geändert werden."
         }
     },
     "roles": {
         "title": "Rollenverwaltung",
-        "subtitle": "Punkte-Multiplikatoren konfigurieren",
+        "subtitle": "Konfigurieren Sie Punktemultiplikatoren für jede Familienrolle",
         "multiplier": "Multiplikator",
         "edit": "Bearbeiten",
         "currentValue": "Aktuell: {{value}}x",

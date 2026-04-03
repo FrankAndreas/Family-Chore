@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getUsers, getTasks, triggerDailyReset, getAllTransactions, getReviewQueue, reviewTask } from '../../api';
 import type { User, Task, Transaction, TransactionFilters, TaskInstance } from '../../types';
+import { useTranslation } from 'react-i18next';
 import { SkeletonLoader } from '../../components/SkeletonLoader';
 import Toast from '../../components/Toast';
 import { useToast } from '../../hooks/useToast';
@@ -10,6 +11,7 @@ import '../../styles/SharedDashboard.css';
 import './Dashboard.css';
 
 const AdminDashboard: React.FC = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [users, setUsers] = useState<User[]>([]);
     const [tasks, setTasks] = useState<Task[]>([]);
@@ -161,7 +163,7 @@ const AdminDashboard: React.FC = () => {
             </div>
             <header className="page-header">
                 <h1 className="page-title">Admin Dashboard</h1>
-                <p className="page-subtitle">Overview of family performance and system status</p>
+                <p className="page-subtitle">{t('dashboard.subtitle', 'Overview of family performance and system status')}</p>
             </header>
 
             <div className="stats-grid">
