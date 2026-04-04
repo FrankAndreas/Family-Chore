@@ -4,6 +4,7 @@ Unit tests for CRUD operations - focusing on critical business logic.
 import pytest
 from datetime import datetime
 from backend import crud, models, schemas
+from backend.services import tasks as tasks_service
 
 
 class TestPointCalculation:
@@ -47,7 +48,7 @@ class TestPointCalculation:
         seeded_db.commit()
 
         # Act
-        completed = crud.complete_task_instance(seeded_db, instance.id)
+        completed = tasks_service.complete_task_instance(seeded_db, instance.id)
 
         # Assert
         assert completed.status == "COMPLETED"
@@ -92,7 +93,7 @@ class TestPointCalculation:
         seeded_db.commit()
 
         # Act
-        crud.complete_task_instance(seeded_db, instance.id)
+        tasks_service.complete_task_instance(seeded_db, instance.id)
 
         # Assert
         transaction = seeded_db.query(models.Transaction).filter(
@@ -142,8 +143,8 @@ class TestPointCalculation:
         seeded_db.commit()
 
         # Act - complete twice
-        crud.complete_task_instance(seeded_db, instance.id)
-        crud.complete_task_instance(seeded_db, instance.id)
+        tasks_service.complete_task_instance(seeded_db, instance.id)
+        tasks_service.complete_task_instance(seeded_db, instance.id)
 
         # Assert - points only awarded once
         seeded_db.refresh(user)

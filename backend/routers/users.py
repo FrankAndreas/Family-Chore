@@ -4,6 +4,7 @@ from typing import List
 import logging
 
 from .. import schemas, crud, models
+from ..services import users as users_service
 from ..database import get_db
 from ..dependencies import get_current_user, get_current_admin_user
 from ..events import broadcaster
@@ -83,7 +84,7 @@ async def penalize_user(
     """Admin endpoint to deduct points from a user."""
     logger.info(
         f"Penalizing user {user_id} for {penalty.points} points: {penalty.reason}")
-    result = crud.apply_penalty(db, user_id=user_id, penalty=penalty)
+    result = users_service.apply_penalty(db, user_id=user_id, penalty=penalty)
 
     if not result["success"]:
         raise HTTPException(status_code=404, detail=result["error"])

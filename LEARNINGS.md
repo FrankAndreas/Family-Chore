@@ -510,6 +510,16 @@ This file captures accumulated knowledge from development sessions. The Libraria
 ### Gotchas
 - **Generic CSS Outlines**: A common mistake is adding custom React `onFocus` states that clash with generic `#id:focus` pseudo-classes defined in `index.css`. Trust the global CSS to handle the visual focus rings (e.g., `outline` settings) while JavaScript manages the markup.
 
+## 📅 2026-04-04: Monolith Service Decomposition & Automated Verification
+
+### Session Context
+- **Service Layer Extraction**: Decomposing a 600+ line `crud.py` file requires identifying natural bounded contexts (e.g., scoring vs. task orchestration).
+- **Test Migration**: The largest surface area of technical debt during architectural extraction resides in unit/integration tests that rely extensively on mocking the old monolithic namespace (`backend.crud`). Methodical `sed` or targeted replacement is required.
+- **Browser Subagents**: Verifying complex real-time React hook behavior (e.g. SSE connections updating points on task completion) using headless subagents provides excellent automated end-to-end validation without manually bootstrapping realistic test databases.
+
+### Gotchas
+- Ensure you commit all fixes *after* running full test suites as partial monolith migrations will severely break router integration tests that haven't been patched to map to the new service layers yet.
+
 ## Template for Future Entries
 
 ```markdown

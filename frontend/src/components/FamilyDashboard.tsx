@@ -1,11 +1,13 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import api, { completeTask, redeemRewardSplit } from '../api';
+import { useState, useEffect } from 'react';
+import { completeTask, redeemRewardSplit } from '../api';
 import { useTranslation } from 'react-i18next';
-import type { TaskInstance, User, Reward, Transaction } from '../types';
+import type { TaskInstance, Reward } from '../types';
 import { useDebounce } from '../hooks/useDebounce';
 import { useToast } from '../hooks/useToast';
 import { useSwipeTabs } from '../hooks/useSwipeTabs';
 import { SkeletonLoader } from './SkeletonLoader';
+import { useFamilyDashboardData } from "../hooks/useFamilyDashboardData";
+import { useTransactions } from "../hooks/useTransactions";
 // import Modal from './Modal'; // Moved to sub-components
 import Toast from './Toast';
 import './FamilyDashboard.css';
@@ -17,186 +19,43 @@ import TasksTab from './FamilyDashboard/TasksTab';
 import RedeemTab from './FamilyDashboard/RedeemTab';
 import HistoryTab from './FamilyDashboard/HistoryTab';
 
-// FamilyDashboard-specific API calls with skipAuthRedirect
-// These may be called without login, so we suppress 401-triggered reloads.
-const getPendingTasksPublic = () => api.get('/tasks/pending', { skipAuthRedirect: true });
-const getUsersPublic = () => api.get('/users/', { skipAuthRedirect: true });
-const getRewardsPublic = () => api.get('/rewards/', { skipAuthRedirect: true });
-const getAllTransactionsPublic = (params: Record<string, unknown> = {}) =>
-    api.get('/transactions', { params: { skip: 0, limit: 100, ...params }, skipAuthRedirect: true });
-
-// --- Inline ClaimModal and SplitRedeemModal removed ---
-// Moved to ./FamilyDashboard/ClaimModal.tsx and ./FamilyDashboard/SplitRedeemModal.tsx
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
     const { t } = useTranslation();
-    const [activeTab, setActiveTab] = useState<'tasks' | 'redeem' | 'history'>('tasks');
-    const FAMILY_TABS = ['tasks', 'redeem', 'history'] as const;
+    const [activeTab, setActiveTab] = useState<"tasks" | "redeem" | "history">("tasks");
+    const FAMILY_TABS = ["tasks", "redeem", "history"] as const;
     const swipeHandlers = useSwipeTabs(FAMILY_TABS, activeTab, setActiveTab as (tab: string) => void);
-    const [tasks, setTasks] = useState<TaskInstance[]>([]);
-    const [users, setUsers] = useState<User[]>([]);
-    const [rewards, setRewards] = useState<Reward[]>([]);
-    const [transactions, setTransactions] = useState<Transaction[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { toasts, removeToast, success, error: showError } = useToast();
+
     const [selectedTask, setSelectedTask] = useState<TaskInstance | null>(null);
     const [selectedRedeem, setSelectedRedeem] = useState<Reward | null>(null);
     const [redeeming, setRedeeming] = useState(false);
-    const { toasts, removeToast, success, error: showError } = useToast();
-    const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
-    const [connected, setConnected] = useState(false);
-    const [historyPage, setHistoryPage] = useState(1);
-    const [hasMoreHistory, setHasMoreHistory] = useState(true);
     const [collapsedUsers, setCollapsedUsers] = useState<Set<number>>(new Set());
-    const eventSourceRef = useRef<EventSource | null>(null);
-
-    const loadData = useCallback(async () => {
-        try {
-            const [tasksRes, usersRes, rewardsRes] = await Promise.all([
-                getPendingTasksPublic(),
-                getUsersPublic(),
-                getRewardsPublic()
-            ]);
-            setTasks(tasksRes.data);
-            setUsers(usersRes.data);
-            setRewards(rewardsRes.data);
-            setLastUpdate(new Date());
-        } catch (error) {
-            console.error("Failed to load family dashboard data", error);
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    const refreshTasks = useCallback(async () => {
-        try {
-            const tasksRes = await getPendingTasksPublic();
-            setTasks(tasksRes.data);
-            setLastUpdate(new Date());
-        } catch (error) {
-            console.error("Failed to refresh tasks", error);
-        }
-    }, []);
-
-    const refreshData = useCallback(async () => {
-        try {
-            const [usersRes, rewardsRes] = await Promise.all([getUsersPublic(), getRewardsPublic()]);
-            setUsers(usersRes.data);
-            setRewards(rewardsRes.data);
-            setLastUpdate(new Date());
-        } catch (error) {
-            console.error("Failed to refresh data", error);
-        }
-    }, []);
-
-    const [searchTerm, setSearchTerm] = useState('');
+    const [searchTerm, setSearchTerm] = useState("");
     const debouncedSearch = useDebounce(searchTerm, 300);
-    const [filters, setFilters] = useState<Record<string, unknown>>({});
+
+    const { transactions, hasMoreHistory, refreshTransactions, loadMoreHistory, setFilters } = useTransactions();
+
+    const { tasks, setTasks, users, rewards, loading, connected, lastUpdate, refreshData } = useFamilyDashboardData(
+        () => {
+            if (activeTab === "history") refreshTransactions({}, true);
+        },
+        (data) => {
+            success(`🎉 ${data?.reward_name || "Reward"} redeemed!`);
+            if (activeTab === "history") refreshTransactions({}, true);
+        }
+    );
 
     useEffect(() => {
         setFilters(prev => ({ ...prev, search: debouncedSearch || undefined }));
-    }, [debouncedSearch]);
-
-    const refreshTransactions = useCallback(async (newFilters = {}, reset = false) => {
-        const updatedFilters = { ...filters, ...newFilters };
-        setFilters(updatedFilters);
-        const currentPage = reset ? 1 : historyPage;
-        if (reset) setHistoryPage(1);
-
-        try {
-            const limit = 50;
-            const transactionsRes = await getAllTransactionsPublic({
-                skip: (currentPage - 1) * limit,
-                limit,
-                ...updatedFilters
-            });
-
-            if (reset) {
-                setTransactions(transactionsRes.data);
-            } else {
-                setTransactions(prev => [...prev, ...transactionsRes.data]);
-            }
-
-            setHasMoreHistory(transactionsRes.data.length === limit);
-        } catch (error) {
-            console.error("Failed to refresh transactions", error);
-        }
-    }, [filters, historyPage]);
-
-    const loadMoreHistory = () => {
-        setHistoryPage(prev => prev + 1);
-    };
-
-    // Load more when page changes, if not page 1 (which is handled by reset)
-    useEffect(() => {
-        if (historyPage > 1 && activeTab === 'history') {
-            refreshTransactions({}, false);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [historyPage]);
-
-    const activeTabRef = useRef(activeTab);
-    const refreshTransactionsRef = useRef(refreshTransactions);
+    }, [debouncedSearch, setFilters]);
 
     useEffect(() => {
-        activeTabRef.current = activeTab;
-    }, [activeTab]);
-
-    useEffect(() => {
-        refreshTransactionsRef.current = refreshTransactions;
-    }, [refreshTransactions]);
-
-    useEffect(() => {
-        loadData();
-
-        const token = localStorage.getItem('auth_token') || '';
-        const eventSource = new EventSource(`${API_BASE}/events?token=${encodeURIComponent(token)}`);
-        eventSourceRef.current = eventSource;
-
-        eventSource.onopen = () => {
-            console.log('SSE connected');
-            setConnected(true);
-        };
-
-        eventSource.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            console.log('SSE event:', data);
-
-            if (data.type === 'connected') {
-                setConnected(true);
-            } else if (data.type === 'task_created' || data.type === 'task_completed' || data.type === 'task_deleted') {
-                refreshTasks();
-                // If we're on history tab, refresh that too
-                if (activeTabRef.current === 'history') refreshTransactionsRef.current({}, true);
-            } else if (data.type === 'reward_redeemed') {
-                refreshData();
-                success(`🎉 ${data.payload?.reward_name || 'Reward'} redeemed!`);
-                if (activeTabRef.current === 'history') refreshTransactionsRef.current({}, true);
-            }
-            setLastUpdate(new Date());
-        };
-
-        eventSource.onerror = (error) => {
-            console.error('SSE error:', error);
-            setConnected(false);
-        };
-
-        return () => {
-            if (eventSourceRef.current) {
-                eventSourceRef.current.close();
-            }
-        };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [loadData, refreshData, refreshTasks]);
-
-    useEffect(() => {
-        if (activeTab === 'history') {
+        if (activeTab === "history") {
             refreshTransactions({}, true);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [activeTab]); // Removed refreshTransactions to avoid infinite loops when it changes filters
-
+    }, [activeTab]);
     const handleCompleteClick = (task: TaskInstance) => {
         setSelectedTask(task);
     };

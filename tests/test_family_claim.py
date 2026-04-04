@@ -1,5 +1,5 @@
-
 from backend import crud, schemas, models
+from backend.services import tasks as tasks_service
 
 
 def test_family_dashboard_claim_logic(db_session):
@@ -61,7 +61,7 @@ def test_family_dashboard_claim_logic(db_session):
 
     # 2. Test: Teenager Claims the task
     # Call complete_task_instance with actual_user_id = user_t.id
-    completed_instance = crud.complete_task_instance(
+    completed_instance = tasks_service.complete_task_instance(
         db, instance_id=instance.id, actual_user_id=user_t.id
     )
 

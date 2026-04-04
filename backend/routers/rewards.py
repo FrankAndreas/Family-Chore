@@ -4,6 +4,7 @@ from typing import List
 import logging
 
 from .. import schemas, crud, models
+from ..services import rewards as rewards_service
 from ..database import get_db
 from ..dependencies import get_current_user, get_current_admin_user
 from ..events import broadcaster
@@ -66,7 +67,7 @@ async def redeem_reward(reward_id: int,
     """
     user_id = int(current_user.id)
     logger.info(f"Redeeming reward {reward_id} for user {user_id}")
-    result = crud.redeem_reward(db, user_id=user_id, reward_id=reward_id)
+    result = rewards_service.redeem_reward(db, user_id=user_id, reward_id=reward_id)
 
     if not result["success"]:
         logger.warning(f"Redemption failed: {result['error']}")
@@ -115,7 +116,7 @@ async def redeem_reward_split(
     contributions = [{"user_id": c.user_id, "points": c.points}
                      for c in request.contributions]
 
-    result = crud.redeem_reward_split(
+    result = rewards_service.redeem_reward_split(
         db, reward_id=reward_id, contributions=contributions)
 
     if not result["success"]:

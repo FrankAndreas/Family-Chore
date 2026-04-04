@@ -4,6 +4,7 @@ Unit tests for Transaction operations.
 """
 from datetime import datetime, timedelta, timezone
 from backend import crud, models, schemas
+from backend.services import users as users_service
 
 
 class TestTransactionHistory:
@@ -218,7 +219,7 @@ class TestPenalty:
         penalty_req = schemas.PenaltyRequest(points=20, reason="Misbehaved")
 
         # Act
-        result = crud.apply_penalty(seeded_db, user.id, penalty_req)
+        result = users_service.apply_penalty(seeded_db, user.id, penalty_req)
 
         # Assert
         assert result["success"] is True
@@ -260,7 +261,7 @@ class TestPenalty:
         penalty_req = schemas.PenaltyRequest(points=20, reason="Huge mistake")
 
         # Act
-        result = crud.apply_penalty(seeded_db, user.id, penalty_req)
+        result = users_service.apply_penalty(seeded_db, user.id, penalty_req)
 
         # Assert
         assert result["success"] is True

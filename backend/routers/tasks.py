@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, File, Up
 from sqlalchemy.orm import Session
 
 from .. import schemas, crud, models
+from ..services import tasks as tasks_service
 from ..database import get_db
 from ..dependencies import get_current_user, get_current_admin_user
 from ..events import broadcaster
@@ -92,7 +93,7 @@ async def complete_task(
     logger.info(
         f"Attempting to complete task instance: {instance_id} (Claimed by user_id: {actual_user_id})")
     try:
-        instance = crud.complete_task_instance(
+        instance = tasks_service.complete_task_instance(
             db, instance_id=instance_id, actual_user_id=actual_user_id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -216,7 +217,7 @@ async def review_task(
     """Admin endpoint to approve or reject a task."""
     logger.info(
         f"Reviewing task instance {instance_id}: approved={review.is_approved}")
-    instance = crud.review_task_instance(
+    instance = tasks_service.review_task_instance(
         db, instance_id=instance_id, review=review)
     if not instance:
         raise HTTPException(

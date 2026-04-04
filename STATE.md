@@ -102,6 +102,11 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We h
   - `DeleteTaskModal.tsx` (45 lines) — delete confirmation modal
 - **Quality**: ESLint clean, TypeScript `--noEmit` clean, browser-verified.
 
+## 🔄 Recent Changes (2026-04-04 Architecture Refactoring Phase 1)
+- **Backend Service Layer**: Decoupled business logic from `crud.py` into dedicated `gamification.py`, `rewards.py`, `tasks.py`, and `users.py` services.
+- **Frontend Refactor**: Extracted complex state management from the monolithic `FamilyDashboard.tsx` into modular and testable React Hooks (`useFamilyDashboardData`, `useTransactions`).
+- **Validation**: 142 backend tests passing, successfully verified live SSE point accumulation on the UI via browser end-to-end testing.
+
 ## 🔄 Recent Changes (2026-04-04 Low-Severity UX Fixes N3/F3/T3)
 - **N3 (ErrorBoundary i18n)**: Refactored `ErrorBoundary.tsx` to use an inner functional `ErrorDisplay` component with `useTranslation` hook (class components can't use hooks). Added `errorBoundary.*` keys to both `en.json` and `de.json`.
 - **F3 (PhotoDropzone Extraction)**: Extracted the inline photo drop-zone from `UserDashboard.tsx` into a reusable `PhotoDropzone.tsx` component with `useCallback`-wrapped drag/drop handlers. Added missing `dashboard.photoTake`, `dashboard.photoReplace`, `dashboard.photoRequired` i18n keys to both locale files.
