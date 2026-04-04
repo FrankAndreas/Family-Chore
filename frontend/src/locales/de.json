@@ -122,7 +122,10 @@
         "noRewards": "Derzeit keine Belohnungen erschwinglich. Sammle weiter!",
         "loadMore": "Mehr laden",
         "dailyBonus": "+5 Tagesbonus verfügbar!",
-        "noDescription": "Keine Beschreibung"
+        "noDescription": "Keine Beschreibung",
+        "photoTake": "Tippe, um ein Foto zu machen oder ziehe ein Bild hierher",
+        "photoReplace": "Tippe, um das Foto zu ersetzen",
+        "photoRequired": "Verifizierung erforderlich"
     },
     "tasks": {
         "title": "Aufgabenverwaltung",
@@ -360,5 +363,13 @@
         "details": "Details",
         "date": "Datum",
         "type": "Typ"
+    },
+    "errorBoundary": {
+        "title": "Ups! Etwas ist schiefgelaufen",
+        "description": "Es tut uns leid, aber ein unerwarteter Fehler ist aufgetreten. Du kannst es erneut versuchen, zurückgehen oder die Seite neu laden.",
+        "showDetails": "Fehlerdetails anzeigen",
+        "tryAgain": "Erneut versuchen",
+        "goBack": "Zurück",
+        "reloadPage": "Seite neu laden"
     }
 }

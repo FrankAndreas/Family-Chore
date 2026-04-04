@@ -121,7 +121,10 @@
         "noRewards": "No rewards affordable right now. Keep earning!",
         "loadMore": "Load More",
         "dailyBonus": "+5 Daily Bonus Available!",
-        "noDescription": "No description"
+        "noDescription": "No description",
+        "photoTake": "Tap to take photo or drop image here",
+        "photoReplace": "Tap to replace photo",
+        "photoRequired": "Verification required"
     },
     "tasks": {
         "title": "Task Management",
@@ -349,5 +352,13 @@
         "details": "Details",
         "date": "Date",
         "type": "Type"
+    },
+    "errorBoundary": {
+        "title": "Oops! Something went wrong",
+        "description": "We're sorry, but an unexpected error occurred. You can try again, go back, or reload the page.",
+        "showDetails": "Show error details",
+        "tryAgain": "Try Again",
+        "goBack": "Go Back",
+        "reloadPage": "Reload Page"
     }
 }

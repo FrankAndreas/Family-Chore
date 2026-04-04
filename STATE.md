@@ -1,7 +1,7 @@
 # State & Global Memory
 
 **Librarian**: Agent-Librarian
-**Last Updated**: 2026-03-05 07:23
+**Last Updated**: 2026-04-04 07:50
 
 ## 🧠 Global Context
 The project is a **Family Chore Gamification System** (Universal-GSD-Core). We have completed **System Polish & Hardening** (V1.4), **Negative Points**, **Email Notifications** (V1.6), **Frontend Integration**, **Analytics & Heatmaps**, and **Security Hardening**. Database schema version is **1.9**.
@@ -102,6 +102,14 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We h
   - `DeleteTaskModal.tsx` (45 lines) — delete confirmation modal
 - **Quality**: ESLint clean, TypeScript `--noEmit` clean, browser-verified.
 
+## 🔄 Recent Changes (2026-04-04 Low-Severity UX Fixes N3/F3/T3)
+- **N3 (ErrorBoundary i18n)**: Refactored `ErrorBoundary.tsx` to use an inner functional `ErrorDisplay` component with `useTranslation` hook (class components can't use hooks). Added `errorBoundary.*` keys to both `en.json` and `de.json`.
+- **F3 (PhotoDropzone Extraction)**: Extracted the inline photo drop-zone from `UserDashboard.tsx` into a reusable `PhotoDropzone.tsx` component with `useCallback`-wrapped drag/drop handlers. Added missing `dashboard.photoTake`, `dashboard.photoReplace`, `dashboard.photoRequired` i18n keys to both locale files.
+- **T3 (Mobile Swipe Tabs)**: Created `useSwipeTabs.ts` custom hook using `touchstart`/`touchmove`/`touchend` events with 50px threshold and vertical-scroll detection. Applied to `FamilyDashboard.tsx` (3 tabs: tasks/redeem/history) and `UserDashboard.tsx` (2 tabs: tasks/history).
+- **N6**: Already resolved — Login.tsx has hint text and description paragraph for Family Dashboard button.
+- **N7**: Already resolved — shared Modal component handles Escape key and focus trap.
+- **Quality**: ESLint clean, TypeScript `--noEmit` clean, browser-verified.
+
 ## 📍 System State
 - **Backend**: Port 8000. **142 tests passed**. Flake8 and Mypy clean. Schema v1.9 tracked via Alembic.
 - **Frontend**: Port 8080 (Docker), 5173 (local). ESLint clean. Build successful. Fully internationalized (EN/DE). Enhanced WCAG 2.1 compliance.
@@ -110,27 +118,29 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We h
 ## 🚧 Remaining UX Review Items
 **Source**: `docs/reviews/ux-review-2026-03-11.md`
 
-All Priority P0–P4 and all Medium items are complete. Remaining low-severity items:
+✅ **ALL UX review items are now complete** — P0–P4, Medium, and Low severity.
 
 | ID | Severity | Description | Status |
 |----|----------|-------------|--------|
-| N1 | 🟡 Medium | SSE indicator hidden on mobile (collapsed sidebar) | ✅ Done (verified existing fix) |
+| N1 | 🟡 Medium | SSE indicator hidden on mobile (collapsed sidebar) | ✅ Done |
 | F2 | 🟡 Medium | SplitRedeemModal number inputs accept negative visually | ✅ Done |
 | C2 | 🟡 Medium | Other oversized components (RewardHub, TaskManagement) | ✅ Done |
-| N3 | 🟢 Low | ErrorBoundary only offers "Reload Page" | Open |
-| N6 | 🟢 Low | Family Dashboard button context unclear | Open |
-| N7 | 🟢 Low | No keyboard shortcuts or bulk actions | Open |
-| F3 | 🟢 Low | Photo drop-zone inline handlers/untranslated text | Open |
-| T3 | 🟢 Low | No swipe gestures for mobile | Open |
+| N3 | 🟢 Low | ErrorBoundary recovery + i18n | ✅ Done |
+| N6 | 🟢 Low | Family Dashboard button context unclear | ✅ Done (was already fixed) |
+| N7 | 🟢 Low | No keyboard shortcuts or bulk actions | ✅ Done (via Modal component) |
+| F3 | 🟢 Low | Photo drop-zone inline handlers/untranslated text | ✅ Done |
+| T3 | 🟢 Low | No swipe gestures for mobile | ✅ Done |
 
 ## ⚠️ Known Issues / Watchlist
 - All security issues (S1–S13) ✅ Resolved
 - All IDOR vulnerabilities ✅ Resolved
 - All P0–P4 priority UX fixes ✅ Resolved
 - All 🟡 Medium UX fixes ✅ Resolved
+- All 🟢 Low UX fixes ✅ Resolved
+- **🎉 UX Review fully complete**
 
 ---
 
 ## 🔜 Next Session Prompt
 > **Start a new conversation and say:**
-> "Review `STATE.md` and `docs/reviews/ux-review-2026-03-11.md`. All P0–P4 and Medium-priority UX fixes are done. Consider tackling the remaining Low-severity items (N3, N6, N7, F3, T3) or moving on to new features."
+> "Review `STATE.md`. The UX review is fully complete (all 12 standards, all severity levels). Consider new features, performance optimization, or test coverage improvements."

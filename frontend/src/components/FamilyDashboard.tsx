@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import type { TaskInstance, User, Reward, Transaction } from '../types';
 import { useDebounce } from '../hooks/useDebounce';
 import { useToast } from '../hooks/useToast';
+import { useSwipeTabs } from '../hooks/useSwipeTabs';
 import { SkeletonLoader } from './SkeletonLoader';
 // import Modal from './Modal'; // Moved to sub-components
 import Toast from './Toast';
@@ -32,6 +33,8 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
     const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState<'tasks' | 'redeem' | 'history'>('tasks');
+    const FAMILY_TABS = ['tasks', 'redeem', 'history'] as const;
+    const swipeHandlers = useSwipeTabs(FAMILY_TABS, activeTab, setActiveTab as (tab: string) => void);
     const [tasks, setTasks] = useState<TaskInstance[]>([]);
     const [users, setUsers] = useState<User[]>([]);
     const [rewards, setRewards] = useState<Reward[]>([]);
@@ -310,6 +313,7 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
                 </button>
             </div>
 
+            <div className="family-dashboard-content" {...swipeHandlers}>
             {activeTab === 'tasks' && (
                 <TasksTab
                     users={users}
@@ -342,6 +346,7 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
                     loadMoreHistory={loadMoreHistory}
                 />
             )}
+            </div>
 
             {selectedTask && (
                 <ClaimModal

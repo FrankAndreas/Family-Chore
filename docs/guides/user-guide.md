@@ -188,11 +188,18 @@ The system refreshes every night at midnight.
 
 ### 📸 Photo Verification Tasks
 Some tasks require photo proof:
-1. Tap the **"Upload / Take Photo"** button on the task card.
-2. Your device will open the **camera** or **file picker** — take a photo or select one from your gallery.
+1. Tap the **photo drop-zone** (📸 icon) on the task card — your device will open the camera or file picker.
+2. Alternatively, you can **drag and drop** an image file directly onto the drop-zone.
 3. A small preview of the photo will appear. Click **"Mark Complete"** — your task goes to **"In Review"** status.
 4. An Admin will approve or reject it from the **Review Queue** on the Admin Dashboard.
 5. If approved, points are awarded. If rejected, you'll get a notification explaining why.
+
+### 👆 Mobile Swipe Navigation
+On mobile devices, you can **swipe left or right** on tab content to switch between tabs:
+- **Family Dashboard**: Swipe between Tasks, Rewards, and History.
+- **User Dashboard**: Swipe between My Tasks and History.
+
+> **Tip**: This works alongside the tab buttons at the top of each dashboard.
 
 ---
 
@@ -214,4 +221,4 @@ A: Go to the **Settings** page and select "Deutsch". You can set it as your pers
 A: This usually means the server is restarting or you lost internet connection. It should disappear automatically once connected.
 
 ---
-*Generated for ChoreSpec v1.7*
+*Generated for ChoreSpec v1.8*

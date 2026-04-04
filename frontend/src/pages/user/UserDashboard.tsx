@@ -4,9 +4,11 @@ import { useTranslation } from 'react-i18next';
 import { getUserDailyTasks, completeTask, getTasks, getUserTransactions, uploadTaskPhoto } from '../../api';
 import type { TaskInstance, Task, User, Transaction, TransactionFilters } from '../../types';
 import { SkeletonLoader } from '../../components/SkeletonLoader';
+import PhotoDropzone from '../../components/PhotoDropzone';
 import Toast from '../../components/Toast';
 import { useToast } from '../../hooks/useToast';
 import { useDebounce } from '../../hooks/useDebounce';
+import { useSwipeTabs } from '../../hooks/useSwipeTabs';
 import '../../styles/SharedDashboard.css';
 import './UserDashboard.css';
 
@@ -20,25 +22,7 @@ interface TaskInstanceWithDetails extends TaskInstance {
     taskDetails?: Task;
 }
 
-// Helper component to manage Object URL lifecycle
-const PhotoPreview: React.FC<{ file: File }> = ({ file }) => {
-    const [url, setUrl] = useState<string>('');
-
-    useEffect(() => {
-        const objectUrl = URL.createObjectURL(file);
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setUrl(objectUrl);
-        return () => URL.revokeObjectURL(objectUrl);
-    }, [file]);
-
-    return (
-        <img
-            src={url}
-            alt="Task completion verification photo"
-            style={{ width: '100%', height: 'auto', borderRadius: '4px', objectFit: 'cover', border: '1px solid var(--border-color)' }}
-        />
-    );
-};
+// PhotoPreview component moved to PhotoDropzone.tsx
 
 const UserDashboard: React.FC = () => {
     const { t } = useTranslation();
@@ -47,6 +31,8 @@ const UserDashboard: React.FC = () => {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'tasks' | 'history'>('tasks');
+    const TABS = ['tasks', 'history'] as const;
+    const swipeHandlers = useSwipeTabs(TABS, activeTab, setActiveTab as (tab: string) => void);
     const [historyPage, setHistoryPage] = useState(1);
     const [hasMoreHistory, setHasMoreHistory] = useState(true);
     const [completingId, setCompletingId] = useState<number | null>(null);
@@ -242,7 +228,7 @@ const UserDashboard: React.FC = () => {
                     </div>
                 </div>
             ) : (
-                <div className="dashboard-content">
+                <div className="dashboard-content" {...swipeHandlers}>
                     {activeTab === 'tasks' && (
                         <div className="dashboard-sections">
                             <div className="section glass-panel">
@@ -278,53 +264,11 @@ const UserDashboard: React.FC = () => {
                                                             )}
                                                         </div>
                                                         {task?.requires_photo_verification && !isInReview && (
-                                                            <div className="photo-upload-section mt-3">
-                                                                <label
-                                                                    className="dropzone-container flex-col-center border-dashed border-2 rounded-md p-4 bg-secondary cursor-pointer max-w-sm w-full mx-auto"
-                                                                    onDragOver={(e) => {
-                                                                        e.preventDefault();
-                                                                        e.currentTarget.classList.add('drag-active');
-                                                                    }}
-                                                                    onDragLeave={(e) => {
-                                                                        e.preventDefault();
-                                                                        e.currentTarget.classList.remove('drag-active');
-                                                                    }}
-                                                                    onDrop={(e) => {
-                                                                        e.preventDefault();
-                                                                        e.currentTarget.classList.remove('drag-active');
-                                                                        const file = e.dataTransfer.files ? e.dataTransfer.files[0] : null;
-                                                                        if (file && file.type.startsWith('image/')) {
-                                                                            setPhotoUrls(prev => ({ ...prev, [instance.id]: file }));
-                                                                        }
-                                                                    }}
-                                                                >
-                                                                    <input
-                                                                        type="file"
-                                                                        accept="image/*"
-                                                                        capture="environment"
-                                                                        className="hidden-file-input"
-                                                                        onChange={(e) => {
-                                                                            const file = e.target.files ? e.target.files[0] : null;
-                                                                            setPhotoUrls(prev => ({ ...prev, [instance.id]: file }));
-                                                                        }}
-                                                                    />
-                                                                    {photoUrls[instance.id] ? (
-                                                                        <div className="photo-upload-box">
-                                                                            <PhotoPreview file={photoUrls[instance.id]!} />
-                                                                            <div className="photo-replace-btn">
-                                                                                ✓
-                                                                            </div>
-                                                                            <div className="photo-replace-text">{t('dashboard.photoReplace', 'Tap to replace photo')}</div>
-                                                                        </div>
-                                                                    ) : (
-                                                                        <>
-                                                                            <div className="photo-upload-icon">📸</div>
-                                                                            <div className="photo-upload-text">{t('dashboard.photoTake', 'Tap to take photo or drop image here')}</div>
-                                                                            <small className="photo-upload-hint">{t('dashboard.photoRequired', 'Verification required')}</small>
-                                                                        </>
-                                                                    )}
-                                                                </label>
-                                                            </div>
+                                                            <PhotoDropzone
+                                                                instanceId={instance.id}
+                                                                photo={photoUrls[instance.id] || null}
+                                                                onPhotoChange={(id, file) => setPhotoUrls(prev => ({ ...prev, [id]: file }))}
+                                                            />
                                                         )}
                                                     </div>
                                                     <button
