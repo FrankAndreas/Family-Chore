@@ -69,10 +69,6 @@ async def redeem_reward(reward_id: int,
     logger.info(f"Redeeming reward {reward_id} for user {user_id}")
     result = rewards_service.redeem_reward(db, user_id=user_id, reward_id=reward_id)
 
-    if not result["success"]:
-        logger.warning(f"Redemption failed: {result['error']}")
-        raise HTTPException(status_code=400, detail=result["error"])
-
     logger.info(
         f"Redemption successful: {result['reward_name']} for {result['points_spent']} points")
 
@@ -118,10 +114,6 @@ async def redeem_reward_split(
 
     result = rewards_service.redeem_reward_split(
         db, reward_id=reward_id, contributions=contributions)
-
-    if not result["success"]:
-        logger.warning(f"Split redemption failed: {result['error']}")
-        raise HTTPException(status_code=400, detail=result["error"])
 
     logger.info(
         f"Split redemption successful: {result['reward_name']} for {result['total_points']} points")

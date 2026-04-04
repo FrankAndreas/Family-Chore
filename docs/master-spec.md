@@ -304,6 +304,37 @@ ChoreSpec is a family-oriented chore gamification system. It transforms househol
 - **When** the UI renders the localized string
 - **Then** the application uses the plural form via i18next `count` interpolation (e.g., "3 Tage" in German, "3 days" in English).
 
+### 4.11 BDD Scenarios (Gamification / Streaks)
+**Scenario: User completes a task and increments their daily streak**
+- **Given** a user has a current streak of 0 days
+- **When** the user completes their first task of the day
+- **Then** the gamification engine increments the user's streak to 1 day
+- **And** the baseline role multiplier receives an additive bonus of `+0.1`.
+
+**Scenario: Additive streak multiplier is capped**
+- **Given** a user has maintained a streak of 6 days (multiplier bonus +0.5)
+- **When** the user completes a task on the 7th consecutive day
+- **Then** the user's streak continues to increment (e.g., 7 days)
+- **And** the additive multiplier bonus remains capped at `+0.5`.
+
+**Scenario: Missed day resets the streak**
+- **Given** a user has a current streak of 5 days
+- **When** the Midnight Reset job runs and the user completed ZERO tasks that day
+- **Then** the gamification engine resets the user's active streak to 0
+- **And** their role multiplier drops back to the baseline.
+
+### 4.12 BDD Scenarios (Architecture / Error Handling)
+**Scenario: API handles Insufficient Points domain exception**
+- **Given** the frontend requests a reward redemption
+- **When** the user's balance is less than the reward cost (triggering `InsufficientPointsError` in the Service Layer)
+- **Then** the FastAPI exception handler intercepts the domain exception
+- **And** responds with a standardized RFC 7807 problem detail JSON (e.g., `{"detail": "Insufficient points balance", "type": "domain_error"}`) and a 400 status code.
+
+**Scenario: Time-travel testing for scheduled tasks**
+- **Given** a unit test validating task recurrence
+- **When** the test passes a mocked `now` datetime instance into the Service Layer
+- **Then** the service logic evaluates cooldowns and recurring deadlines strictly against the injected `now` instance instead of the real system clock.
+
 ---
 
 ## 5. Current Implementation Delta (vs. MVP Spec)

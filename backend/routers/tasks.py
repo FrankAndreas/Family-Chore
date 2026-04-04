@@ -92,14 +92,10 @@ async def complete_task(
 ):
     logger.info(
         f"Attempting to complete task instance: {instance_id} (Claimed by user_id: {actual_user_id})")
-    try:
-        instance = tasks_service.complete_task_instance(
-            db, instance_id=instance_id, actual_user_id=actual_user_id)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    if not instance:
-        logger.error(f"Task instance not found: {instance_id}")
-        raise HTTPException(status_code=404, detail="Task instance not found")
+
+    instance = tasks_service.complete_task_instance(
+        db, instance_id=instance_id, actual_user_id=actual_user_id)
+
     logger.info(
         f"Task completed successfully: instance {instance_id} by user {instance.user_id}")
 
@@ -219,9 +215,6 @@ async def review_task(
         f"Reviewing task instance {instance_id}: approved={review.is_approved}")
     instance = tasks_service.review_task_instance(
         db, instance_id=instance_id, review=review)
-    if not instance:
-        raise HTTPException(
-            status_code=404, detail="Task instance not found or not in review")
 
     # Real-time update
     await broadcaster.broadcast("task_reviewed", {

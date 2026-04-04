@@ -86,9 +86,6 @@ async def penalize_user(
         f"Penalizing user {user_id} for {penalty.points} points: {penalty.reason}")
     result = users_service.apply_penalty(db, user_id=user_id, penalty=penalty)
 
-    if not result["success"]:
-        raise HTTPException(status_code=404, detail=result["error"])
-
     # Notify User in-app
     crud.create_notification(db, schemas.NotificationCreate(
         user_id=user_id,

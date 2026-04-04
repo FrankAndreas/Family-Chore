@@ -111,10 +111,12 @@ def test_redeem_reward_insufficient_points(db_session, reward_setup):
     user = reward_setup["child"]  # Has 50 points
     reward = reward_setup["pizza"]  # Costs 500
 
-    result = rewards_service.redeem_reward(db_session, user.id, reward.id)
+    from backend.exceptions import InsufficientPointsError
 
-    assert result["success"] is False
-    assert "Insufficient points" in result["error"]
+    with pytest.raises(InsufficientPointsError) as exc:
+        rewards_service.redeem_reward(db_session, user.id, reward.id)
+
+    assert "Insufficient points" in str(exc.value)
 
     # Verify no points deducted
     db_session.refresh(user)
@@ -122,15 +124,15 @@ def test_redeem_reward_insufficient_points(db_session, reward_setup):
 
 
 def test_redeem_reward_invalid_ids(db_session, reward_setup):
+    from backend.exceptions import UserNotFoundError, RewardNotFoundError
+
     # Invalid user
-    result = rewards_service.redeem_reward(db_session, 9999, reward_setup["pizza"].id)
-    assert result["success"] is False
-    assert result["error"] == "User not found"
+    with pytest.raises(UserNotFoundError):
+        rewards_service.redeem_reward(db_session, 9999, reward_setup["pizza"].id)
 
     # Invalid reward
-    result = rewards_service.redeem_reward(db_session, reward_setup["teen"].id, 9999)
-    assert result["success"] is False
-    assert result["error"] == "Reward not found"
+    with pytest.raises(RewardNotFoundError):
+        rewards_service.redeem_reward(db_session, reward_setup["teen"].id, 9999)
 
 
 def test_redeem_reward_split_success(db_session, reward_setup):
@@ -173,15 +175,17 @@ def test_redeem_reward_split_validation(db_session, reward_setup):
     child = reward_setup["child"]
     reward = reward_setup["toy"]  # 100 pts
 
+    from backend.exceptions import InsufficientPointsError, UserNotFoundError
+
     # 1. Total mismatch
     contributions_bad_sum = [
         {"user_id": teen.id, "points": 50},
         {"user_id": child.id, "points": 10}
     ]
-    result = rewards_service.redeem_reward_split(
-        db_session, reward.id, contributions_bad_sum)
-    assert result["success"] is False
-    assert "does not equal reward cost" in result["error"]
+    with pytest.raises(InsufficientPointsError) as exc:
+        rewards_service.redeem_reward_split(
+            db_session, reward.id, contributions_bad_sum)
+    assert "does not equal reward cost" in str(exc.value)
 
     # 2. Insufficient funds individual
     # Child has 50, tries to pay 60
@@ -189,19 +193,19 @@ def test_redeem_reward_split_validation(db_session, reward_setup):
         {"user_id": teen.id, "points": 40},
         {"user_id": child.id, "points": 60}
     ]
-    result = rewards_service.redeem_reward_split(
-        db_session, reward.id, contributions_too_poor)
-    assert result["success"] is False
-    assert "has only 50 pts" in result["error"]
+    with pytest.raises(InsufficientPointsError) as exc:
+        rewards_service.redeem_reward_split(
+            db_session, reward.id, contributions_too_poor)
+    assert "has only 50 pts" in str(exc.value)
 
     # 3. Invalid user
     contributions_bad_user = [
         {"user_id": 9999, "points": 100}
     ]
-    result = rewards_service.redeem_reward_split(
-        db_session, reward.id, contributions_bad_user)
-    assert result["success"] is False
-    assert "User 9999 not found" in result["error"]
+    with pytest.raises(UserNotFoundError) as exc:
+        rewards_service.redeem_reward_split(
+            db_session, reward.id, contributions_bad_user)
+    assert "User 9999 not found" in str(exc.value)
 
 
 def test_redeem_reward_split_zero_contribution(db_session, reward_setup):

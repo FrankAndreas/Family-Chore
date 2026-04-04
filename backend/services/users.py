@@ -1,19 +1,24 @@
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone
+from typing import Optional
 from .. import models, schemas
 from .. import crud
+from ..exceptions import UserNotFoundError
 
 
-def apply_penalty(db: Session, user_id: int, penalty: schemas.PenaltyRequest) -> dict:
+def apply_penalty(
+    db: Session, user_id: int, penalty: schemas.PenaltyRequest, current_time: Optional[datetime] = None
+) -> dict:
     """
     Deduct points from a user and create a PENALTY transaction.
     """
     user = crud.get_user(db, user_id)
     if not user:
-        return {"success": False, "error": "User not found"}
+        raise UserNotFoundError()
 
     # Deduct points (can be negative)
     user.current_points -= penalty.points
+    now_dt = current_time or datetime.now(timezone.utc)
 
     # Create transaction
     transaction = models.Transaction(
@@ -24,7 +29,7 @@ def apply_penalty(db: Session, user_id: int, penalty: schemas.PenaltyRequest) ->
         awarded_points=-penalty.points,
         description=penalty.reason,
         reference_instance_id=None,
-        timestamp=datetime.now(timezone.utc)
+        timestamp=now_dt
     )
     db.add(transaction)
     db.commit()

@@ -107,6 +107,11 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We h
 - **Frontend Refactor**: Extracted complex state management from the monolithic `FamilyDashboard.tsx` into modular and testable React Hooks (`useFamilyDashboardData`, `useTransactions`).
 - **Validation**: 142 backend tests passing, successfully verified live SSE point accumulation on the UI via browser end-to-end testing.
 
+## 🔄 Recent Changes (2026-04-04 Architecture Refactoring Phase 2)
+- **Domain Exceptions**: Restructured error handling across `services/` and `routers/`. Introduced `DomainError` hierarchy (`TaskNotFoundError`, `InsufficientPointsError`, `InvalidStateTransitionError`) mapping directly to HTTP status codes via a global FastAPI exception handler, removing 50+ lines of redundant error-status dictionary checking.
+- **Gamification Engine**: Implemented `current_time` time-travel injection into `gamification.py`. Replaced flat base points with a compound streak mechanic (+0.1 multiplier daily, capped at +0.5). Included a `reset_expired_streaks` function for scheduled midnight cron job resets.
+- **Verification**: 147 backend automated tests passing. Clean `flake8` and `mypy` runs. End-to-end Browser Agent successfully verified manual Streak point increments, standard task completion, and correct Insufficient Funds UI state rejections without crashing.
+
 ## 🔄 Recent Changes (2026-04-04 Low-Severity UX Fixes N3/F3/T3)
 - **N3 (ErrorBoundary i18n)**: Refactored `ErrorBoundary.tsx` to use an inner functional `ErrorDisplay` component with `useTranslation` hook (class components can't use hooks). Added `errorBoundary.*` keys to both `en.json` and `de.json`.
 - **F3 (PhotoDropzone Extraction)**: Extracted the inline photo drop-zone from `UserDashboard.tsx` into a reusable `PhotoDropzone.tsx` component with `useCallback`-wrapped drag/drop handlers. Added missing `dashboard.photoTake`, `dashboard.photoReplace`, `dashboard.photoRequired` i18n keys to both locale files.

@@ -1,4 +1,4 @@
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
 from contextlib import asynccontextmanager
@@ -21,6 +21,7 @@ from .notifications_service import send_email_sync, send_push_to_user_sync
 from .dependencies import get_current_admin_user, get_current_user
 from .security import verify_token
 from .events import broadcaster
+from .exceptions import DomainError
 
 
 # Initialize Tables
@@ -199,6 +200,14 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="ChoreSpec MVP", lifespan=lifespan)
+
+
+@app.exception_handler(DomainError)
+async def domain_error_handler(request: Request, exc: DomainError):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"success": False, "type": "domain_error", "detail": exc.detail}
+    )
 
 # M1: Retrieve CORS internal network origins from environment or default to local Vite/React servers
 cors_origins_env = os.environ.get("CORS_ORIGINS", "")

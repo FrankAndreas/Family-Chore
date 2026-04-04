@@ -543,3 +543,13 @@ This file captures accumulated knowledge from development sessions. The Libraria
 ### Gotchas
 - **Mypy vs Linters**: When adding custom properties to Axios configs, ESLint may complain about unused imports (`AxiosRequestConfig`) if they are only utilized inside `declare module` blocks. Prune generic imports carefully.
 - **Database Inspection**: When using SQLAlchemy 2.0 APIs, `inspect(engine)` is deprecated for `has_table` checks. The correct syntax is `with engine.connect() as conn: inspector = inspect(conn)`.
+
+## 📅 2026-04-04: Domain Exceptions & Type Enforcement
+
+### Session Context
+- **Global Error Handlers**: Defining a base `DomainError(Exception)` and catching it via `@app.exception_handler` decouples business logic constraints (e.g. Insufficient Points) from `HTTPException` routing block codes boilerplate, enforcing standard RFC 7807 problem details HTTP responses.
+- **Dynamic Date Bounds**: Avoid `datetime.now(timezone.utc)` directly inside domain calculation services (like streak evaluation logic) as it breaks unit testing over intervals. Instead, expose `current_time: Optional[datetime] = None` explicitly for dependency injection.
+
+### Gotchas
+- **Mypy Return Paths**: When refactoring exception handling, even if code structurally guarantees a return value via an explicit `raise NotFoundError` upstream, `mypy` requires removing `Optional[...]` from the function signature and correctly handling union boundaries, else downstream checks will aggressively flag `NoneType` issues.
+- **DB Model Keyword Initialization**: Attempting to mock Pydantic-like structured parameters natively inside direct SQLAlchemy mapping `models.Task(**kwargs)` within Pytest fails severely if schema fields (e.g., `created_by_id`) do not exist natively on the database mapped base classes.

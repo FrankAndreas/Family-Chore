@@ -1,31 +1,30 @@
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone
+from typing import Optional
 from .. import models
+from ..exceptions import UserNotFoundError, RewardNotFoundError, InsufficientPointsError
 
 
-def redeem_reward(db: Session, user_id: int, reward_id: int) -> dict:
+def redeem_reward(db: Session, user_id: int, reward_id: int, current_time: Optional[datetime] = None) -> dict:
     """
     Redeem a reward for a user.
-    Returns dict with success status, transaction details, or error message.
     """
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
-        return {"success": False, "error": "User not found"}
+        raise UserNotFoundError()
 
     reward = db.query(models.Reward).filter(
         models.Reward.id == reward_id).first()
     if not reward:
-        return {"success": False, "error": "Reward not found"}
+        raise RewardNotFoundError()
 
     # Validate user has enough points
     if user.current_points < reward.cost_points:
-        return {
-            "success": False,
-            "error": f"Insufficient points. You have {user.current_points}, need {reward.cost_points}"
-        }
+        raise InsufficientPointsError(f"Insufficient points. You have {user.current_points}, need {reward.cost_points}")
 
     # Deduct points
     user.current_points -= reward.cost_points
+    now_dt = current_time or datetime.now(timezone.utc)
 
     # Create REDEEM transaction (negative awarded_points to indicate spending)
     transaction = models.Transaction(
@@ -36,7 +35,7 @@ def redeem_reward(db: Session, user_id: int, reward_id: int) -> dict:
         awarded_points=-reward.cost_points,  # Negative to show deduction
         description=f"Redeemed reward: {reward.name}",
         reference_instance_id=None,  # No task instance reference
-        timestamp=datetime.now(timezone.utc)
+        timestamp=now_dt
     )
     db.add(transaction)
 
@@ -57,25 +56,24 @@ def redeem_reward(db: Session, user_id: int, reward_id: int) -> dict:
     }
 
 
-def redeem_reward_split(db: Session, reward_id: int, contributions: list[dict]) -> dict:
+def redeem_reward_split(
+    db: Session, reward_id: int, contributions: list[dict], current_time: Optional[datetime] = None
+) -> dict:
     """
     Redeem a reward by pooling points from multiple users.
     contributions: list of {user_id: int, points: int}
-    Returns dict with success status, transaction details, or error message.
     """
     # Get the reward
     reward = db.query(models.Reward).filter(
         models.Reward.id == reward_id).first()
     if not reward:
-        return {"success": False, "error": "Reward not found"}
+        raise RewardNotFoundError()
 
     # Calculate total contribution
     total_points = sum(c["points"] for c in contributions)
     if total_points != reward.cost_points:
-        return {
-            "success": False,
-            "error": f"Total contribution ({total_points}) does not equal reward cost ({reward.cost_points})"
-        }
+        raise InsufficientPointsError(
+            f"Total contribution ({total_points}) does not equal reward cost ({reward.cost_points})")
 
     # Validate all users exist and have enough points
     users_data = []
@@ -86,18 +84,17 @@ def redeem_reward_split(db: Session, reward_id: int, contributions: list[dict]) 
         user = db.query(models.User).filter(
             models.User.id == contrib["user_id"]).first()
         if not user:
-            return {"success": False, "error": f"User {contrib['user_id']} not found"}
+            raise UserNotFoundError(f"User {contrib['user_id']} not found")
 
         if user.current_points < contrib["points"]:
-            return {
-                "success": False,
-                "error": f"{user.nickname} has only {user.current_points} pts, needs {contrib['points']}"
-            }
+            raise InsufficientPointsError(
+                f"{user.nickname} has only {user.current_points} pts, needs {contrib['points']}")
 
         users_data.append({"user": user, "points": contrib["points"]})
 
     # All validations passed - deduct points and create transactions
     transactions = []
+    now_dt = current_time or datetime.now(timezone.utc)
     for data in users_data:
         user = data["user"]
         points = data["points"]
@@ -114,7 +111,7 @@ def redeem_reward_split(db: Session, reward_id: int, contributions: list[dict]) 
             awarded_points=-points,
             description=f"Redeemed reward: {reward.name} (Split)",
             reference_instance_id=None,
-            timestamp=datetime.now(timezone.utc)
+            timestamp=now_dt
         )
         db.add(transaction)
         db.flush()  # Get transaction ID
