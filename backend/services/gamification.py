@@ -1,94 +1,81 @@
-from sqlalchemy.orm import Session
-from datetime import datetime, timezone, timedelta
-from .. import models
+"""
+Gamification orchestrator — thin composition layer.
 
+Delegates calculation to ``points_policy`` and streak management to
+``streak_tracker``.  This module's only remaining responsibility is
+**persistence**: creating the Transaction, updating the instance, and
+committing.
 
+AR2.1 / AR2.2 refactor: the hardcoded math and streak state-machine have
+been extracted so that new gamification rules can be added without
+modifying this orchestration code.
+"""
+from datetime import datetime, timezone
 from typing import Optional
 
+from sqlalchemy.orm import Session
 
-def reset_expired_streaks(db: Session, reference_date: Optional[datetime] = None) -> int:
-    """
-    Resets current_streak to 0 for all users who haven't completed a task since yesterday.
-    Intended to run during the midnight reset.
-    """
-    now_date = (reference_date or datetime.now(timezone.utc)).date()
-    yesterday = now_date - timedelta(days=1)
+from .. import models
+from .points_policy import calculate_points
+from .streak_tracker import update_user_streak
 
-    users = db.query(models.User).filter(
-        (models.User.last_task_date < yesterday) | (models.User.last_task_date.is_(None)),
-        models.User.current_streak > 0
-    ).all()
-
-    count = 0
-    for user in users:
-        user.current_streak = 0
-        count += 1
-
-    if count > 0:
-        db.commit()
-    return count
+# ── Re-export so existing callers (tests, cron jobs) are not broken ──
+from .streak_tracker import reset_expired_streaks  # noqa: F401
 
 
 def award_points_for_task(
     db: Session, instance: models.TaskInstance, current_time: Optional[datetime] = None
 ) -> models.TaskInstance:
     """
-    Shared helper: calculate streaks, daily bonus, award points, create transaction,
-    and mark recurring siblings as completed. Commits and refreshes the instance.
+    Orchestrate task completion: update streak, calculate points, persist.
+
+    This function composes:
+    - ``streak_tracker.update_user_streak`` (streak state-machine)
+    - ``points_policy.calculate_points``  (pure math)
+
+    And then handles only persistence concerns (Transaction, User points, commit).
     """
     now_dt = current_time or datetime.now(timezone.utc)
     task = instance.task
     user = instance.user
     role = user.role
 
-    # 1. Gamification: Streaks & Daily Bonus
-    today_date = now_dt.date()
-    is_first_task_today = user.last_task_date != today_date
-    daily_bonus = 5 if is_first_task_today else 0
+    # 1. Streak (delegated to streak_tracker)
+    streak, is_first = update_user_streak(user, now_dt.date())
 
-    if is_first_task_today:
-        if user.last_task_date == today_date - timedelta(days=1):
-            user.current_streak += 1
-        else:
-            user.current_streak = 1
-        user.last_task_date = today_date
+    # 2. Points (delegated to points_policy — pure, no side effects)
+    breakdown = calculate_points(
+        base_points=task.base_points,
+        role_multiplier=role.multiplier_value,
+        current_streak=streak,
+        is_first_task_today=is_first,
+    )
 
-    # The streak logic caps at +0.5 bonus. e.g. Day 1: 0, Day 2: 0.1 ... Day 6: 0.5.
-    streak_bonus = min(0.5, max(0, user.current_streak - 1) * 0.1)
-    effective_multiplier = role.multiplier_value + streak_bonus
-
-    # 2. Calculate Points
-    base_points = task.base_points
-    awarded_points = int(base_points * effective_multiplier) + daily_bonus
-
-    # 3. Update Instance
+    # 3. Persistence — the only responsibility left here
     instance.status = "COMPLETED"
     instance.completed_at = now_dt
 
-    # 4. Create Transaction
     desc = f"Completed task: {task.name}"
-    if daily_bonus > 0:
-        desc += f" (+{daily_bonus} Daily Bonus)"
-    if streak_bonus > 0.0:
-        desc += f" [Streak: {user.current_streak} days]"
+    if breakdown.description_suffix:
+        desc += f" {breakdown.description_suffix}"
 
     transaction = models.Transaction(
         user_id=user.id,
         type="EARN",
-        base_points_value=base_points,
-        multiplier_used=effective_multiplier,
-        awarded_points=awarded_points,
+        base_points_value=breakdown.base_points,
+        multiplier_used=breakdown.effective_multiplier,
+        awarded_points=breakdown.total_awarded,
         description=desc,
         reference_instance_id=instance.id,
         timestamp=now_dt
     )
     db.add(transaction)
 
-    # 5. Update User Points
-    user.current_points += awarded_points
-    user.lifetime_points += awarded_points
+    # Update user totals
+    user.current_points += breakdown.total_awarded
+    user.lifetime_points += breakdown.total_awarded
 
-    # 6. For recurring tasks, mark all other pending instances as completed
+    # For recurring tasks, mark all other pending instances as completed
     if task.schedule_type == "recurring":
         other_instances = db.query(models.TaskInstance).filter(
             models.TaskInstance.task_id == task.id,
