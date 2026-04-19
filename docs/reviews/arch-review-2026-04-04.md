@@ -92,6 +92,6 @@
 
 ## Tracking
 
-- [ ] P0: Extract standalone Service Layer from `crud.py` (AR1.1, AR3.1)
-- [ ] P1: Standardize Error Handling and Custom Domain Exceptions (AR5.1)
-- [ ] P2: Modularize State handling in `FamilyDashboard.tsx` (AR1.3)
+- [x] P0: Extract standalone Service Layer from `crud.py` (AR1.1, AR3.1) - *Completed in Phase 1*
+- [x] P1: Standardize Error Handling and Custom Domain Exceptions (AR5.1) - *Completed in Phase 2*
+- [x] P2: Modularize State handling in `FamilyDashboard.tsx` (AR1.3) - *Completed in Phase 1*
