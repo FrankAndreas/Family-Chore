@@ -2,6 +2,14 @@ import axios from 'axios';
 
 import type { LoginResponse, User } from './types';
 
+// ── Force-logout callback (registered by App.tsx) ──────────────
+// Allows the axios interceptor to signal the React tree on 401,
+// replacing window.location.reload() with a clean state transition.
+let _forceLogoutCallback: (() => void) | null = null;
+
+export function registerForceLogout(callback: () => void): void {
+    _forceLogoutCallback = callback;
+}
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 const api = axios.create({
@@ -40,9 +48,10 @@ api.interceptors.response.use(
             if (!skipRedirect) {
                 localStorage.removeItem('user');
                 localStorage.removeItem('auth_token');
-                // Reload the page so the SPA re-renders from root and shows the Login component
-                // (there is no '/login' route in React Router — Login is rendered conditionally)
-                window.location.reload();
+                // Signal the React tree to clear auth state and show Login
+                if (_forceLogoutCallback) {
+                    _forceLogoutCallback();
+                }
             }
         }
         return Promise.reject(error);

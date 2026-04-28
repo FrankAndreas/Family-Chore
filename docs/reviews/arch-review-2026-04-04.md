@@ -95,3 +95,7 @@
 - [x] P0: Extract standalone Service Layer from `crud.py` (AR1.1, AR3.1) - *Completed in Phase 1*
 - [x] P1: Standardize Error Handling and Custom Domain Exceptions (AR5.1) - *Completed in Phase 2*
 - [x] P2: Modularize State handling in `FamilyDashboard.tsx` (AR1.3) - *Completed in Phase 1*
+- [x] P3: Decouple Gamification Engine (AR2.1, AR2.2) - *Completed: extracted `points_policy.py` (pure math), `streak_tracker.py` (state-machine), rewrote `gamification.py` as thin orchestrator*
+- [x] P4: Isolate Transaction/Audit Boundary (AR1.2, AR3.2) - *Completed: centralized `transaction_service.py`, rewired all callers, moved cleanup from `crud.py`*
+- [x] P5: Replace `window.location.reload()` on 401 (AR4.2) - *Completed: registered force-logout callback from App.tsx, axios interceptor signals React state instead of reloading*
+

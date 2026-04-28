@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ToastProvider } from './context/ToastContext';
 import { NotificationProvider } from './context/NotificationContext';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -16,7 +16,7 @@ import SettingsPage from './pages/SettingsPage';
 import NotFoundPage from './pages/NotFoundPage';
 import FamilyDashboardView from './components/FamilyDashboard';
 import type { User } from './types';
-import { getUsers } from './api';
+import { getUsers, registerForceLogout } from './api';
 import './App.css';
 import './index.css';
 
@@ -39,7 +39,15 @@ function App() {
 
   const handleLogout = () => {
     setCurrentUser(null);
+    localStorage.removeItem('user');
+    localStorage.removeItem('auth_token');
   };
+
+  // Register the force-logout callback so the axios 401 interceptor
+  // can clear React state without window.location.reload()
+  useEffect(() => {
+    registerForceLogout(handleLogout);
+  }, []);
 
   const refreshUser = async () => {
     if (!currentUser) return;
