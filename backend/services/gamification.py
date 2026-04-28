@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 from .. import models
 from .points_policy import calculate_points
 from .streak_tracker import update_user_streak
+from .transaction_service import record_earn
 
 # ── Re-export so existing callers (tests, cron jobs) are not broken ──
 from .streak_tracker import reset_expired_streaks  # noqa: F401
@@ -59,17 +60,16 @@ def award_points_for_task(
     if breakdown.description_suffix:
         desc += f" {breakdown.description_suffix}"
 
-    transaction = models.Transaction(
+    record_earn(
+        db,
         user_id=user.id,
-        type="EARN",
-        base_points_value=breakdown.base_points,
-        multiplier_used=breakdown.effective_multiplier,
+        base_points=breakdown.base_points,
+        multiplier=breakdown.effective_multiplier,
         awarded_points=breakdown.total_awarded,
         description=desc,
-        reference_instance_id=instance.id,
-        timestamp=now_dt
+        reference_instance_id=int(instance.id),
+        timestamp=now_dt,
     )
-    db.add(transaction)
 
     # Update user totals
     user.current_points += breakdown.total_awarded

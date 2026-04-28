@@ -1,9 +1,10 @@
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone
 from typing import Optional
-from .. import models, schemas
+from .. import schemas
 from .. import crud
 from ..exceptions import UserNotFoundError
+from .transaction_service import record_penalty
 
 
 def apply_penalty(
@@ -21,17 +22,13 @@ def apply_penalty(
     now_dt = current_time or datetime.now(timezone.utc)
 
     # Create transaction
-    transaction = models.Transaction(
-        user_id=user.id,
-        type="PENALTY",
-        base_points_value=penalty.points,
-        multiplier_used=1.0,
-        awarded_points=-penalty.points,
-        description=penalty.reason,
-        reference_instance_id=None,
-        timestamp=now_dt
+    transaction = record_penalty(
+        db,
+        user_id=int(user.id),
+        points=penalty.points,
+        reason=penalty.reason,
+        timestamp=now_dt,
     )
-    db.add(transaction)
     db.commit()
     db.refresh(user)
     db.refresh(transaction)

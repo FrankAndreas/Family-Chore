@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from typing import Optional
 from .. import models
 from ..exceptions import UserNotFoundError, RewardNotFoundError, InsufficientPointsError
+from .transaction_service import record_redeem
 
 
 def redeem_reward(db: Session, user_id: int, reward_id: int, current_time: Optional[datetime] = None) -> dict:
@@ -27,17 +28,13 @@ def redeem_reward(db: Session, user_id: int, reward_id: int, current_time: Optio
     now_dt = current_time or datetime.now(timezone.utc)
 
     # Create REDEEM transaction (negative awarded_points to indicate spending)
-    transaction = models.Transaction(
-        user_id=user.id,
-        type="REDEEM",
-        base_points_value=reward.cost_points,
-        multiplier_used=1.0,  # No multiplier for redemptions
-        awarded_points=-reward.cost_points,  # Negative to show deduction
+    transaction = record_redeem(
+        db,
+        user_id=int(user.id),
+        cost_points=int(reward.cost_points),
         description=f"Redeemed reward: {reward.name}",
-        reference_instance_id=None,  # No task instance reference
-        timestamp=now_dt
+        timestamp=now_dt,
     )
-    db.add(transaction)
 
     # If this reward was the user's goal, clear it
     if user.current_goal_reward_id == reward_id:
@@ -103,17 +100,13 @@ def redeem_reward_split(
         user.current_points -= points
 
         # Create transaction
-        transaction = models.Transaction(
+        transaction = record_redeem(
+            db,
             user_id=user.id,
-            type="REDEEM",
-            base_points_value=points,
-            multiplier_used=1.0,
-            awarded_points=-points,
+            cost_points=points,
             description=f"Redeemed reward: {reward.name} (Split)",
-            reference_instance_id=None,
-            timestamp=now_dt
+            timestamp=now_dt,
         )
-        db.add(transaction)
         db.flush()  # Get transaction ID
 
         transactions.append({

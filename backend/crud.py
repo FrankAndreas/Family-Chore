@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime, date, timezone
 from typing import Optional, List
 from . import models, schemas, security
+from .services.transaction_service import delete_user_transactions, detach_instance_references
 
 # --- User CRUD ---
 
@@ -69,7 +70,7 @@ def delete_user(db: Session, user_id: int) -> bool:
 
     # Delete related records explicitly
     db.query(models.TaskInstance).filter(models.TaskInstance.user_id == user_id).delete()
-    db.query(models.Transaction).filter(models.Transaction.user_id == user_id).delete()
+    delete_user_transactions(db, user_id)
     db.query(models.Notification).filter(models.Notification.user_id == user_id).delete()
     db.query(models.PushSubscription).filter(models.PushSubscription.user_id == user_id).delete()
 
@@ -233,9 +234,7 @@ def delete_task(db: Session, task_id: int) -> bool:
 
     # B2: Null-out Transaction references to prevent orphaned foreign keys
     if instance_ids:
-        db.query(models.Transaction).filter(
-            models.Transaction.reference_instance_id.in_(instance_ids)
-        ).update({"reference_instance_id": None}, synchronize_session="fetch")
+        detach_instance_references(db, instance_ids)
 
     # Delete related task instances
     db.query(models.TaskInstance).filter(
