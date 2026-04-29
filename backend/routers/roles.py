@@ -43,11 +43,15 @@ def read_roles(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return roles
 
 
-@router.get("/roles/{role_id}/users", dependencies=[Depends(get_current_user)])
+@router.get("/roles/{role_id}/users", response_model=schemas.RoleUsersResponse,
+            dependencies=[Depends(get_current_user)])
 def get_role_users(role_id: int, db: Session = Depends(get_db)):
     """Get count of users assigned to a role."""
     users = db.query(models.User).filter(models.User.role_id == role_id).all()
-    return {"count": len(users), "users": [{"id": u.id, "nickname": u.nickname} for u in users]}
+    return schemas.RoleUsersResponse(
+        count=len(users),
+        users=[schemas.RoleUserInfo(id=int(u.id), nickname=str(u.nickname)) for u in users],
+    )
 
 
 @router.put("/roles/{role_id}", response_model=schemas.Role, dependencies=[Depends(get_current_admin_user)])

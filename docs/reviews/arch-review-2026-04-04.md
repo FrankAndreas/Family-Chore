@@ -98,4 +98,5 @@
 - [x] P3: Decouple Gamification Engine (AR2.1, AR2.2) - *Completed: extracted `points_policy.py` (pure math), `streak_tracker.py` (state-machine), rewrote `gamification.py` as thin orchestrator*
 - [x] P4: Isolate Transaction/Audit Boundary (AR1.2, AR3.2) - *Completed: centralized `transaction_service.py`, rewired all callers, moved cleanup from `crud.py`*
 - [x] P5: Replace `window.location.reload()` on 401 (AR4.2) - *Completed: registered force-logout callback from App.tsx, axios interceptor signals React state instead of reloading*
+- [x] P6: Persistence Ignorance at API Boundary (AR4.1) - *Completed: services return explicit Pydantic DTOs, routers use typed attributes, all raw dict/ORM returns replaced with response schemas*
 

@@ -12,14 +12,14 @@ def complete_task_instance(
     instance_id: int,
     actual_user_id: int = None,
     current_time: Optional[datetime] = None
-) -> models.TaskInstance:
+) -> schemas.TaskInstance:
     instance = db.query(models.TaskInstance).filter(
         models.TaskInstance.id == instance_id).first()
     if not instance:
         raise TaskNotFoundError()
 
     if instance.status == "COMPLETED":
-        return instance  # Already done
+        return schemas.TaskInstance.model_validate(instance)  # Already done
 
     # 1. Get related data (and handle reassignment if needed)
     if actual_user_id and actual_user_id != instance.user_id:
@@ -39,7 +39,7 @@ def complete_task_instance(
         instance.status = "IN_REVIEW"
         db.commit()
         db.refresh(instance)
-        return instance
+        return schemas.TaskInstance.model_validate(instance)
 
     return gamification.award_points_for_task(db, instance, current_time)
 
@@ -49,7 +49,7 @@ def review_task_instance(
     instance_id: int,
     review: schemas.TaskReviewRequest,
     current_time: Optional[datetime] = None
-) -> models.TaskInstance:
+) -> schemas.TaskInstance:
     """Admin endpoint to approve or reject a task."""
     instance = db.query(models.TaskInstance).filter(
         models.TaskInstance.id == instance_id).first()
@@ -77,7 +77,7 @@ def review_task_instance(
             )
         ))
 
-        return instance
+        return schemas.TaskInstance.model_validate(instance)
 
     # Approved: Award points using gamification service.
     return gamification.award_points_for_task(db, instance, current_time)

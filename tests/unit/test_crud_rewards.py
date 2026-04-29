@@ -88,9 +88,9 @@ def test_redeem_reward_success(db_session, reward_setup):
 
     result = rewards_service.redeem_reward(db_session, user.id, reward.id)
 
-    assert result["success"] is True
-    assert result["points_spent"] == 500
-    assert result["remaining_points"] == 500
+    assert result.success is True
+    assert result.points_spent == 500
+    assert result.remaining_points == 500
 
     # Verify database state
     db_session.refresh(user)
@@ -147,8 +147,8 @@ def test_redeem_reward_split_success(db_session, reward_setup):
 
     result = rewards_service.redeem_reward_split(db_session, reward.id, contributions)
 
-    assert result["success"] is True
-    assert result["total_points"] == 100
+    assert result.success is True
+    assert result.total_points == 100
 
     # Verify point deductions
     db_session.refresh(teen)
@@ -220,7 +220,7 @@ def test_redeem_reward_split_zero_contribution(db_session, reward_setup):
     ]
 
     result = rewards_service.redeem_reward_split(db_session, reward.id, contributions)
-    assert result["success"] is True
+    assert result.success is True
 
     # Child should have no transaction
     tx_child = db_session.query(models.Transaction).filter(

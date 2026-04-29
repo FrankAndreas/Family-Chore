@@ -9,7 +9,7 @@ from .transaction_service import record_penalty
 
 def apply_penalty(
     db: Session, user_id: int, penalty: schemas.PenaltyRequest, current_time: Optional[datetime] = None
-) -> dict:
+) -> schemas.PenaltyResponse:
     """
     Deduct points from a user and create a PENALTY transaction.
     """
@@ -33,9 +33,9 @@ def apply_penalty(
     db.refresh(user)
     db.refresh(transaction)
 
-    return {
-        "success": True,
-        "transaction_id": transaction.id,
-        "points_deducted": penalty.points,
-        "remaining_points": user.current_points
-    }
+    return schemas.PenaltyResponse(
+        success=True,
+        transaction_id=int(transaction.id),
+        points_deducted=int(penalty.points),
+        remaining_points=int(user.current_points),
+    )

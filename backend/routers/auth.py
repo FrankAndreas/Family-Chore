@@ -52,8 +52,8 @@ def login(user_credentials: schemas.UserLogin, response: Response, db: Session =
         samesite="lax"
     )
 
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "user": user
-    }
+    return schemas.Token(
+        access_token=access_token,
+        token_type="bearer",
+        user=schemas.User.model_validate(user),
+    )

@@ -1,12 +1,14 @@
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone
 from typing import Optional
-from .. import models
+from .. import models, schemas
 from ..exceptions import UserNotFoundError, RewardNotFoundError, InsufficientPointsError
 from .transaction_service import record_redeem
 
 
-def redeem_reward(db: Session, user_id: int, reward_id: int, current_time: Optional[datetime] = None) -> dict:
+def redeem_reward(
+    db: Session, user_id: int, reward_id: int, current_time: Optional[datetime] = None
+) -> schemas.RedemptionResponse:
     """
     Redeem a reward for a user.
     """
@@ -44,18 +46,18 @@ def redeem_reward(db: Session, user_id: int, reward_id: int, current_time: Optio
     db.refresh(user)
     db.refresh(transaction)
 
-    return {
-        "success": True,
-        "transaction_id": transaction.id,
-        "reward_name": reward.name,
-        "points_spent": reward.cost_points,
-        "remaining_points": user.current_points
-    }
+    return schemas.RedemptionResponse(
+        success=True,
+        transaction_id=int(transaction.id),
+        reward_name=str(reward.name),
+        points_spent=int(reward.cost_points),
+        remaining_points=int(user.current_points),
+    )
 
 
 def redeem_reward_split(
     db: Session, reward_id: int, contributions: list[dict], current_time: Optional[datetime] = None
-) -> dict:
+) -> schemas.SplitRedemptionResponse:
     """
     Redeem a reward by pooling points from multiple users.
     contributions: list of {user_id: int, points: int}
@@ -109,12 +111,12 @@ def redeem_reward_split(
         )
         db.flush()  # Get transaction ID
 
-        transactions.append({
-            "user_id": user.id,
-            "user_name": user.nickname,
-            "points": points,
-            "transaction_id": transaction.id
-        })
+        transactions.append(schemas.SplitTransactionDetail(
+            user_id=int(user.id),
+            user_name=str(user.nickname),
+            points=int(points),
+            transaction_id=int(transaction.id),
+        ))
 
         # Clear goal if this was user's goal
         if user.current_goal_reward_id == reward_id:
@@ -122,9 +124,9 @@ def redeem_reward_split(
 
     db.commit()
 
-    return {
-        "success": True,
-        "reward_name": reward.name,
-        "total_points": total_points,
-        "transactions": transactions
-    }
+    return schemas.SplitRedemptionResponse(
+        success=True,
+        reward_name=str(reward.name),
+        total_points=int(total_points),
+        transactions=transactions,
+    )

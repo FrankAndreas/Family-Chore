@@ -520,6 +520,17 @@ This file captures accumulated knowledge from development sessions. The Libraria
 ### Gotchas
 - Ensure you commit all fixes *after* running full test suites as partial monolith migrations will severely break router integration tests that haven't been patched to map to the new service layers yet.
 
+## 📅 2026-04-29: Persistence Ignorance & DTO Refactoring
+
+### Session Context
+- **Boundary Enforcement**: Returning explicit Pydantic models from the service layer prevents accidental lazy-loading of SQLAlchemy relationships in the router/presentation layer, avoiding implicit I/O and standardizing the contract.
+- **Notification Data Refactoring**: When DTOs strip ORM relationships (like `.task` or `.transaction`), any downstream notifications that need that data must either have it passed explicitly in the DTO or fetched separately in the router before broadcasting.
+- **CRUD Endpoints**: Even simple CRUD endpoints should construct their Pydantic `response_model` explicitly (e.g. `schemas.Token(...)`) rather than relying on FastAPI's implicit dict-to-model coercion, to ensure strict schema enforcement at the boundary.
+
+### Gotchas
+- **Mypy Attribute Errors**: Tests written assuming dictionary returns (`result["success"]`) will instantly fail when switching to DTOs (`result.success`). This is a feature, not a bug, as it flags previously untyped boundaries.
+- **Test Data**: Invalid test data (like a `schedule_type="one_off"` instead of the allowed Enums) might bypass raw dictionary returns but will immediately be caught by strict Pydantic DTO validation.
+
 ## Template for Future Entries
 
 ```markdown

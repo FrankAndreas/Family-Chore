@@ -11,6 +11,7 @@
     "prepare": "husky"
   },
   "devDependencies": {
+    "baseline-browser-mapping": "^2.10.24",
     "husky": "^9.0.0"
   }
 }

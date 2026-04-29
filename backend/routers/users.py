@@ -74,7 +74,9 @@ def delete_user(user_id: int, current_user: models.User = Depends(
     return {"success": True}
 
 
-@router.post("/users/{user_id}/penalize", dependencies=[Depends(get_current_admin_user)])
+@router.post("/users/{user_id}/penalize",
+             response_model=schemas.PenaltyResponse,
+             dependencies=[Depends(get_current_admin_user)])
 async def penalize_user(
     user_id: int,
     penalty: schemas.PenaltyRequest,
@@ -91,7 +93,7 @@ async def penalize_user(
         user_id=user_id,
         type="SYSTEM",
         title="Points Deducted",
-        message=f"You lost {result['points_deducted']} points. Reason: {penalty.reason}"
+        message=f"You lost {result.points_deducted} points. Reason: {penalty.reason}"
     ))
 
     # Send Push Notification
@@ -99,14 +101,14 @@ async def penalize_user(
         background_tasks,
         user_id,
         "Points Deducted",
-        f"You lost {result['points_deducted']} points. Reason: {penalty.reason}"
+        f"You lost {result.points_deducted} points. Reason: {penalty.reason}"
     )
 
     # Broadcast SSE events
     await broadcaster.broadcast("user_penalized", {
         "user_id": user_id,
-        "points_deducted": result["points_deducted"],
-        "remaining_points": result["remaining_points"],
+        "points_deducted": result.points_deducted,
+        "remaining_points": result.remaining_points,
         "reason": penalty.reason
     })
     await broadcaster.broadcast("notification", {"user_id": user_id})

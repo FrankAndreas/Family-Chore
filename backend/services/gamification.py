@@ -15,7 +15,7 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
-from .. import models
+from .. import models, schemas
 from .points_policy import calculate_points
 from .streak_tracker import update_user_streak
 from .transaction_service import record_earn
@@ -26,7 +26,7 @@ from .streak_tracker import reset_expired_streaks  # noqa: F401
 
 def award_points_for_task(
     db: Session, instance: models.TaskInstance, current_time: Optional[datetime] = None
-) -> models.TaskInstance:
+) -> schemas.TaskInstance:
     """
     Orchestrate task completion: update streak, calculate points, persist.
 
@@ -89,4 +89,4 @@ def award_points_for_task(
 
     db.commit()
     db.refresh(instance)
-    return instance
+    return schemas.TaskInstance.model_validate(instance)

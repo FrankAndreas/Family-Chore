@@ -222,9 +222,9 @@ class TestPenalty:
         result = users_service.apply_penalty(seeded_db, user.id, penalty_req)
 
         # Assert
-        assert result["success"] is True
-        assert result["points_deducted"] == 20
-        assert result["remaining_points"] == 80
+        assert result.success is True
+        assert result.points_deducted == 20
+        assert result.remaining_points == 80
 
         # Check user directly
         seeded_db.refresh(user)
@@ -233,7 +233,7 @@ class TestPenalty:
 
         # Check transaction
         tx = seeded_db.query(models.Transaction).filter(
-            models.Transaction.id == result["transaction_id"]
+            models.Transaction.id == result.transaction_id
         ).first()
         assert tx is not None
         assert tx.type == "PENALTY"
@@ -264,8 +264,8 @@ class TestPenalty:
         result = users_service.apply_penalty(seeded_db, user.id, penalty_req)
 
         # Assert
-        assert result["success"] is True
-        assert result["remaining_points"] == -10
+        assert result.success is True
+        assert result.remaining_points == -10
 
         seeded_db.refresh(user)
         assert user.current_points == -10

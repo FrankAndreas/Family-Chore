@@ -4,6 +4,14 @@ from backend.services.gamification import award_points_for_task, reset_expired_s
 from backend import models
 
 
+def _awarded_points(db, instance_id: int) -> int:
+    """Look up awarded_points from the Transaction linked to a TaskInstance."""
+    txn = db.query(models.Transaction).filter(
+        models.Transaction.reference_instance_id == instance_id
+    ).first()
+    return txn.awarded_points if txn else 0
+
+
 @pytest.fixture
 def setup_test_users(db_session, seeded_db):
     parent = models.User(nickname="Parent", login_pin="1111", role_id=1)
@@ -18,7 +26,7 @@ def test_streak_first_task(db_session, setup_test_users):
     """Completing the first task should start a streak and award daily bonus"""
     child = setup_test_users["child"]
     task = models.Task(name="Streak 1", description="yes", default_due_time="12:00",
-                       base_points=100, schedule_type="one_off")
+                       base_points=100, schedule_type="daily")
     db_session.add(task)
     db_session.commit()
 
@@ -40,16 +48,16 @@ def test_streak_first_task(db_session, setup_test_users):
     assert child.current_streak == 1
     assert child.last_task_date == now.date()
     # base * mult + daily_bonus: 100 * 1.5 (role) + 5 = 155
-    assert instance.transaction.awarded_points == 155
+    assert _awarded_points(db_session, instance.id) == 155
 
 
 def test_streak_same_day(db_session, setup_test_users):
     """Completing a second task on the same day shouldn't increase streak or award daily bonus"""
     child = setup_test_users["child"]
     task1 = models.Task(name="T1", description="yes", default_due_time="12:00",
-                        base_points=100, schedule_type="one_off")
+                        base_points=100, schedule_type="daily")
     task2 = models.Task(name="T2", description="yes", default_due_time="12:00",
-                        base_points=100, schedule_type="one_off")
+                        base_points=100, schedule_type="daily")
     db_session.add_all([task1, task2])
     db_session.commit()
 
@@ -67,13 +75,13 @@ def test_streak_same_day(db_session, setup_test_users):
 
     # Should be streak 1
     assert child.current_streak == 1
-    assert inst1.transaction.awarded_points == 155
+    assert _awarded_points(db_session, inst1.id) == 155
 
     award_points_for_task(db_session, inst2, current_time=now2)
 
     # Should STILL be streak 1, no daily bonus
     assert child.current_streak == 1
-    assert inst2.transaction.awarded_points == 150
+    assert _awarded_points(db_session, inst2.id) == 150
 
 
 def test_streak_consecutive_days(db_session, setup_test_users):
@@ -82,7 +90,7 @@ def test_streak_consecutive_days(db_session, setup_test_users):
 
     for day in range(1, 8):
         task = models.Task(name=f"T{day}", description="yes", default_due_time="12:00",
-                           base_points=100, schedule_type="one_off")
+                           base_points=100, schedule_type="daily")
         db_session.add(task)
         db_session.commit()
         inst = models.TaskInstance(task_id=task.id, user_id=child.id, status="PENDING",
@@ -103,7 +111,7 @@ def test_streak_consecutive_days(db_session, setup_test_users):
 
         expected_bonus = min(0.5, (day - 1) * 0.1)
         expected_points = int(100 * (1.5 + expected_bonus)) + 5
-        assert inst.transaction.awarded_points == expected_points
+        assert _awarded_points(db_session, inst.id) == expected_points
 
 
 def test_streak_missed_day(db_session, setup_test_users):
@@ -111,9 +119,9 @@ def test_streak_missed_day(db_session, setup_test_users):
     child = setup_test_users["child"]
 
     task1 = models.Task(name="T1", description="yes", default_due_time="12:00",
-                        base_points=100, schedule_type="one_off")
+                        base_points=100, schedule_type="daily")
     task2 = models.Task(name="T2", description="yes", default_due_time="12:00",
-                        base_points=100, schedule_type="one_off")
+                        base_points=100, schedule_type="daily")
     db_session.add_all([task1, task2])
     db_session.commit()
 
@@ -134,7 +142,7 @@ def test_streak_missed_day(db_session, setup_test_users):
     award_points_for_task(db_session, inst2, current_time=now3)
 
     assert child.current_streak == 1
-    assert inst2.transaction.awarded_points == 155  # Streak broke, so back to base + daily_bonus
+    assert _awarded_points(db_session, inst2.id) == 155  # Streak broke, so back to base + daily_bonus
 
 
 def test_reset_expired_streaks(db_session, setup_test_users):

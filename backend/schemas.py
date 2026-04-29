@@ -316,6 +316,59 @@ class SplitRedemptionResponse(BaseModel):
     error: Optional[str] = None
 
 
+# --- Penalty Response ---
+
+
+class PenaltyResponse(BaseModel):
+    """Response from user penalty endpoint."""
+    success: bool
+    transaction_id: int
+    points_deducted: int
+    remaining_points: int
+
+
+# --- System / Import Response DTOs ---
+
+
+class TaskImportResponse(BaseModel):
+    """Response from bulk task import endpoint."""
+    success: bool
+    created: List[str]
+    skipped: List[str]
+    errors: List[str]
+    summary: str
+
+
+class DailyResetResponse(BaseModel):
+    """Response from daily reset endpoint."""
+    message: str
+
+
+# --- Role Users Response ---
+
+
+class RoleUserInfo(BaseModel):
+    """Minimal user info for role membership listing."""
+    id: int
+    nickname: str
+
+
+class RoleUsersResponse(BaseModel):
+    """Response from GET /roles/{id}/users."""
+    count: int
+    users: List[RoleUserInfo]
+
+
+# --- Analytics Distribution ---
+
+
+class PointsDistributionEntry(BaseModel):
+    """Single entry in the points distribution chart."""
+    name: str
+    value: int
+    role: str
+
+
 # --- Transaction Schemas ---
 
 

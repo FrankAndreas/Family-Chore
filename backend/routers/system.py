@@ -48,7 +48,8 @@ def export_tasks(db: Session = Depends(get_db)):
     )
 
 
-@router.post("/tasks/import", dependencies=[Depends(get_current_admin_user)])
+@router.post("/tasks/import", response_model=schemas.TaskImportResponse,
+             dependencies=[Depends(get_current_admin_user)])
 async def import_tasks(import_data: schemas.TasksImport, db: Session = Depends(get_db)):
     """Import tasks from a structured format. Uses role names instead of IDs."""
     logger.info(f"Importing {len(import_data.tasks)} tasks...")
@@ -113,7 +114,7 @@ async def import_tasks(import_data: schemas.TasksImport, db: Session = Depends(g
                 requires_photo_verification=task_item.requires_photo_verification,
             )
             new_task = crud.create_task(db=db, task=task_create)
-            created.append(new_task.name)
+            created.append(str(new_task.name))
             # Prevent duplicates within import
             existing_names.add(task_item.name.lower())
             logger.info(f"Imported task: {new_task.name} (ID: {new_task.id})")
@@ -128,16 +129,17 @@ async def import_tasks(import_data: schemas.TasksImport, db: Session = Depends(g
     logger.info(
         f"Import complete: {len(created)} created, {len(skipped)} skipped, {len(errors)} errors")
 
-    return {
-        "success": len(errors) == 0,
-        "created": created,
-        "skipped": skipped,
-        "errors": errors,
-        "summary": f"Created {len(created)} tasks, skipped {len(skipped)}, {len(errors)} errors"
-    }
+    return schemas.TaskImportResponse(
+        success=len(errors) == 0,
+        created=created,
+        skipped=skipped,
+        errors=errors,
+        summary=f"Created {len(created)} tasks, skipped {len(skipped)}, {len(errors)} errors",
+    )
 
 
-@router.post("/daily-reset/", dependencies=[Depends(get_current_admin_user)])
+@router.post("/daily-reset/", response_model=schemas.DailyResetResponse,
+             dependencies=[Depends(get_current_admin_user)])
 def trigger_daily_reset(background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     logger.info("Triggering daily reset...")
     count = crud.generate_daily_instances(db)
@@ -157,7 +159,9 @@ def trigger_daily_reset(background_tasks: BackgroundTasks, db: Session = Depends
 
     logger.info(
         f"Daily reset complete. Created {count} task instances. Queued {notified_count} emails.")
-    return {"message": f"Daily reset complete. Created {count} task instances. Queued {notified_count} emails."}
+    return schemas.DailyResetResponse(
+        message=f"Daily reset complete. Created {count} task instances. Queued {notified_count} emails."
+    )
 
 
 @router.get("/settings/language/default",

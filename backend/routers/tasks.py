@@ -93,6 +93,11 @@ async def complete_task(
     logger.info(
         f"Attempting to complete task instance: {instance_id} (Claimed by user_id: {actual_user_id})")
 
+    # Pre-fetch task name for notification messages (before DTO conversion loses ORM access)
+    orm_instance = db.query(models.TaskInstance).filter(
+        models.TaskInstance.id == instance_id).first()
+    task_name = orm_instance.task.name if orm_instance and orm_instance.task else "Unknown"
+
     instance = tasks_service.complete_task_instance(
         db, instance_id=instance_id, actual_user_id=actual_user_id)
 
@@ -101,18 +106,24 @@ async def complete_task(
 
     # Notify User if completed
     if instance.status == "COMPLETED":
+        # Look up awarded points from the transaction record
+        txn = db.query(models.Transaction).filter(
+            models.Transaction.reference_instance_id == instance_id
+        ).first()
+        awarded_points = txn.awarded_points if txn else 0
+
         crud.create_notification(db, schemas.NotificationCreate(
             user_id=int(instance.user_id),
             type="TASK_COMPLETED",
             title="Task Completed!",
-            message=f"You earned {instance.transaction.awarded_points} points for '{instance.task.name}'."
+            message=f"You earned {awarded_points} points for '{task_name}'."
         ))
     elif instance.status == "IN_REVIEW":
         crud.create_notification(db, schemas.NotificationCreate(
             user_id=int(instance.user_id),
             type="SYSTEM",
             title="Task In Review",
-            message=f"Your photo for '{instance.task.name}' is pending admin review."
+            message=f"Your photo for '{task_name}' is pending admin review."
         ))
         # Send notifications to Admins
         admins = crud.get_notifiable_admins(db)
@@ -120,17 +131,17 @@ async def complete_task(
             send_push_to_user_background(
                 background_tasks,
                 int(admin.id),
-                f"Approval Required: {instance.task.name}",
-                f"A photo for '{instance.task.name}' requires your approval."
+                f"Approval Required: {task_name}",
+                f"A photo for '{task_name}' requires your approval."
             )
             if admin.email:
                 send_email_background(
                     background_tasks,
                     to_email=str(admin.email),
-                    subject=f"Approval Required: {instance.task.name}",
+                    subject=f"Approval Required: {task_name}",
                     body=(
                         f"Hi {admin.nickname},\n\n"
-                        f"A photo for the task '{instance.task.name}' has been uploaded by another "
+                        f"A photo for the task '{task_name}' has been uploaded by another "
                         "user and requires your approval.\nPlease review it at the God Mode Family Dashboard."
                     )
                 )
@@ -213,6 +224,12 @@ async def review_task(
     """Admin endpoint to approve or reject a task."""
     logger.info(
         f"Reviewing task instance {instance_id}: approved={review.is_approved}")
+
+    # Pre-fetch task name for notification messages
+    orm_instance = db.query(models.TaskInstance).filter(
+        models.TaskInstance.id == instance_id).first()
+    task_name = orm_instance.task.name if orm_instance and orm_instance.task else "Unknown"
+
     instance = tasks_service.review_task_instance(
         db, instance_id=instance_id, review=review)
 
@@ -230,7 +247,7 @@ async def review_task(
         background_tasks,
         int(instance.user_id),
         f"Task {outcome.title()}",
-        f"Your task '{instance.task.name}' was {outcome}."
+        f"Your task '{task_name}' was {outcome}."
     )
 
     return instance

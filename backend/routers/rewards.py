@@ -70,23 +70,23 @@ async def redeem_reward(reward_id: int,
     result = rewards_service.redeem_reward(db, user_id=user_id, reward_id=reward_id)
 
     logger.info(
-        f"Redemption successful: {result['reward_name']} for {result['points_spent']} points")
+        f"Redemption successful: {result.reward_name} for {result.points_spent} points")
 
     # Notify User
     crud.create_notification(db, schemas.NotificationCreate(
         user_id=user_id,
         type="REWARD_REDEEMED",
         title="Reward Redeemed!",
-        message=f"You redeemed '{result['reward_name']}' for {result['points_spent']} points."
+        message=f"You redeemed '{result.reward_name}' for {result.points_spent} points."
     ))
 
     # Broadcast SSE event for real-time updates
     await broadcaster.broadcast("reward_redeemed", {
         "user_id": user_id,
         "reward_id": reward_id,
-        "reward_name": result["reward_name"],
-        "points_spent": result["points_spent"],
-        "remaining_points": result["remaining_points"]
+        "reward_name": result.reward_name,
+        "points_spent": result.points_spent,
+        "remaining_points": result.remaining_points
     })
     await broadcaster.broadcast("notification", {"user_id": user_id})
 
@@ -116,25 +116,25 @@ async def redeem_reward_split(
         db, reward_id=reward_id, contributions=contributions)
 
     logger.info(
-        f"Split redemption successful: {result['reward_name']} for {result['total_points']} points")
+        f"Split redemption successful: {result.reward_name} for {result.total_points} points")
 
     # Broadcast SSE event for real-time updates
     await broadcaster.broadcast("reward_redeemed", {
         "reward_id": reward_id,
-        "reward_name": result["reward_name"],
-        "total_points": result["total_points"],
-        "contributors": result["transactions"],
+        "reward_name": result.reward_name,
+        "total_points": result.total_points,
+        "contributors": [t.model_dump() for t in result.transactions] if result.transactions else [],
         "is_split": True
     })
 
     # Notify all contributors
-    for tx in result["transactions"]:
+    for tx in (result.transactions or []):
         crud.create_notification(db, schemas.NotificationCreate(
-            user_id=tx["user_id"],
+            user_id=tx.user_id,
             type="REWARD_REDEEMED",
             title="Group Reward Redeemed!",
-            message=f"You contributed {tx['points']} points to '{result['reward_name']}'."
+            message=f"You contributed {tx.points} points to '{result.reward_name}'."
         ))
-        await broadcaster.broadcast("notification", {"user_id": tx["user_id"]})
+        await broadcaster.broadcast("notification", {"user_id": tx.user_id})
 
     return result

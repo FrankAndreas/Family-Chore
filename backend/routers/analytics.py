@@ -11,6 +11,7 @@ from ..schemas import (
     HeatmapDay, UserHeatmap, HeatmapResponse,
     HeatmapTaskDetail, HeatmapDayDetails,
     StreakInfo, TopPerformer, AnalyticsSummary,
+    PointsDistributionEntry,
 )
 
 
@@ -80,7 +81,8 @@ def get_weekly_activity(db: Session = Depends(get_db)):
     return formatted_data
 
 
-@router.get("/distribution", response_model=List[Dict[str, Any]], dependencies=[Depends(get_current_user)])
+@router.get("/distribution", response_model=List[PointsDistributionEntry],
+            dependencies=[Depends(get_current_user)])
 def get_points_distribution(db: Session = Depends(get_db)):
     """
     Returns the distribution of lifetime points among all users.
@@ -90,11 +92,11 @@ def get_points_distribution(db: Session = Depends(get_db)):
 
     distribution = []
     for user in users:
-        distribution.append({
-            "name": user.nickname,
-            "value": user.lifetime_points,
-            "role": user.role.name if user.role else "Unknown"
-        })
+        distribution.append(PointsDistributionEntry(
+            name=str(user.nickname),
+            value=int(user.lifetime_points),
+            role=str(user.role.name) if user.role else "Unknown",
+        ))
 
     return distribution
 
