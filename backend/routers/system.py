@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, BackgroundTasks, HTTPException
 from sqlalchemy.orm import Session
 
 from .. import schemas, crud, models
+from ..services import scheduler, notifications
 from ..database import get_db
 from ..dependencies import get_current_user, get_current_admin_user
 from ..notifications_service import send_email_background
@@ -142,10 +143,10 @@ async def import_tasks(import_data: schemas.TasksImport, db: Session = Depends(g
              dependencies=[Depends(get_current_admin_user)])
 def trigger_daily_reset(background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     logger.info("Triggering daily reset...")
-    count = crud.generate_daily_instances(db)
+    count = scheduler.generate_daily_instances(db)
 
     # Send daily reminders via Email
-    users_to_notify = crud.get_users_with_pending_daily_tasks(db)
+    users_to_notify = notifications.get_users_with_pending_daily_tasks(db)
     notified_count = 0
     for user in users_to_notify:
         if user.email:

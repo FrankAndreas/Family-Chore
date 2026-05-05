@@ -7,7 +7,7 @@ from pathlib import Path
 from email.message import EmailMessage
 from fastapi import BackgroundTasks
 from .database import SessionLocal
-from . import crud
+from .services import notifications
 
 try:
     from pywebpush import webpush, WebPushException
@@ -170,7 +170,7 @@ def send_push_sync(subscription_info: dict, payload: dict):
 def send_push_to_user_sync(user_id: int, title: str, message: str, data: dict = None):
     db = SessionLocal()
     try:
-        subs = crud.get_push_subscriptions_by_user(db, user_id)
+        subs = notifications.get_push_subscriptions_by_user(db, user_id)
         if not subs:
             return
 

@@ -1,7 +1,7 @@
 # State & Global Memory
 
 **Librarian**: Agent-Librarian
-**Last Updated**: 2026-04-04 07:50
+**Last Updated**: 2026-05-05 21:07
 
 ## 🧠 Global Context
 The project is a **Family Chore Gamification System** (Universal-GSD-Core). We have completed **System Polish & Hardening** (V1.4), **Negative Points**, **Email Notifications** (V1.6), **Frontend Integration**, **Analytics & Heatmaps**, and **Security Hardening**. Database schema version is **1.9**.
@@ -120,16 +120,15 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We h
 - **N7**: Already resolved — shared Modal component handles Escape key and focus trap.
 - **Quality**: ESLint clean, TypeScript `--noEmit` clean, browser-verified.
 
-## 🔄 Recent Changes (2026-04-29 Architecture Refactoring Phase 3: DTOs & Persistence Ignorance)
-- **API Boundary Protection**: Refactored `services/` (gamification, rewards, tasks, users) to return validated Pydantic DTOs instead of raw SQLAlchemy ORM models or dictionaries.
-- **Router Explicit Contracts**: Updated `routers/` to use typed attribute access (e.g. `.success` instead of `['success']`) and strictly enforce `response_model` construction (e.g. `schemas.Token`, `schemas.RoleUsersResponse`).
-- **Notification Data Fetching**: Moved nested relationship resolution to the controller (router) layer to accommodate DTO-based service returns without breaking the notification pipeline.
-- **Test Suite Updates**: Migrated tests (`test_gamification`, `test_crud_rewards`, `test_transactions`) to assert against DTO attributes. Added localized DB helpers for transaction verification.
-- **Verification**: Browser smoke test verified end-to-end functionality. API JSON contract remains 100% stable.
+## 🔄 Recent Changes (2026-05-05 Architecture Phase 4 & Frontend SSE)
+- **God Object Extraction**: Completed decoupling `crud.py` into dedicated `scheduler.py` and `notifications.py` services. 
+- **Router Layer Isolation**: Completely removed all direct calls to `crud.py` for notification broadcasting, task logic, user creation, and web-push subscription.
+- **Frontend Performance**: Refactored `useFamilyDashboardData.ts` to actively ignore backend `ping` SSE messages, eliminating unnecessary 30-second component re-renders.
+- **Test Integrity**: Validated with a 100% pass rate in the backend test suite, alongside 0 errors for `flake8` and `mypy`. 
 
 ## 📍 System State
-- **Backend**: Port 8000. **142 tests passed**. Flake8 and Mypy clean. Schema v1.9 tracked via Alembic.
-- **Frontend**: Port 8080 (Docker), 5173 (local). ESLint clean. Build successful. Fully internationalized (EN/DE). Enhanced WCAG 2.1 compliance.
+- **Backend**: Port 8000. **142 tests passed**. Flake8 and Mypy clean. Schema v1.9 tracked via Alembic. All services decoupled.
+- **Frontend**: Port 8080 (Docker), 5173 (local). ESLint clean. TypeScript clean. Fully internationalized (EN/DE). Enhanced WCAG 2.1 compliance.
 - **Docker**: Secure PostgreSQL + FastAPI configuration operational.
 
 ## 🚧 Remaining UX Review Items

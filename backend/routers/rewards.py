@@ -4,7 +4,7 @@ from typing import List
 import logging
 
 from .. import schemas, crud, models
-from ..services import rewards as rewards_service
+from ..services import rewards as rewards_service, notifications
 from ..database import get_db
 from ..dependencies import get_current_user, get_current_admin_user
 from ..events import broadcaster
@@ -73,7 +73,7 @@ async def redeem_reward(reward_id: int,
         f"Redemption successful: {result.reward_name} for {result.points_spent} points")
 
     # Notify User
-    crud.create_notification(db, schemas.NotificationCreate(
+    notifications.create_notification(db, schemas.NotificationCreate(
         user_id=user_id,
         type="REWARD_REDEEMED",
         title="Reward Redeemed!",
@@ -129,7 +129,7 @@ async def redeem_reward_split(
 
     # Notify all contributors
     for tx in (result.transactions or []):
-        crud.create_notification(db, schemas.NotificationCreate(
+        notifications.create_notification(db, schemas.NotificationCreate(
             user_id=tx.user_id,
             type="REWARD_REDEEMED",
             title="Group Reward Redeemed!",

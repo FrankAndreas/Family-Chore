@@ -564,3 +564,12 @@ This file captures accumulated knowledge from development sessions. The Libraria
 ### Gotchas
 - **Mypy Return Paths**: When refactoring exception handling, even if code structurally guarantees a return value via an explicit `raise NotFoundError` upstream, `mypy` requires removing `Optional[...]` from the function signature and correctly handling union boundaries, else downstream checks will aggressively flag `NoneType` issues.
 - **DB Model Keyword Initialization**: Attempting to mock Pydantic-like structured parameters natively inside direct SQLAlchemy mapping `models.Task(**kwargs)` within Pytest fails severely if schema fields (e.g., `created_by_id`) do not exist natively on the database mapped base classes.
+
+## 📅 2026-05-05: SSE Reconnection & Backend God Object Decoupling
+
+### Session Context
+- **Service Decoupling**: The monolithic `crud.py` file ("God Object") was completely decoupled into `scheduler.py` and `notifications.py` services. This ensures that the CRUD layer remains purely responsible for persistence, moving domain logic like web-push subscriptions and task generation into bounded service contexts.
+- **Frontend SSE Optimization**: `EventSource` receives backend keep-alive `ping` events every 30 seconds to prevent reverse-proxy timeouts. Failing to explicitly ignore `data.type === 'ping'` inside frontend hook `onmessage` handlers triggers rapid and unnecessary React state updates (`setLastUpdate(new Date())`), crippling SPA performance.
+
+### Gotchas
+- **EventSource Lifecycle**: Be wary of recreating `EventSource` on every render by missing a `useCallback` on handler functions passed to custom hooks (like `onTasksUpdated`). Using refs (`useRef`) to store the latest callback without triggering `useEffect` dependency arrays prevents reconnect storms.

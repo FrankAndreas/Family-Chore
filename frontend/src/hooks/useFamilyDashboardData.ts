@@ -81,6 +81,10 @@ export function useFamilyDashboardData(onTasksUpdated?: () => void, onRewardsUpd
             const data = JSON.parse(event.data);
             console.log('SSE event:', data);
 
+            if (data.type === 'ping') {
+                return; // Ignore keepalive to prevent unnecessary re-renders
+            }
+
             if (data.type === 'connected') {
                 setConnected(true);
             } else if (data.type === 'task_created' || data.type === 'task_completed' || data.type === 'task_deleted') {

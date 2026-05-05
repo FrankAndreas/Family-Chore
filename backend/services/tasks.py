@@ -3,7 +3,7 @@ from typing import Optional
 from datetime import datetime
 from .. import models, schemas
 from . import gamification
-from .. import crud  # fallback for notification creation etc
+from . import notifications
 from ..exceptions import InvalidStateTransitionError, TaskNotFoundError
 
 
@@ -67,7 +67,7 @@ def review_task_instance(
         db.refresh(instance)
 
         # Notify
-        crud.create_notification(db, schemas.NotificationCreate(
+        notifications.create_notification(db, schemas.NotificationCreate(
             user_id=int(instance.user_id),
             type="SYSTEM",
             title="Chore Rejected",

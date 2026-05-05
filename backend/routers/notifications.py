@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
 from typing import List
 
-from .. import crud, schemas, models
+from .. import schemas, models
+from ..services import notifications
 from ..database import get_db
 from ..dependencies import get_current_user
 from ..notifications_service import VAPID_PUBLIC_KEY
@@ -27,7 +28,7 @@ def subscribe_push(
     db: Session = Depends(get_db)
 ):
     """Save a user's push subscription."""
-    sub = crud.create_push_subscription(db, user_id=int(current_user.id), sub_in=subscription)
+    sub = notifications.create_push_subscription(db, user_id=int(current_user.id), sub_in=subscription)
     return sub
 
 
@@ -38,7 +39,7 @@ def unsubscribe_push(
     db: Session = Depends(get_db)
 ):
     """Remove a user's push subscription (only their own)."""
-    success = crud.delete_push_subscription_by_user(
+    success = notifications.delete_push_subscription_by_user(
         db, endpoint=endpoint, user_id=int(current_user.id)
     )
     if not success:
@@ -58,7 +59,7 @@ def read_user_notifications(
     """Get notifications for a user (own data or admin)."""
     if current_user.id != user_id and current_user.role.name != "Admin":
         raise HTTPException(status_code=403, detail="Not authorized to view these notifications")
-    return crud.get_user_notifications(
+    return notifications.get_user_notifications(
         db, user_id=user_id, skip=skip, limit=limit, unread_only=unread_only
     )
 
@@ -69,7 +70,7 @@ def mark_notification_read(notification_id: int,
                            db: Session = Depends(get_db)):
     """Mark a notification as read (uses JWT-derived user identity)."""
     user_id = int(current_user.id)
-    notification = crud.mark_notification_read(
+    notification = notifications.mark_notification_read(
         db, notification_id=notification_id, user_id=user_id)
     if not notification:
         raise HTTPException(status_code=404, detail="Notification not found")
@@ -81,4 +82,4 @@ def mark_all_read(current_user: models.User = Depends(get_current_user),
                   db: Session = Depends(get_db)):
     """Mark all notifications for the current user as read."""
     user_id = int(current_user.id)
-    return crud.mark_all_notifications_read(db, user_id=user_id)
+    return notifications.mark_all_notifications_read(db, user_id=user_id)

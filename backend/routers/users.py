@@ -4,7 +4,7 @@ from typing import List
 import logging
 
 from .. import schemas, crud, models
-from ..services import users as users_service
+from ..services import users as users_service, notifications
 from ..database import get_db
 from ..dependencies import get_current_user, get_current_admin_user
 from ..events import broadcaster
@@ -89,7 +89,7 @@ async def penalize_user(
     result = users_service.apply_penalty(db, user_id=user_id, penalty=penalty)
 
     # Notify User in-app
-    crud.create_notification(db, schemas.NotificationCreate(
+    notifications.create_notification(db, schemas.NotificationCreate(
         user_id=user_id,
         type="SYSTEM",
         title="Points Deducted",

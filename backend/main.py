@@ -15,7 +15,8 @@ from alembic import command as alembic_command
 
 from . import models, crud
 from .database import engine, SessionLocal
-from .routers import analytics, notifications, auth, users, roles, tasks, rewards, transactions, system
+from .services import scheduler as scheduler_service, notifications
+from .routers import analytics, notifications as notif_router, auth, users, roles, tasks, rewards, transactions, system
 from .backup import BackupManager
 from .notifications_service import send_email_sync, send_push_to_user_sync
 from .dependencies import get_current_admin_user, get_current_user
@@ -40,12 +41,12 @@ def scheduled_daily_reset():
     logger.info("Midnight scheduler: Running daily reset...")
     db = SessionLocal()
     try:
-        count = crud.perform_daily_reset_if_needed(db)
+        count = scheduler_service.perform_daily_reset_if_needed(db)
         if count > 0:
             logger.info(
                 f"Midnight scheduler: Generated {count} task instances")
             # Send reminder emails directly (scheduler runs in its own thread)
-            users_to_notify = crud.get_users_with_pending_daily_tasks(db)
+            users_to_notify = notifications.get_users_with_pending_daily_tasks(db)
             notified_count = 0
             for user in users_to_notify:
                 # Always attempt to send a push notification
@@ -132,7 +133,7 @@ async def lifespan(app: FastAPI):
     # Smart daily reset: Only generate if not already done today
     db = SessionLocal()
     try:
-        count = crud.perform_daily_reset_if_needed(db)
+        count = scheduler_service.perform_daily_reset_if_needed(db)
         if count > 0:
             logger.info(f"Startup: Generated {count} task instances for today")
         else:
@@ -252,7 +253,7 @@ app.include_router(rewards.router)
 app.include_router(transactions.router)
 app.include_router(system.router)
 app.include_router(analytics.router)
-app.include_router(notifications.router)
+app.include_router(notif_router.router)
 
 
 @app.post("/backups/run", tags=["System"], dependencies=[Depends(get_current_admin_user)])

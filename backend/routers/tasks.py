@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, File, Up
 from sqlalchemy.orm import Session
 
 from .. import schemas, crud, models
-from ..services import tasks as tasks_service
+from ..services import tasks as tasks_service, scheduler, notifications
 from ..database import get_db
 from ..dependencies import get_current_user, get_current_admin_user
 from ..events import broadcaster
@@ -24,6 +24,8 @@ async def create_task(task: schemas.TaskCreate, db: Session = Depends(get_db)):
     logger.info(
         f"Creating task: {task.name} with {task.base_points} base points")
     created_task = crud.create_task(db=db, task=task)
+    # Auto-generate instances for the new task so it appears on Family Dashboard immediately
+    scheduler.generate_instances_for_task(db, created_task)
     logger.info(
         f"Task created successfully: {created_task.name} (ID: {created_task.id})")
 
@@ -112,21 +114,21 @@ async def complete_task(
         ).first()
         awarded_points = txn.awarded_points if txn else 0
 
-        crud.create_notification(db, schemas.NotificationCreate(
+        notifications.create_notification(db, schemas.NotificationCreate(
             user_id=int(instance.user_id),
             type="TASK_COMPLETED",
             title="Task Completed!",
             message=f"You earned {awarded_points} points for '{task_name}'."
         ))
     elif instance.status == "IN_REVIEW":
-        crud.create_notification(db, schemas.NotificationCreate(
+        notifications.create_notification(db, schemas.NotificationCreate(
             user_id=int(instance.user_id),
             type="SYSTEM",
             title="Task In Review",
             message=f"Your photo for '{task_name}' is pending admin review."
         ))
         # Send notifications to Admins
-        admins = crud.get_notifiable_admins(db)
+        admins = notifications.get_notifiable_admins(db)
         for admin in admins:
             send_push_to_user_background(
                 background_tasks,
