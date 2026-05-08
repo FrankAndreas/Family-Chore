@@ -1,11 +1,12 @@
 from backend import crud, schemas
+from backend.services import notifications
 from backend.notifications_service import send_email_background
 from fastapi import BackgroundTasks
 
 
 def test_create_notification(db_session, admin_user):
     # Create a notification via CRUD
-    notif = crud.create_notification(
+    notif = notifications.create_notification(
         db_session,
         schemas.NotificationCreate(
             user_id=admin_user.id,
@@ -21,7 +22,7 @@ def test_create_notification(db_session, admin_user):
 
 def test_get_notifications_api(client, admin_user, db_session):
     # Create a notification first
-    crud.create_notification(
+    notifications.create_notification(
         db_session,
         schemas.NotificationCreate(
             user_id=admin_user.id,
@@ -41,7 +42,7 @@ def test_get_notifications_api(client, admin_user, db_session):
 
 def test_mark_read_api(client, admin_user, db_session):
     # Create notification
-    notif = crud.create_notification(
+    notif = notifications.create_notification(
         db_session,
         schemas.NotificationCreate(
             user_id=admin_user.id,
@@ -64,7 +65,7 @@ def test_mark_read_api(client, admin_user, db_session):
 
 def test_mark_all_read_api(client, admin_user, db_session):
     # Create two notifications
-    crud.create_notification(
+    notifications.create_notification(
         db_session,
         schemas.NotificationCreate(
             user_id=admin_user.id,
@@ -73,7 +74,7 @@ def test_mark_all_read_api(client, admin_user, db_session):
             message="1"
         )
     )
-    crud.create_notification(
+    notifications.create_notification(
         db_session,
         schemas.NotificationCreate(
             user_id=admin_user.id,
@@ -89,7 +90,7 @@ def test_mark_all_read_api(client, admin_user, db_session):
     assert response.json() is True
 
     # Verify
-    unreads = crud.get_user_notifications(
+    unreads = notifications.get_user_notifications(
         db_session, admin_user.id, unread_only=True)
     assert len(unreads) == 0
 
@@ -97,13 +98,13 @@ def test_mark_all_read_api(client, admin_user, db_session):
 def test_get_notifiable_admins(db_session, admin_user):
     # Admin starts without email
     assert admin_user.email is None
-    admins = crud.get_notifiable_admins(db_session)
+    admins = notifications.get_notifiable_admins(db_session)
     assert len(admins) == 0
 
     # Add email and enable notifications
     crud.update_user(db_session, admin_user.id, schemas.UserUpdate(
         email="admin@example.com", notifications_enabled=True))
-    admins = crud.get_notifiable_admins(db_session)
+    admins = notifications.get_notifiable_admins(db_session)
     assert len(admins) == 1
     assert admins[0].email == "admin@example.com"
 

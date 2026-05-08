@@ -73,7 +73,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 def verify_token(token: str) -> Optional[Dict[str, Any]]:
     """Verify a JWT token and return its payload."""
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = cast(Dict[str, Any], jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM]))
         return payload
     except jwt.PyJWTError as e:
         logger.error(f"JWT Verification Error: {e}")

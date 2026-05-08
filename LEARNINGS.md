@@ -573,3 +573,12 @@ This file captures accumulated knowledge from development sessions. The Libraria
 
 ### Gotchas
 - **EventSource Lifecycle**: Be wary of recreating `EventSource` on every render by missing a `useCallback` on handler functions passed to custom hooks (like `onTasksUpdated`). Using refs (`useRef`) to store the latest callback without triggering `useEffect` dependency arrays prevents reconnect storms.
+
+## 📅 2026-05-08: Test Alignment & Environment Constraints
+
+### Session Context
+- **Test Alignment**: When a "God Object" (like `crud.py`) is decoupled into domain-specific services, the legacy tests inevitably break with `AttributeError`. A methodical update to test imports and calls is required before considering a refactor complete.
+- **Python 3.14 Constraints**: The `externally-managed-environment` rule via PEP 668 restricts global pip installations on modern Linux distributions. Bypassing this with `--break-system-packages` is viable for localized CI execution logic, but container-based isolation or `pipx` is the standard for production.
+
+### Gotchas
+- **Mypy strictness**: Even standard library abstractions like `jwt.decode` returning `Any` will fail strict static type validation if the function contract specifies `Dict[str, Any]`. Use `cast(Dict[str, Any], ...)` explicitly to pass `mypy`.

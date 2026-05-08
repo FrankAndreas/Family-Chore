@@ -2,6 +2,7 @@
 import pytest
 from datetime import datetime, timedelta
 from backend import crud, models, schemas
+from backend.services import scheduler
 
 
 @pytest.fixture
@@ -145,9 +146,9 @@ def test_generate_instances_weekly_wrong_day(db_session, task_setup):
         default_due_time=wrong_day
     )
     task = crud.create_task(db_session, task_data)
+    scheduler.generate_instances_for_task(db_session, task)
 
     # verify creating the task triggered generation (which should return 0)
-    # create_task calls generate_instances_for_task internally
 
     instances = db_session.query(models.TaskInstance).filter(
         models.TaskInstance.task_id == task.id).all()
@@ -168,6 +169,7 @@ def test_generate_instances_weekly_correct_day(db_session, task_setup):
 
     # This should generate an instance
     task = crud.create_task(db_session, task_data)
+    scheduler.generate_instances_for_task(db_session, task)
 
     instances = db_session.query(models.TaskInstance).filter(
         models.TaskInstance.task_id == task.id).all()
@@ -188,7 +190,7 @@ def test_generate_instances_recurring_cooldown(db_session, task_setup):
     db_session.commit()
 
     # 1. First generation - should succeed (no history)
-    count = crud.generate_instances_for_task(db_session, task)
+    count = scheduler.generate_instances_for_task(db_session, task)
     assert count == 1
 
     # Mark as completed YESTERDAY
@@ -200,7 +202,7 @@ def test_generate_instances_recurring_cooldown(db_session, task_setup):
     db_session.commit()
 
     # 2. Second generation - should fail (1 day < 3 days)
-    count = crud.generate_instances_for_task(db_session, task)
+    count = scheduler.generate_instances_for_task(db_session, task)
     assert count == 0
 
     # Update completion to 4 days ago
@@ -213,7 +215,7 @@ def test_generate_instances_recurring_cooldown(db_session, task_setup):
     instance.due_time = datetime.now() - timedelta(days=4)
     db_session.commit()
 
-    count = crud.generate_instances_for_task(db_session, task)
+    count = scheduler.generate_instances_for_task(db_session, task)
     assert count == 1
 
 
@@ -221,9 +223,10 @@ def test_get_all_pending_tasks(db_session, task_setup):
     # Only pending tasks for today/future should be returned
 
     # Create a completed task
-    crud.create_task(db_session, schemas.TaskCreate(
+    task = crud.create_task(db_session, schemas.TaskCreate(
         name="Active Task", description="d", base_points=10, default_due_time="12:00"
     ))
+    scheduler.generate_instances_for_task(db_session, task)
 
     pending = crud.get_all_pending_tasks(db_session)
     # At least the one we just created (plus maybe setup ones)

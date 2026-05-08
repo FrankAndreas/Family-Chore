@@ -126,8 +126,13 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We h
 - **Frontend Performance**: Refactored `useFamilyDashboardData.ts` to actively ignore backend `ping` SSE messages, eliminating unnecessary 30-second component re-renders.
 - **Test Integrity**: Validated with a 100% pass rate in the backend test suite, alongside 0 errors for `flake8` and `mypy`. 
 
+## 🔄 Recent Changes (2026-05-08 Backend Test Repair)
+- **Test Alignment**: Migrated all deprecated `crud.py` references within the test suite (`test_notifications.py`, `test_crud_*.py`) to use their decoupled service equivalents (`scheduler.py`, `notifications.py`).
+- **PEP8 & Type Checking**: Resolved unused import violations and corrected `Any` type casting in `backend/security.py` to achieve fully green `flake8` and `mypy` test runs.
+- **Environment**: Documented the necessity of using `--break-system-packages` for local pip test installation on strict Python 3.14 environments. 
+
 ## 📍 System State
-- **Backend**: Port 8000. **142 tests passed**. Flake8 and Mypy clean. Schema v1.9 tracked via Alembic. All services decoupled.
+- **Backend**: Port 8000. **183 tests passed**. Flake8 and Mypy clean. Schema v1.9 tracked via Alembic. All services decoupled.
 - **Frontend**: Port 8080 (Docker), 5173 (local). ESLint clean. TypeScript clean. Fully internationalized (EN/DE). Enhanced WCAG 2.1 compliance.
 - **Docker**: Secure PostgreSQL + FastAPI configuration operational.
 

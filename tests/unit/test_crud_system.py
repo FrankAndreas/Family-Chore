@@ -1,6 +1,7 @@
 
 from datetime import date, timedelta
 from backend import crud, models
+from backend.services import scheduler
 
 
 def test_system_settings_cycle(db_session):
@@ -41,7 +42,7 @@ def test_update_user_language(db_session, seeded_db, admin_user):
 
 def test_daily_reset_logic(db_session, seeded_db):
     # 1. No reset date initially -> Reset Needed
-    assert crud.is_reset_needed(db_session) is True
+    assert scheduler.is_reset_needed(db_session) is True
 
     # 2. Perform reset
     # We need a task to verify it actually does something
@@ -57,32 +58,32 @@ def test_daily_reset_logic(db_session, seeded_db):
     seeded_db.add(user)
     seeded_db.commit()
 
-    count = crud.perform_daily_reset_if_needed(db_session)
+    count = scheduler.perform_daily_reset_if_needed(db_session)
     assert count == 1
 
     # 2. Verify Date recorded
-    last_reset = crud.get_last_reset_date(db_session)
+    last_reset = scheduler.get_last_reset_date(db_session)
     assert last_reset == date.today()
 
     # 3. Check again -> Should NOT be needed
-    assert crud.is_reset_needed(db_session) is False
+    assert scheduler.is_reset_needed(db_session) is False
 
     # 4. Perform again -> Should do nothing
-    count = crud.perform_daily_reset_if_needed(db_session)
+    count = scheduler.perform_daily_reset_if_needed(db_session)
     assert count == 0
 
 
 def test_daily_reset_future_date(db_session):
     # If reset date is tomorrow (time travel?), reset shouldn't happen today
     tomorrow = date.today() + timedelta(days=1)
-    crud.set_last_reset_date(db_session, tomorrow)
+    scheduler.set_last_reset_date(db_session, tomorrow)
 
-    assert crud.is_reset_needed(db_session) is False
+    assert scheduler.is_reset_needed(db_session) is False
 
 
 def test_daily_reset_past_date(db_session):
     # If reset date is yesterday, reset should happen
     yesterday = date.today() - timedelta(days=1)
-    crud.set_last_reset_date(db_session, yesterday)
+    scheduler.set_last_reset_date(db_session, yesterday)
 
-    assert crud.is_reset_needed(db_session) is True
+    assert scheduler.is_reset_needed(db_session) is True

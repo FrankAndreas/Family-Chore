@@ -3,8 +3,8 @@ Unit tests for CRUD operations - focusing on critical business logic.
 """
 import pytest
 from datetime import datetime
-from backend import crud, models, schemas
-from backend.services import tasks as tasks_service
+from backend import models, schemas
+from backend.services import tasks as tasks_service, scheduler
 
 
 class TestPointCalculation:
@@ -180,7 +180,7 @@ class TestDailyReset:
         seeded_db.commit()
 
         # Act
-        count = crud.generate_daily_instances(seeded_db)
+        count = scheduler.generate_daily_instances(seeded_db)
 
         # Assert
         assert count == 2  # One for each child
@@ -210,8 +210,8 @@ class TestDailyReset:
         seeded_db.commit()
 
         # Act - run daily reset twice
-        count1 = crud.generate_daily_instances(seeded_db)
-        count2 = crud.generate_daily_instances(seeded_db)
+        count1 = scheduler.generate_daily_instances(seeded_db)
+        count2 = scheduler.generate_daily_instances(seeded_db)
 
         # Assert
         assert count1 == 1
