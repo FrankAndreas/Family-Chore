@@ -7,8 +7,7 @@ import { TIER_THRESHOLDS } from '../../constants';
 import { triggerConfetti } from '../../utils/confetti';
 import { SkeletonLoader } from '../../components/SkeletonLoader';
 import Modal from '../../components/Modal';
-import Toast from '../../components/Toast';
-import { useToast } from '../../hooks/useToast';
+import { useToast } from '../../context/ToastContext';
 import '../../styles/SharedDashboard.css';
 import './RewardHub.css';
 
@@ -27,7 +26,7 @@ const RewardHub: React.FC = () => {
     const [rewardToDelete, setRewardToDelete] = useState<Reward | null>(null);
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [submitting, setSubmitting] = useState(false);
-    const { toasts, removeToast, success, error } = useToast();
+    const { showToast } = useToast();
 
     const [formData, setFormData] = useState<RewardFormData>({
         name: '',
@@ -52,7 +51,7 @@ const RewardHub: React.FC = () => {
             const response = await getRewards();
             setRewards(response.data);
         } catch (err) {
-            error(t('rewards.toasts.load_error'));
+            showToast(t('rewards.toasts.load_error'), 'error');
             console.error('Failed to fetch rewards', err);
         } finally {
             setLoading(false);
@@ -65,12 +64,12 @@ const RewardHub: React.FC = () => {
 
         try {
             await createReward(formData);
-            success(t('rewards.toasts.create_success'));
+            showToast(t('rewards.toasts.create_success'), 'success');
             setShowCreateForm(false);
             setFormData({ name: '', description: '', cost_points: 0, tier_level: 1 });
             fetchRewards();
         } catch (err) {
-            error(t('rewards.toasts.create_error'));
+            showToast(t('rewards.toasts.create_error'), 'error');
             console.error('Failed to create reward', err);
         } finally {
             setSubmitting(false);
@@ -89,12 +88,12 @@ const RewardHub: React.FC = () => {
                 cost_points: formData.cost_points,
                 tier_level: formData.tier_level
             });
-            success(t('rewards.toasts.update_success', 'Reward updated successfully!'));
+            showToast(t('rewards.toasts.update_success', 'Reward updated successfully!'), 'success');
             setEditingReward(null);
             setFormData({ name: '', description: '', cost_points: 0, tier_level: 1 });
             fetchRewards();
         } catch (err) {
-            error(t('rewards.toasts.update_error', 'Failed to update reward'));
+            showToast(t('rewards.toasts.update_error', 'Failed to update reward'), 'error');
             console.error('Failed to update reward', err);
         } finally {
             setSubmitting(false);
@@ -114,9 +113,9 @@ const RewardHub: React.FC = () => {
     const handleSetGoal = async (rewardId: number) => {
         try {
             await setUserGoal(currentUser.id, rewardId);
-            success(t('rewards.toasts.goal_success'));
+            showToast(t('rewards.toasts.goal_success'), 'success');
         } catch (err) {
-            error(t('rewards.toasts.goal_error'));
+            showToast(t('rewards.toasts.goal_error'), 'error');
             console.error('Failed to set goal', err);
         }
     };
@@ -131,13 +130,13 @@ const RewardHub: React.FC = () => {
         setRedeeming(true);
         try {
             await redeemReward(redeemConfirm.reward.id);
-            success(t('rewards.toasts.redeem_success', { name: redeemConfirm.reward.name }));
+            showToast(t('rewards.toasts.redeem_success', { name: redeemConfirm.reward.name }), 'success');
             setRedeemConfirm(null);
             await refreshUser();
             // Re-fetch rewards instead of full page reload (preserves React state and SSE)
             fetchRewards();
         } catch (err) {
-            error(t('rewards.toasts.redeem_error'));
+            showToast(t('rewards.toasts.redeem_error'), 'error');
             console.error('Failed to redeem reward', err);
         } finally {
             setRedeeming(false);
@@ -206,12 +205,12 @@ const RewardHub: React.FC = () => {
             if ((prev < TIER_THRESHOLDS.SILVER && curr >= TIER_THRESHOLDS.SILVER) ||
                 (prev < TIER_THRESHOLDS.GOLD && curr >= TIER_THRESHOLDS.GOLD)) {
                 triggerConfetti();
-                success(t('rewards.toasts.tier_unlocked', { tier: tierStats.current }));
+                showToast(t('rewards.toasts.tier_unlocked', { tier: tierStats.current }), 'success');
             }
         }
         prevPoints.current = curr;
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentUser.lifetime_points, t, success]);
+    }, [currentUser.lifetime_points, t, showToast]);
 
     if (loading) {
         return (
@@ -266,10 +265,10 @@ const RewardHub: React.FC = () => {
                                 if (!rewardToDelete) return;
                                 try {
                                     await deleteReward(rewardToDelete.id);
-                                    success(t('rewards.toasts.delete_success', 'Reward deleted!'));
+                                    showToast(t('rewards.toasts.delete_success', 'Reward deleted!'), 'success');
                                     fetchRewards();
                                 } catch (err) {
-                                    error(t('rewards.toasts.delete_error', 'Failed to delete reward.'));
+                                    showToast(t('rewards.toasts.delete_error', 'Failed to delete reward.'), 'error');
                                     console.error('Failed to delete reward', err);
                                 } finally {
                                     setRewardToDelete(null);
@@ -347,19 +346,6 @@ const RewardHub: React.FC = () => {
                     </div>
                 )}
             </Modal>
-
-            {/* Toast notifications */}
-            <div className="toast-container">
-                {toasts.map(toast => (
-                    <Toast
-                        key={toast.id}
-                        message={toast.message}
-                        type={toast.type}
-                        duration={toast.duration}
-                        onClose={() => removeToast(toast.id)}
-                    />
-                ))}
-            </div>
 
             <header className="page-header">
                 <div>

@@ -5,8 +5,7 @@ import { getUserDailyTasks, completeTask, getTasks, getUserTransactions, uploadT
 import type { TaskInstance, Task, Transaction, TransactionFilters } from '../../types';
 import { SkeletonLoader } from '../../components/SkeletonLoader';
 import PhotoDropzone from '../../components/PhotoDropzone';
-import Toast from '../../components/Toast';
-import { useToast } from '../../hooks/useToast';
+import { useToast } from '../../context/ToastContext';
 import { useDebounce } from '../../hooks/useDebounce';
 import { useSwipeTabs } from '../../hooks/useSwipeTabs';
 import '../../styles/SharedDashboard.css';
@@ -32,7 +31,7 @@ const UserDashboard: React.FC = () => {
     const [hasMoreHistory, setHasMoreHistory] = useState(true);
     const [completingId, setCompletingId] = useState<number | null>(null);
     const [photoUrls, setPhotoUrls] = useState<Record<number, File | null>>({});
-    const { toasts, removeToast, success, error: showError } = useToast();
+    const { showToast } = useToast();
 
     const [searchTerm, setSearchTerm] = useState('');
     const debouncedSearch = useDebounce(searchTerm, 300);
@@ -86,11 +85,11 @@ const UserDashboard: React.FC = () => {
             }
         } catch (err) {
             console.error('Failed to fetch data', err);
-            showError('Failed to load dashboard data. Please try again.');
+            showToast('Failed to load dashboard data. Please try again.', 'error');
         } finally {
             setLoading(false);
         }
-    }, [currentUser.id, activeTab, filters, historyPage, showError]);
+    }, [currentUser.id, activeTab, filters, historyPage, showToast]);
 
     useEffect(() => {
         if (currentUser) {
@@ -118,7 +117,7 @@ const UserDashboard: React.FC = () => {
         try {
             const task = instance.taskDetails;
             if (task?.requires_photo_verification && !photoUrls[instance.id] && instance.status !== 'IN_REVIEW') {
-                showError(t('dashboard.photoRequiredError', { defaultValue: `Photo verification required for "${task.name}".`, task: task.name }));
+                showToast(t('dashboard.photoRequiredError', { defaultValue: `Photo verification required for "${task.name}".`, task: task.name }), 'error');
                 setCompletingId(null);
                 return;
             }
@@ -130,16 +129,16 @@ const UserDashboard: React.FC = () => {
 
             const res = await completeTask(instance.id);
             if (res.data.status === 'IN_REVIEW') {
-                success(t('dashboard.taskSubmittedReview', 'Task submitted for review! 📸'));
+                showToast(t('dashboard.taskSubmittedReview', 'Task submitted for review! 📸'), 'success');
                 setPhotoUrls(prev => { const next = { ...prev }; delete next[instance.id]; return next; });
             } else {
-                success(t('dashboard.taskCompletedSuccess', 'Task completed! Points awarded. 🎉'));
+                showToast(t('dashboard.taskCompletedSuccess', 'Task completed! Points awarded. 🎉'), 'success');
                 await refreshUser();
             }
             fetchData(); // Refresh list to show updated status
         } catch (err) {
             console.error('Failed to complete task', err);
-            showError(t('dashboard.errorCompletingTaskContext', { defaultValue: `Error completing "${instance.taskDetails?.name || 'Task'}". Please try again.`, task: instance.taskDetails?.name || 'Task' }));
+            showToast(t('dashboard.errorCompletingTaskContext', { defaultValue: `Error completing "${instance.taskDetails?.name || 'Task'}". Please try again.`, task: instance.taskDetails?.name || 'Task' }), 'error');
         } finally {
             setCompletingId(null);
         }
@@ -166,19 +165,6 @@ const UserDashboard: React.FC = () => {
 
     return (
         <div className="page-container fade-in">
-            {/* Toast notifications */}
-            <div className="toast-container">
-                {toasts.map(toast => (
-                    <Toast
-                        key={toast.id}
-                        message={toast.message}
-                        type={toast.type}
-                        duration={toast.duration}
-                        onClose={() => removeToast(toast.id)}
-                    />
-                ))}
-            </div>
-
             <header className="page-header">
                 <h1 className="page-title">{t('dashboard.myDashboard', 'My Dashboard')}</h1>
                 <p className="page-subtitle">

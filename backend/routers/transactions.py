@@ -2,12 +2,12 @@ import datetime
 from typing import List, Optional
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from .. import schemas, crud, models
 from ..database import get_db
-from ..dependencies import get_current_user
+from ..dependencies import get_current_user, require_self_or_admin
 
 logger = logging.getLogger(__name__)
 
@@ -28,8 +28,7 @@ def read_user_transactions(
     db: Session = Depends(get_db),
 ):
     """Get history for a specific user."""
-    if current_user.id != user_id and current_user.role.name != "Admin":
-        raise HTTPException(status_code=403, detail="Not authorized to view this user's transactions")
+    require_self_or_admin(current_user, user_id)
     return crud.get_user_transactions(
         db, user_id=user_id, skip=skip, limit=limit,
         txn_type=txn_type, search=search, start_date=start_date, end_date=end_date

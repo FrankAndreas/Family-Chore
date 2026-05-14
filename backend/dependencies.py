@@ -62,8 +62,23 @@ def get_current_user(
     return user
 
 
+ADMIN_ROLE_NAME = "Admin"
+
+
+def is_admin(user) -> bool:
+    return bool(user.role and user.role.name == ADMIN_ROLE_NAME)
+
+
+def require_self_or_admin(current_user, user_id: int) -> None:
+    if current_user.id != user_id and not is_admin(current_user):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized"
+        )
+
+
 def get_current_admin_user(current_user=Depends(get_current_user)):
-    if current_user.role.name != "Admin":
+    if not is_admin(current_user):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions"

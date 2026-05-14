@@ -5,7 +5,7 @@ from typing import List
 from .. import schemas, models
 from ..services import notifications
 from ..database import get_db
-from ..dependencies import get_current_user
+from ..dependencies import get_current_user, require_self_or_admin
 from ..notifications_service import VAPID_PUBLIC_KEY
 
 router = APIRouter(
@@ -57,8 +57,7 @@ def read_user_notifications(
     db: Session = Depends(get_db)
 ):
     """Get notifications for a user (own data or admin)."""
-    if current_user.id != user_id and current_user.role.name != "Admin":
-        raise HTTPException(status_code=403, detail="Not authorized to view these notifications")
+    require_self_or_admin(current_user, user_id)
     return notifications.get_user_notifications(
         db, user_id=user_id, skip=skip, limit=limit, unread_only=unread_only
     )

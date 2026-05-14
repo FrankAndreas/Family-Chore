@@ -3,13 +3,11 @@ import { completeTask, redeemRewardSplit } from '../api';
 import { useTranslation } from 'react-i18next';
 import type { TaskInstance, Reward } from '../types';
 import { useDebounce } from '../hooks/useDebounce';
-import { useToast } from '../hooks/useToast';
+import { useToast } from '../context/ToastContext';
 import { useSwipeTabs } from '../hooks/useSwipeTabs';
 import { SkeletonLoader } from './SkeletonLoader';
 import { useFamilyDashboardData } from "../hooks/useFamilyDashboardData";
 import { useTransactions } from "../hooks/useTransactions";
-// import Modal from './Modal'; // Moved to sub-components
-import Toast from './Toast';
 import './FamilyDashboard.css';
 
 // Extracted sub-components (C1 decomposition)
@@ -25,7 +23,7 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
     const [activeTab, setActiveTab] = useState<"tasks" | "redeem" | "history">("tasks");
     const FAMILY_TABS = ["tasks", "redeem", "history"] as const;
     const swipeHandlers = useSwipeTabs(FAMILY_TABS, activeTab, setActiveTab as (tab: string) => void);
-    const { toasts, removeToast, success, error: showError } = useToast();
+    const { showToast } = useToast();
 
     const [selectedTask, setSelectedTask] = useState<TaskInstance | null>(null);
     const [selectedRedeem, setSelectedRedeem] = useState<Reward | null>(null);
@@ -41,7 +39,7 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
             if (activeTab === "history") refreshTransactions({}, true);
         },
         (data) => {
-            success(`🎉 ${data?.reward_name || "Reward"} redeemed!`);
+            showToast(`🎉 ${data?.reward_name || "Reward"} redeemed!`, 'success');
             if (activeTab === "history") refreshTransactions({}, true);
         }
     );
@@ -69,7 +67,7 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
             if (activeTab === 'history') refreshTransactions({}, true); // Refresh history if needed
         } catch (error) {
             console.error("Failed to complete task", error);
-            showError(`Error completing "${selectedTask.task?.name || `Task #${selectedTask.task_id}`}". Please try again.`);
+            showToast(`Error completing "${selectedTask.task?.name || `Task #${selectedTask.task_id}`}". Please try again.`, 'error');
         }
     };
 
@@ -84,13 +82,13 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
         try {
             const result = await redeemRewardSplit(selectedRedeem.id, contributions);
             const contributors = result.data.transactions?.map(t => t.user_name).join(', ') || '';
-            success(`🎉 ${selectedRedeem.name} redeemed by ${contributors}!`);
+            showToast(`🎉 ${selectedRedeem.name} redeemed by ${contributors}!`, 'success');
             setSelectedRedeem(null);
             refreshData();
             if (activeTab === 'history') refreshTransactions({}, true);
         } catch (error) {
             console.error("Failed to redeem", error);
-            showError(`❌ Failed to redeem "${selectedRedeem.name}". Check contributions?`);
+            showToast(`❌ Failed to redeem "${selectedRedeem.name}". Check contributions?`, 'error');
         } finally {
             setRedeeming(false);
         }
@@ -129,19 +127,6 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
 
     return (
         <div className="family-dashboard">
-            {/* Toast notifications */}
-            <div className="toast-container">
-                {toasts.map(tst => (
-                    <Toast
-                        key={tst.id}
-                        message={tst.message}
-                        type={tst.type}
-                        duration={tst.duration}
-                        onClose={() => removeToast(tst.id)}
-                    />
-                ))}
-            </div>
-
             <div className="family-dashboard-header">
                 <div>
                     <h1>🏡 {t('dashboard.familyDashboard')}</h1>

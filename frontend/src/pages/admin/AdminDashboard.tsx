@@ -4,8 +4,7 @@ import { getUsers, getTasks, triggerDailyReset, getAllTransactions, getReviewQue
 import type { User, Task, Transaction, TransactionFilters, TaskInstance } from '../../types';
 import { useTranslation } from 'react-i18next';
 import { SkeletonLoader } from '../../components/SkeletonLoader';
-import Toast from '../../components/Toast';
-import { useToast } from '../../hooks/useToast';
+import { useToast } from '../../context/ToastContext';
 import { useDebounce } from '../../hooks/useDebounce';
 import '../../styles/SharedDashboard.css';
 import './Dashboard.css';
@@ -20,7 +19,7 @@ const AdminDashboard: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [resetting, setResetting] = useState(false);
     const [reviewingId, setReviewingId] = useState<number | null>(null);
-    const { toasts, removeToast, success, error: showError } = useToast();
+    const { showToast } = useToast();
 
     // Rejection modal state
     const [rejectModal, setRejectModal] = useState<{ instanceId: number; show: boolean } | null>(null);
@@ -61,10 +60,10 @@ const AdminDashboard: React.FC = () => {
         setResetting(true);
         try {
             await triggerDailyReset();
-            success('Daily reset completed! Task instances generated.');
+            showToast('Daily reset completed! Task instances generated.', 'success');
         } catch (err) {
             console.error('Failed to trigger daily reset', err);
-            showError('Failed to trigger daily reset');
+            showToast('Failed to trigger daily reset', 'error');
         } finally {
             setResetting(false);
         }
@@ -74,11 +73,11 @@ const AdminDashboard: React.FC = () => {
         setReviewingId(instanceId);
         try {
             await reviewTask(instanceId, true, undefined);
-            success('Task approved and points awarded!');
+            showToast('Task approved and points awarded!', 'success');
             fetchData();
         } catch (err) {
             console.error('Failed to approve task', err);
-            showError('Failed to submit review.');
+            showToast('Failed to submit review.', 'error');
         } finally {
             setReviewingId(null);
         }
@@ -94,12 +93,12 @@ const AdminDashboard: React.FC = () => {
         setReviewingId(rejectModal.instanceId);
         try {
             await reviewTask(rejectModal.instanceId, false, rejectReason || undefined);
-            success('Task rejected.');
+            showToast('Task rejected.', 'success');
             setRejectModal(null);
             fetchData();
         } catch (err) {
             console.error('Failed to reject task', err);
-            showError('Failed to submit review.');
+            showToast('Failed to submit review.', 'error');
         } finally {
             setReviewingId(null);
         }
@@ -149,18 +148,6 @@ const AdminDashboard: React.FC = () => {
 
     return (
         <div className="page-container fade-in">
-            {/* Toast notifications */}
-            <div className="toast-container">
-                {toasts.map(toast => (
-                    <Toast
-                        key={toast.id}
-                        message={toast.message}
-                        type={toast.type}
-                        duration={toast.duration}
-                        onClose={() => removeToast(toast.id)}
-                    />
-                ))}
-            </div>
             <header className="page-header">
                 <h1 className="page-title">Admin Dashboard</h1>
                 <p className="page-subtitle">{t('dashboard.subtitle', 'Overview of family performance and system status')}</p>

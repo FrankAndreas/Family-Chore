@@ -6,7 +6,7 @@ import logging
 from .. import schemas, crud, models
 from ..services import rewards as rewards_service, notifications
 from ..database import get_db
-from ..dependencies import get_current_user, get_current_admin_user
+from ..dependencies import get_current_user, get_current_admin_user, require_self_or_admin
 from ..events import broadcaster
 
 logger = logging.getLogger(__name__)
@@ -48,8 +48,7 @@ def set_user_goal(user_id: int, reward_id: int,
                   current_user: models.User = Depends(get_current_user),
                   db: Session = Depends(get_db)):
     # Authorization: Only Admin or the user themselves can set their goal
-    if current_user.id != user_id and current_user.role.name != "Admin":
-        raise HTTPException(status_code=403, detail="Not authorized to set goal for this user")
+    require_self_or_admin(current_user, user_id)
     user = crud.set_user_goal(db, user_id=user_id, reward_id=reward_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")

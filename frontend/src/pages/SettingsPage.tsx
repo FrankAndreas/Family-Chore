@@ -4,8 +4,7 @@ import LanguageSwitcher from '../components/LanguageSwitcher';
 import { useUser } from '../context/UserContext';
 import { useNotifications } from '../context/NotificationContext';
 import { updateUser } from '../api';
-import Toast from '../components/Toast';
-import { useToast } from '../hooks/useToast';
+import { useToast } from '../context/ToastContext';
 
 import '../styles/SharedDashboard.css';
 
@@ -13,7 +12,7 @@ const SettingsPage: React.FC = () => {
     const { t } = useTranslation();
     const { currentUser } = useUser();
     const { isPushSupported, pushSubscribed, subscribeToPush, unsubscribeFromPush } = useNotifications();
-    const { toasts, removeToast, success, error: showError } = useToast();
+    const { showToast } = useToast();
 
     const [email, setEmail] = useState(currentUser?.email || '');
     const [notificationsEnabled, setNotificationsEnabled] = useState(currentUser?.notifications_enabled ?? true);
@@ -34,10 +33,10 @@ const SettingsPage: React.FC = () => {
                 email: email || null,
                 notifications_enabled: notificationsEnabled
             });
-            success(t('settings.settingsSavedSuccess', 'Settings saved successfully!'));
+            showToast(t('settings.settingsSavedSuccess', 'Settings saved successfully!'), 'success');
         } catch (err) {
             console.error('Failed to save settings', err);
-            showError(t('settings.settingsSavedError', 'Failed to save settings. Please try again.'));
+            showToast(t('settings.settingsSavedError', 'Failed to save settings. Please try again.'), 'error');
         } finally {
             setIsSavingSettings(false);
         }
@@ -45,19 +44,6 @@ const SettingsPage: React.FC = () => {
 
     return (
         <div className="page-container fade-in">
-            {/* Toast notifications */}
-            <div className="toast-container">
-                {toasts.map(toast => (
-                    <Toast
-                        key={toast.id}
-                        message={toast.message}
-                        type={toast.type}
-                        duration={toast.duration}
-                        onClose={() => removeToast(toast.id)}
-                    />
-                ))}
-            </div>
-
             <header className="page-header">
                 <div className="header-content">
                     <div>

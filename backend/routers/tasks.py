@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from .. import schemas, crud, models
 from ..services import tasks as tasks_service, scheduler, notifications
 from ..database import get_db
-from ..dependencies import get_current_user, get_current_admin_user
+from ..dependencies import get_current_user, get_current_admin_user, is_admin, require_self_or_admin
 from ..events import broadcaster
 from ..notifications_service import send_email_background, send_push_to_user_background
 
@@ -100,8 +100,7 @@ def read_user_daily_tasks(
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    if current_user.id != user_id and current_user.role.name != "Admin":
-        raise HTTPException(status_code=403, detail="Not authorized to view this user's tasks")
+    require_self_or_admin(current_user, user_id)
     return crud.get_user_daily_tasks(db, user_id=user_id)
 
 
@@ -128,8 +127,8 @@ async def complete_task(
 
     # Admins may complete any task on behalf of the assigned user.
     # Non-admins are restricted to their own tasks (enforced in the service).
-    is_admin = current_user.role.name == "Admin"
-    completing_user_id = int(orm_instance.user_id) if is_admin and orm_instance else int(current_user.id)
+    user_is_admin = is_admin(current_user)
+    completing_user_id = int(orm_instance.user_id) if user_is_admin and orm_instance else int(current_user.id)
 
     instance = tasks_service.complete_task_instance(
         db, instance_id=instance_id, actual_user_id=completing_user_id)

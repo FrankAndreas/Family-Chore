@@ -9,8 +9,7 @@ import {
 import type { WeeklyStats, DistributionStat, HeatmapResponse, AnalyticsSummary } from '../../api';
 import { getWeeklyStats, getPointsDistribution, getHeatmapData, getAnalyticsSummary } from '../../api';
 import { SkeletonLoader } from '../../components/SkeletonLoader';
-import { useToast } from '../../hooks/useToast';
-import Toast from '../../components/Toast';
+import { useToast } from '../../context/ToastContext';
 import StatCards from '../../components/StatCards';
 import Heatmap from '../../components/Heatmap';
 import TimeRangeSelector from '../../components/TimeRangeSelector';
@@ -28,7 +27,7 @@ const AnalyticsDashboard: React.FC = () => {
     const [heatmapDays, setHeatmapDays] = useState(30);
     const [loading, setLoading] = useState(true);
     const [heatmapLoading, setHeatmapLoading] = useState(false);
-    const { toasts, removeToast, error } = useToast();
+    const { showToast } = useToast();
 
     useEffect(() => {
         if (currentUser.role.name === 'Admin') {
@@ -51,7 +50,7 @@ const AnalyticsDashboard: React.FC = () => {
             setSummaryData(summaryRes.data);
         } catch (err) {
             console.error("Failed to load analytics", err);
-            error(t('common.error_loading'));
+            showToast(t('common.error_loading'), 'error');
         } finally {
             setLoading(false);
         }
@@ -65,11 +64,11 @@ const AnalyticsDashboard: React.FC = () => {
             setHeatmapData(res.data);
         } catch (err) {
             console.error("Failed to reload heatmap", err);
-            error(t('common.error_loading'));
+            showToast(t('common.error_loading'), 'error');
         } finally {
             setHeatmapLoading(false);
         }
-    }, [error, t]);
+    }, [showToast, t]);
 
     if (currentUser.role.name !== 'Admin') {
         return <Navigate to="/dashboard" replace />;
@@ -126,18 +125,6 @@ const AnalyticsDashboard: React.FC = () => {
 
     return (
         <div className="page-container analytics-dashboard fade-in">
-            <div className="toast-container">
-                {toasts.map(toast => (
-                    <Toast
-                        key={toast.id}
-                        message={toast.message}
-                        type={toast.type}
-                        duration={toast.duration}
-                        onClose={() => removeToast(toast.id)}
-                    />
-                ))}
-            </div>
-
             <header className="page-header">
                 <div>
                     <h1 className="page-title">📊 {t('analytics.title')}</h1>
