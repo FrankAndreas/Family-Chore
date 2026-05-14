@@ -1,6 +1,6 @@
-import shutil
 import os
 import glob
+import sqlite3
 import logging
 from datetime import datetime
 from typing import List, Dict
@@ -29,7 +29,12 @@ class BackupManager:
         backup_path = os.path.join(self.backup_dir, backup_filename)
 
         try:
-            shutil.copy2(self.db_path, backup_path)
+            src = sqlite3.connect(self.db_path)
+            dst = sqlite3.connect(backup_path)
+            with dst:
+                src.backup(dst)
+            dst.close()
+            src.close()
             return backup_path
         except Exception as e:
             raise Exception(f"Failed to create backup: {str(e)}")

@@ -239,8 +239,12 @@ os.makedirs("uploads", exist_ok=True)
 @app.get("/uploads/{filename}", tags=["System"])
 def get_uploaded_file(filename: str, current_user: models.User = Depends(get_current_user)):
     """Serve uploaded files only to authenticated users."""
-    file_path = os.path.join("uploads", filename)
-    if not os.path.exists(file_path):
+    from pathlib import Path
+    uploads_dir = Path("uploads").resolve()
+    file_path = (uploads_dir / filename).resolve()
+    if not str(file_path).startswith(str(uploads_dir) + os.sep):
+        raise HTTPException(status_code=400, detail="Invalid filename")
+    if not file_path.exists():
         raise HTTPException(status_code=404, detail="File not found")
     return FileResponse(file_path)
 
