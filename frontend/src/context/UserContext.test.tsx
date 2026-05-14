@@ -1,6 +1,6 @@
-import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { UserContext, useUser } from './UserContext';
+import type { UserContextType } from './UserContext';
 import { describe, it, expect } from 'vitest';
 
 const TestComponent = () => {
@@ -14,8 +14,11 @@ const TestComponent = () => {
 
 describe('UserContext', () => {
     it('renders children correctly', () => {
-        // @ts-expect-error - Mock user for testing
-        const mockValue = { currentUser: { nickname: 'TestUser' }, refreshUser: async () => {}, logout: () => {} };
+        const mockValue = {
+            currentUser: { nickname: 'TestUser' },
+            refreshUser: async () => {},
+            logout: () => {},
+        } as unknown as UserContextType;
         render(
             <UserContext.Provider value={mockValue}>
                 <TestComponent />

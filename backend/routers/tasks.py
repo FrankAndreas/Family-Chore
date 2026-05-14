@@ -1,8 +1,11 @@
+import io
 import os
 import uuid
 
 from typing import List
 import logging
+
+from PIL import Image, UnidentifiedImageError
 
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, File, UploadFile
 from fastapi.concurrency import run_in_threadpool
@@ -20,10 +23,22 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["Tasks"])
 
 
-def _write_chunk(path: str, chunk: bytes, append: bool = True):
-    mode = "ab" if append else "wb"
-    with open(path, mode) as f:
-        f.write(chunk)
+# Legacy chunk-writer — superseded by _compress_and_save (kept per STRICT_NO_DELETE)
+# def _write_chunk(path: str, chunk: bytes, append: bool = True):
+#     mode = "ab" if append else "wb"
+#     with open(path, mode) as f:
+#         f.write(chunk)
+
+
+MAX_THUMBNAIL_DIM = 1280  # px — longest edge; preserves aspect ratio
+
+
+def _compress_and_save(buf: io.BytesIO, path: str, max_dim: int = MAX_THUMBNAIL_DIM) -> None:
+    """Resize and convert image to WebP. Runs in a threadpool to avoid blocking the event loop."""
+    with Image.open(buf) as img:
+        img = img.convert("RGB")  # Normalises RGBA, palette, and CMYK to 3-channel
+        img.thumbnail((max_dim, max_dim), Image.LANCZOS)
+        img.save(path, format="WEBP", quality=82, optimize=True)
 
 
 @router.post("/tasks/", response_model=schemas.Task, dependencies=[Depends(get_current_admin_user)])
@@ -167,7 +182,12 @@ async def complete_task(
              response_model=schemas.TaskInstance,
              dependencies=[Depends(get_current_user)])
 async def upload_task_photo(instance_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
-    """Upload a photo for task verification using multipart/form-data."""
+    """Upload a photo for task verification using multipart/form-data.
+
+    Accepts any image format supported by Pillow. The file is streamed into memory
+    then compressed to WebP (max 1280×1280 px, quality=82) in a threadpool before
+    being written to disk. This avoids serving raw 10 MB uploads.
+    """
     MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10 MB
 
     instance = db.query(models.TaskInstance).filter(
@@ -178,35 +198,34 @@ async def upload_task_photo(instance_id: int, file: UploadFile = File(...), db: 
     if not file.content_type or not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="File must be an image")
 
-    # S4: Derive extension from validated content_type, not user-supplied filename
-    content_type_to_ext = {
-        "image/jpeg": "jpg",
-        "image/png": "png",
-        "image/gif": "gif",
-        "image/webp": "webp",
-        "image/heic": "heic",
-        "image/heif": "heif",
-    }
-    file_extension = content_type_to_ext.get(file.content_type, "jpg")
-    unique_filename = f"{uuid.uuid4().hex}.{file_extension}"
-    file_path = os.path.join("uploads", unique_filename)
-
-    # S3: Enforce max upload size while streaming chunks without blocking event loop
+    # Phase 1: Stream upload into an in-memory buffer (async — no disk I/O here)
+    buf = io.BytesIO()
     total_size = 0
-    # Create empty file first
-    await run_in_threadpool(_write_chunk, file_path, b"", False)
-
-    while content := await file.read(1024 * 1024):  # Read 1MB chunks
+    while content := await file.read(1024 * 1024):  # 1 MB chunks
         total_size += len(content)
         if total_size > MAX_UPLOAD_SIZE:
-            await run_in_threadpool(os.remove, file_path)
             raise HTTPException(
                 status_code=413,
                 detail=f"File too large. Maximum upload size is {MAX_UPLOAD_SIZE // (1024 * 1024)} MB."
             )
-        await run_in_threadpool(_write_chunk, file_path, content, True)
+        buf.write(content)
+    buf.seek(0)
 
-    # Set completion_photo_url to the newly served path
+    # Phase 2: Compress and save to disk via Pillow in a threadpool (non-blocking)
+    # Output is always .webp regardless of input format.
+    unique_filename = f"{uuid.uuid4().hex}.webp"
+    file_path = os.path.join("uploads", unique_filename)
+
+    try:
+        await run_in_threadpool(_compress_and_save, buf, file_path)
+    except UnidentifiedImageError:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot process image. Format may be unsupported (e.g. HEIC without plugin)."
+        )
+
     instance.completion_photo_url = f"/uploads/{unique_filename}"
     db.commit()
     db.refresh(instance)

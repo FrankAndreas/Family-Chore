@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react';
 import type { User } from '../types';
 
-interface UserContextType {
+export interface UserContextType {
     currentUser: User;
     refreshUser: () => Promise<void>;
     logout: () => void;

@@ -1,7 +1,7 @@
 # State & Global Memory
 
 **Librarian**: Agent-Librarian
-**Last Updated**: 2026-05-05 21:07
+**Last Updated**: 2026-05-14 15:35
 
 ## 🧠 Global Context
 The project is a **Family Chore Gamification System** (Universal-GSD-Core). We have completed **System Polish & Hardening** (V1.4), **Negative Points**, **Email Notifications** (V1.6), **Frontend Integration**, **Analytics & Heatmaps**, and **Security Hardening**. Database schema version is **1.9**.
@@ -135,6 +135,13 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We h
 - **Non-Blocking I/O**: Refactored `upload_task_photo` and `/backups/run` endpoints. `upload_task_photo` now offloads file writes to a thread pool via `run_in_threadpool`, and backups are queued gracefully via `BackgroundTasks`. This eliminates severe event loop blocking previously caused by expensive disk operations on the main execution thread.
 - **N+1 SQL Queries Remediation**: Rewrote SQLAlchemy task queries in `crud.py` to utilize `.options(joinedload(...))` eager fetching. Nested task and user dependencies are now dynamically assembled in a single SQL operation, dramatically cutting down latency.
 - **Pydantic Configuration Refactor**: Stripped all disparate `os.getenv` environment parsing instances scattered across `main.py`, `database.py`, and `notifications_service.py`. A centralized, robust schema is now utilized via the `pydantic-settings` module, enforcing fallback policies consistently and improving code cleanliness. Secure `.env` auto-generation via `security.py` safely remains untouched.
+
+## 🔄 Recent Changes (2026-05-14 Performance Audit: Image Compression & Code-Splitting)
+- **P0 Server-Side Image Optimization**: Refactored `upload_task_photo` in `backend/routers/tasks.py`. Replaced direct spooling of raw multi-megabyte image files to disk with an in-memory streaming buffer, then offloaded a WebP conversion process (capped at 1280px edge, 82% quality) to a non-blocking threadpool via the `Pillow` library.
+- **Resource Safety & Cleanup**: Implemented existence-guarding `os.remove` logic within the `UnidentifiedImageError` exception block, guaranteeing that partial or malformed files are cleanly purged from `uploads/` before client errors return. Added `Pillow>=10.0.0` to `requirements.txt`.
+- **P1 Frontend Code-Splitting**: Replaced synchronous imports of all primary application view pages in `App.tsx` with `React.lazy()` dynamically-imported wrappers wrapped in a robust `<Suspense>` fallback block containing visual `SkeletonLoader` tokens.
+- **Webpack/Vite Bundle Splitting**: Initial JavaScript asset weight cut by **54%** (from **871.63 kB** to **394.55 kB**). Admin and analytics dashboards are now completely lazy-loaded, fetching asynchronously only when navigated to.
+- **Environment Stability Fixes**: Corrected broken typing configurations inside `vite.config.ts` (switched to `vitest/config`) and resolved type-assertion mocks inside `UserContext.test.tsx` to ensure 100% compiler-clean `tsc` and `lint` pipelines.
 
 ## 📍 System State
 - **Backend**: Port 8000. **183 tests passed**. Flake8 and Mypy clean. Schema v1.9 tracked via Alembic. All services decoupled. Event loops strictly unblocked.

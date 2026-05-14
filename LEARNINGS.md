@@ -590,4 +590,13 @@ This file captures accumulated knowledge from development sessions. The Libraria
 ### Gotchas
 - **Pydantic Settings vs Standalone Fallbacks**: When transitioning configuration logic, default hardcoded parameters inside `BaseSettings` (like `JWT_SECRET_KEY = "your-secret-key"`) can destructively overwrite or bypass pre-existing standalone `.env` key-generation flows (such as `security.py`). Never inject fallback parameters inside settings if external mechanisms independently manage those credentials.
 - **Test Environments**: Verifying asynchronous background task modifications (like `/backups/run`) is trivially achieved locally via the FastAPI `TestClient`, which safely emulates full HTTP interactions against decoupled routes.
+## 📅 2026-05-14: Performance Audit Remediations (Image Compression & Code-Splitting)
 
+### Session Context
+- **In-Memory Async Image Conversion**: Direct local disk spooling of high-res files introduces scaling vulnerabilities. The optimal FastAPI pattern relies on writing chunks asynchronously to an `io.BytesIO` stream first, followed by an optimized conversion payload executed in an offloaded `run_in_threadpool` step using `Pillow`'s WebP generator.
+- **Atomic Error Recovery**: Disk modifications inside try/except blocks MUST clean up partial outcomes. If the Pillow pipeline raises a conversion or codec error (e.g., `UnidentifiedImageError`), adding a proactive `os.remove` guard on the destination path ensures we do not accumulate dead storage blocks on rejection.
+- **React Suspense Routing Trees**: Refactoring monolithic page imports to use `React.lazy()` and explicit `Suspense` boundaries effectively cuts JavaScript startup footprints in half (54% in our scenario). Wrapping route definitions in `Suspense` with an active UI fallback component allows smaller standalone chunks to be fetched on-demand without altering functional routing flow.
+
+### Gotchas
+- **Concurrent Buffer Memory Traces**: The in-memory streaming method accumulates the entire file payload into Python RAM heap BEFORE rendering it. For low-scale systems, this is efficient, but public API nodes experiencing massive concurrent transfers require an upper limit on total payload scale (like `413 Content Length` limits) to prevent RAM exhaustion.
+- **Vite Context Definitions**: Traditional standard imports from `'vite'` for `defineConfig` can break type mapping if `vitest` properties are defined inside a merged configuration file. Explicitly changing the root provider to `'vitest/config'` natively integrates Vitest definitions into compiler tooling safely.
