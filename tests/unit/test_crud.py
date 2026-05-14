@@ -48,7 +48,7 @@ class TestPointCalculation:
         seeded_db.commit()
 
         # Act
-        completed = tasks_service.complete_task_instance(seeded_db, instance.id)
+        completed = tasks_service.complete_task_instance(seeded_db, instance.id, actual_user_id=user.id)
 
         # Assert
         assert completed.status == "COMPLETED"
@@ -93,7 +93,7 @@ class TestPointCalculation:
         seeded_db.commit()
 
         # Act
-        tasks_service.complete_task_instance(seeded_db, instance.id)
+        tasks_service.complete_task_instance(seeded_db, instance.id, actual_user_id=user.id)
 
         # Assert
         transaction = seeded_db.query(models.Transaction).filter(
@@ -143,8 +143,8 @@ class TestPointCalculation:
         seeded_db.commit()
 
         # Act - complete twice
-        tasks_service.complete_task_instance(seeded_db, instance.id)
-        tasks_service.complete_task_instance(seeded_db, instance.id)
+        tasks_service.complete_task_instance(seeded_db, instance.id, actual_user_id=user.id)
+        tasks_service.complete_task_instance(seeded_db, instance.id, actual_user_id=user.id)
 
         # Assert - points only awarded once
         seeded_db.refresh(user)

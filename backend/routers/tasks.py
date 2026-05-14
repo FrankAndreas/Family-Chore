@@ -94,9 +94,14 @@ async def delete_task(task_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/tasks/daily/{user_id}",
-            response_model=List[schemas.TaskInstance],
-            dependencies=[Depends(get_current_user)])
-def read_user_daily_tasks(user_id: int, db: Session = Depends(get_db)):
+            response_model=List[schemas.TaskInstance])
+def read_user_daily_tasks(
+    user_id: int,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if current_user.id != user_id and current_user.role.name != "Admin":
+        raise HTTPException(status_code=403, detail="Not authorized to view this user's tasks")
     return crud.get_user_daily_tasks(db, user_id=user_id)
 
 
@@ -106,24 +111,28 @@ def read_all_pending_tasks(db: Session = Depends(get_db)):
 
 
 @router.post("/tasks/{instance_id}/complete",
-             response_model=schemas.TaskInstance,
-             dependencies=[Depends(get_current_user)])
+             response_model=schemas.TaskInstance)
 async def complete_task(
     instance_id: int,
     background_tasks: BackgroundTasks,
-    actual_user_id: int = None,
+    current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     logger.info(
-        f"Attempting to complete task instance: {instance_id} (Claimed by user_id: {actual_user_id})")
+        f"Attempting to complete task instance: {instance_id} by user {current_user.id}")
 
     # Pre-fetch task name for notification messages (before DTO conversion loses ORM access)
     orm_instance = db.query(models.TaskInstance).filter(
         models.TaskInstance.id == instance_id).first()
     task_name = orm_instance.task.name if orm_instance and orm_instance.task else "Unknown"
 
+    # Admins may complete any task on behalf of the assigned user.
+    # Non-admins are restricted to their own tasks (enforced in the service).
+    is_admin = current_user.role.name == "Admin"
+    completing_user_id = int(orm_instance.user_id) if is_admin and orm_instance else int(current_user.id)
+
     instance = tasks_service.complete_task_instance(
-        db, instance_id=instance_id, actual_user_id=actual_user_id)
+        db, instance_id=instance_id, actual_user_id=completing_user_id)
 
     logger.info(
         f"Task completed successfully: instance {instance_id} by user {instance.user_id}")

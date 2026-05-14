@@ -10,7 +10,7 @@ from ..exceptions import InvalidStateTransitionError, TaskNotFoundError
 def complete_task_instance(
     db: Session,
     instance_id: int,
-    actual_user_id: int = None,
+    actual_user_id: int,
     current_time: Optional[datetime] = None
 ) -> schemas.TaskInstance:
     instance = db.query(models.TaskInstance).filter(
@@ -21,12 +21,9 @@ def complete_task_instance(
     if instance.status == "COMPLETED":
         return schemas.TaskInstance.model_validate(instance)  # Already done
 
-    # 1. Get related data (and handle reassignment if needed)
-    if actual_user_id and actual_user_id != instance.user_id:
-        # User B is claiming User A's task
-        instance.user_id = actual_user_id
-        db.commit()
-        db.refresh(instance)
+    if instance.user_id != actual_user_id:
+        from ..exceptions import AuthorizationError
+        raise AuthorizationError("You can only complete tasks assigned to you")
 
     task = instance.task
 

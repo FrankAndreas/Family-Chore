@@ -1,89 +1,101 @@
+import datetime
+import pytest
+
 from backend import crud, schemas, models
 from backend.services import tasks as tasks_service
+from backend.exceptions import AuthorizationError
 
 
-def test_family_dashboard_claim_logic(db_session):
-    import uuid
-    import datetime
-    unique_id = str(uuid.uuid4())[:8]
-    db = db_session
-
-    # 1. Setup Data
-    # Create Role 1 (Parent, x1.0)
-    role_p = models.Role(name=f"FD_Parent_{unique_id}", multiplier_value=1.0)
-    db.add(role_p)
-
-    # Create Role 2 (Teen, x1.5)
-    role_t = models.Role(name=f"FD_Teen_{unique_id}", multiplier_value=1.5)
-    db.add(role_t)
+def _make_role(db, name, multiplier):
+    role = models.Role(name=name, multiplier_value=multiplier)
+    db.add(role)
     db.commit()
-    db.refresh(role_p)
-    db.refresh(role_t)
+    db.refresh(role)
+    return role
 
-    # Create User A (Parent)
-    user_p = crud.create_user(
+
+def _make_user(db, nickname, role_id):
+    return crud.create_user(
         db,
-        schemas.UserCreate(
-            nickname=f"FD_Dad_{unique_id}", login_pin="0000", role_id=role_p.id
-        )
-    )
-    # Create User B (Teen)
-    user_t = crud.create_user(
-        db,
-        schemas.UserCreate(
-            nickname=f"FD_Son_{unique_id}", login_pin="0000", role_id=role_t.id
-        )
+        schemas.UserCreate(nickname=nickname, login_pin="0000", role_id=role_id),
     )
 
-    # Create Task (Assigned to Parent, 10 points)
-    task = crud.create_task(db, schemas.TaskCreate(
-        name=f"Heavy Lifting_{unique_id}",
-        description="Lift things",
-        base_points=10,
-        assigned_role_id=role_p.id,
-        schedule_type="daily",
-        default_due_time="12:00"
-    ))
 
-    # Generate Instance
-    # Force manual instance creation to avoid 'daily reset' complexity
+def _make_instance(db, task_id, user_id):
     instance = models.TaskInstance(
-        task_id=task.id,
-        user_id=user_p.id,  # Assigned to Dad
+        task_id=task_id,
+        user_id=user_id,
         due_time=datetime.datetime.now(),
-        status="PENDING"
+        status="PENDING",
     )
     db.add(instance)
     db.commit()
     db.refresh(instance)
+    return instance
 
-    assert instance.user_id == user_p.id
 
-    # 2. Test: Teenager Claims the task
-    # Call complete_task_instance with actual_user_id = user_t.id
-    completed_instance = tasks_service.complete_task_instance(
-        db, instance_id=instance.id, actual_user_id=user_t.id
+def test_user_can_complete_own_task(db_session):
+    import uuid
+
+    uid = str(uuid.uuid4())[:8]
+    role = _make_role(db_session, f"Parent_{uid}", 1.0)
+    user = _make_user(db_session, f"Dad_{uid}", role.id)
+
+    task = crud.create_task(
+        db_session,
+        schemas.TaskCreate(
+            name=f"Dishes_{uid}",
+            description="Wash up",
+            base_points=10,
+            assigned_role_id=role.id,
+            schedule_type="daily",
+            default_due_time="12:00",
+        ),
     )
 
-    # 3. Verify
-    assert completed_instance is not None
-    assert completed_instance.status == "COMPLETED"
+    instance = _make_instance(db_session, task.id, user.id)
 
-    # Verify Reassignment
-    assert completed_instance.user_id == user_t.id  # Should now be Son
+    result = tasks_service.complete_task_instance(
+        db_session, instance_id=instance.id, actual_user_id=user.id
+    )
 
-    # Verify Transaction (Teen gets 1.5x points = 15)
-    tx = db.query(models.Transaction).filter(
+    assert result.status == "COMPLETED"
+    assert result.user_id == user.id
+
+    tx = db_session.query(models.Transaction).filter(
         models.Transaction.reference_instance_id == instance.id
     ).first()
     assert tx is not None
-    assert tx.user_id == user_t.id
-    assert tx.multiplier_used == 1.5
-    assert tx.awarded_points == 20
+    assert tx.user_id == user.id
+    assert tx.awarded_points == 15  # 10 base + 5 daily first-task bonus
 
-    # Verify Original Task Definition Unchanged
-    # The task definition should still be assigned to Role Parent
-    original_task = db.query(models.Task).filter(
-        models.Task.id == task.id
-    ).first()
-    assert original_task.assigned_role_id == role_p.id
+
+def test_user_cannot_complete_another_users_task(db_session):
+    import uuid
+
+    uid = str(uuid.uuid4())[:8]
+    role_p = _make_role(db_session, f"Parent2_{uid}", 1.0)
+    role_t = _make_role(db_session, f"Teen2_{uid}", 1.5)
+
+    user_p = _make_user(db_session, f"Dad2_{uid}", role_p.id)
+    user_t = _make_user(db_session, f"Son2_{uid}", role_t.id)
+
+    task = crud.create_task(
+        db_session,
+        schemas.TaskCreate(
+            name=f"HeavyLifting_{uid}",
+            description="Lift things",
+            base_points=10,
+            assigned_role_id=role_p.id,
+            schedule_type="daily",
+            default_due_time="12:00",
+        ),
+    )
+
+    # Instance assigned to parent
+    instance = _make_instance(db_session, task.id, user_p.id)
+
+    with pytest.raises(AuthorizationError):
+        tasks_service.complete_task_instance(
+            db_session, instance_id=instance.id, actual_user_id=user_t.id
+        )
