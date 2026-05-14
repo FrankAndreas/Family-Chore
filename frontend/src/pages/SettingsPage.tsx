@@ -1,21 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../components/LanguageSwitcher';
-import { useOutletContext } from 'react-router-dom';
+import { useUser } from '../context/UserContext';
 import { useNotifications } from '../context/NotificationContext';
 import { updateUser } from '../api';
 import Toast from '../components/Toast';
 import { useToast } from '../hooks/useToast';
-import type { User } from '../types';
-import '../styles/SharedDashboard.css';
 
-interface ContextType {
-    currentUser: User | null;
-}
+import '../styles/SharedDashboard.css';
 
 const SettingsPage: React.FC = () => {
     const { t } = useTranslation();
-    const { currentUser } = useOutletContext<ContextType>();
+    const { currentUser } = useUser();
     const { isPushSupported, pushSubscribed, subscribeToPush, unsubscribeFromPush } = useNotifications();
     const { toasts, removeToast, success, error: showError } = useToast();
 

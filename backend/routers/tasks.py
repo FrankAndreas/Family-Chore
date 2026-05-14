@@ -5,6 +5,7 @@ from typing import List
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, File, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from sqlalchemy.orm import Session
 
 from .. import schemas, crud, models
@@ -17,6 +18,12 @@ from ..notifications_service import send_email_background, send_push_to_user_bac
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["Tasks"])
+
+
+def _write_chunk(path: str, chunk: bytes, append: bool = True):
+    mode = "ab" if append else "wb"
+    with open(path, mode) as f:
+        f.write(chunk)
 
 
 @router.post("/tasks/", response_model=schemas.Task, dependencies=[Depends(get_current_admin_user)])
@@ -184,19 +191,20 @@ async def upload_task_photo(instance_id: int, file: UploadFile = File(...), db: 
     unique_filename = f"{uuid.uuid4().hex}.{file_extension}"
     file_path = os.path.join("uploads", unique_filename)
 
-    # S3: Enforce max upload size while streaming chunks
+    # S3: Enforce max upload size while streaming chunks without blocking event loop
     total_size = 0
-    with open(file_path, "wb") as buffer:
-        while content := await file.read(1024 * 1024):  # Read 1MB chunks
-            total_size += len(content)
-            if total_size > MAX_UPLOAD_SIZE:
-                buffer.close()
-                os.remove(file_path)
-                raise HTTPException(
-                    status_code=413,
-                    detail=f"File too large. Maximum upload size is {MAX_UPLOAD_SIZE // (1024 * 1024)} MB."
-                )
-            buffer.write(content)
+    # Create empty file first
+    await run_in_threadpool(_write_chunk, file_path, b"", False)
+
+    while content := await file.read(1024 * 1024):  # Read 1MB chunks
+        total_size += len(content)
+        if total_size > MAX_UPLOAD_SIZE:
+            await run_in_threadpool(os.remove, file_path)
+            raise HTTPException(
+                status_code=413,
+                detail=f"File too large. Maximum upload size is {MAX_UPLOAD_SIZE // (1024 * 1024)} MB."
+            )
+        await run_in_threadpool(_write_chunk, file_path, content, True)
 
     # Set completion_photo_url to the newly served path
     instance.completion_photo_url = f"/uploads/{unique_filename}"

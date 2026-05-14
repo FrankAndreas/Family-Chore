@@ -131,8 +131,13 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We h
 - **PEP8 & Type Checking**: Resolved unused import violations and corrected `Any` type casting in `backend/security.py` to achieve fully green `flake8` and `mypy` test runs.
 - **Environment**: Documented the necessity of using `--break-system-packages` for local pip test installation on strict Python 3.14 environments. 
 
+## 🔄 Recent Changes (2026-05-14 Backend Architecture Debt Fixes)
+- **Non-Blocking I/O**: Refactored `upload_task_photo` and `/backups/run` endpoints. `upload_task_photo` now offloads file writes to a thread pool via `run_in_threadpool`, and backups are queued gracefully via `BackgroundTasks`. This eliminates severe event loop blocking previously caused by expensive disk operations on the main execution thread.
+- **N+1 SQL Queries Remediation**: Rewrote SQLAlchemy task queries in `crud.py` to utilize `.options(joinedload(...))` eager fetching. Nested task and user dependencies are now dynamically assembled in a single SQL operation, dramatically cutting down latency.
+- **Pydantic Configuration Refactor**: Stripped all disparate `os.getenv` environment parsing instances scattered across `main.py`, `database.py`, and `notifications_service.py`. A centralized, robust schema is now utilized via the `pydantic-settings` module, enforcing fallback policies consistently and improving code cleanliness. Secure `.env` auto-generation via `security.py` safely remains untouched.
+
 ## 📍 System State
-- **Backend**: Port 8000. **183 tests passed**. Flake8 and Mypy clean. Schema v1.9 tracked via Alembic. All services decoupled.
+- **Backend**: Port 8000. **183 tests passed**. Flake8 and Mypy clean. Schema v1.9 tracked via Alembic. All services decoupled. Event loops strictly unblocked.
 - **Frontend**: Port 8080 (Docker), 5173 (local). ESLint clean. TypeScript clean. Fully internationalized (EN/DE). Enhanced WCAG 2.1 compliance.
 - **Docker**: Secure PostgreSQL + FastAPI configuration operational.
 
@@ -158,10 +163,11 @@ The project is a **Family Chore Gamification System** (Universal-GSD-Core). We h
 - All P0–P4 priority UX fixes ✅ Resolved
 - All 🟡 Medium UX fixes ✅ Resolved
 - All 🟢 Low UX fixes ✅ Resolved
+- Backend Performance bottleneck remediations ✅ Resolved
 - **🎉 UX Review fully complete**
 
 ---
 
 ## 🔜 Next Session Prompt
 > **Start a new conversation and say:**
-> "Review `STATE.md`. The UX review is fully complete (all 12 standards, all severity levels). Consider new features, performance optimization, or test coverage improvements."
+> "Review `STATE.md`. All frontend UX and top-priority backend architecture debts are resolved. Consider new features, deep frontend Vitest infrastructure tests, or overall performance optimization."

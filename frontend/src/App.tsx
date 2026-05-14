@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ToastProvider } from './context/ToastContext';
 import { NotificationProvider } from './context/NotificationContext';
+import { UserContext } from './context/UserContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import Login from './components/Login';
@@ -73,13 +74,14 @@ function App() {
               <Route path="*" element={<LoginRoute onLogin={handleLogin} />} />
             </Routes>
           ) : (
-            <NotificationProvider currentUser={currentUser}>
-              <Routes>
-                <Route path="/family-dashboard" element={<FamilyDashboardRoute />} />
-                <Route
-                  path="/"
-                  element={<DashboardLayout currentUser={currentUser} onLogout={handleLogout} refreshUser={refreshUser} />}
-                >
+            <UserContext.Provider value={{ currentUser, refreshUser, logout: handleLogout }}>
+              <NotificationProvider>
+                <Routes>
+                  <Route path="/family-dashboard" element={<FamilyDashboardRoute />} />
+                  <Route
+                    path="/"
+                    element={<DashboardLayout />}
+                  >
                   {/* Redirect root to appropriate dashboard */}
                   <Route
                     index
@@ -101,7 +103,8 @@ function App() {
                 {/* Catch all - 404 page */}
                 <Route path="*" element={<NotFoundPage />} />
               </Routes>
-            </NotificationProvider>
+              </NotificationProvider>
+            </UserContext.Provider>
           )}
         </BrowserRouter>
       </ErrorBoundary>

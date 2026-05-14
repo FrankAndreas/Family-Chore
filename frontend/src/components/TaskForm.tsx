@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Role } from '../types';
+import './TaskForm.css';
 
 export interface TaskFormData {
     name: string;
@@ -87,14 +88,14 @@ const TaskForm: React.FC<TaskFormProps> = ({
     };
 
     return (
-        <form onSubmit={handleSubmit} className="form-grid">
+        <form onSubmit={handleSubmit} className="form-grid task-form">
             <div className="form-group">
                 <label htmlFor="taskName">Task Name</label>
                 <input
                     id="taskName"
                     type="text"
                     value={formData.name}
-                    style={nameError ? { borderColor: '#ff4d4f' } : {}}
+                    className={nameError ? 'error-input' : ''}
                     onChange={(e) => {
                         onChange({ name: e.target.value });
                         if (nameError) setNameError('');
@@ -103,7 +104,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
                     required
                     placeholder="e.g. Wash Dishes"
                 />
-                {nameError && <small className="error-text" style={{ color: '#ff4d4f', marginTop: '4px', display: 'block' }}>{nameError}</small>}
+                {nameError && <small className="error-text">{nameError}</small>}
             </div>
             <div className="form-group">
                 <label htmlFor="taskDescription">Description</label>
@@ -111,7 +112,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
                     id="taskDescription"
                     type="text"
                     value={formData.description}
-                    style={descError ? { borderColor: '#ff4d4f' } : {}}
+                    className={descError ? 'error-input' : ''}
                     onChange={(e) => {
                         onChange({ description: e.target.value });
                         if (descError) setDescError('');
@@ -120,7 +121,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
                     required
                     placeholder="e.g. Load and start the dishwasher"
                 />
-                {descError && <small className="error-text" style={{ color: '#ff4d4f', marginTop: '4px', display: 'block' }}>{descError}</small>}
+                {descError && <small className="error-text">{descError}</small>}
             </div>
             <div className="form-group">
                 <label htmlFor="taskBasePoints">Base Points</label>
@@ -128,7 +129,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
                     id="taskBasePoints"
                     type="number"
                     value={formData.basePoints}
-                    style={pointsError ? { borderColor: '#ff4d4f' } : {}}
+                    className={pointsError ? 'error-input' : ''}
                     onChange={(e) => {
                         onChange({ basePoints: Number(e.target.value) });
                         if (pointsError) setPointsError('');
@@ -138,7 +139,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
                     max={1000}
                     required
                 />
-                {pointsError && <small className="error-text" style={{ color: '#ff4d4f', marginTop: '4px', display: 'block' }}>{pointsError}</small>}
+                {pointsError && <small className="error-text">{pointsError}</small>}
             </div>
             <div className="form-group">
                 <label>Assigned To</label>
@@ -156,7 +157,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
                         </option>
                     ))}
                 </select>
-                <small style={{ color: 'var(--text-secondary)', fontSize: 'var(--font-size-xs)' }}>
+                <small className="help-text">
                     Select "All Family Members" for tasks anyone can do
                 </small>
             </div>
@@ -183,7 +184,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
                     <option value="weekly">📆 Weekly - Task appears on specific weekday</option>
                     <option value="recurring">🔄 Recurring - Task with cooldown period</option>
                 </select>
-                <small style={{ color: 'var(--text-secondary)', fontSize: 'var(--font-size-xs)', marginTop: '0.25rem', display: 'block' }}>
+                <small className="help-text-block">
                     {formData.scheduleType === 'daily' && '⏰ Appears at the same time every day'}
                     {formData.scheduleType === 'weekly' && '🗓️ Appears once per week on chosen day'}
                     {formData.scheduleType === 'recurring' && '⏳ Reappears after cooldown period expires'}
@@ -192,33 +193,18 @@ const TaskForm: React.FC<TaskFormProps> = ({
 
             {formData.scheduleType === 'recurring' ? (
                 <>
-                    <div className="recurring-fields-container" style={{
-                        gridColumn: '1 / -1',
-                        padding: '1.5rem',
-                        background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1))',
-                        borderRadius: '12px',
-                        border: '1px solid rgba(139, 92, 246, 0.2)',
-                        marginTop: '0.5rem'
-                    }}>
-                        <h4 style={{
-                            margin: '0 0 1rem 0',
-                            color: 'var(--primary)',
-                            fontSize: '1rem',
-                            fontWeight: '600',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem'
-                        }}>
+                    <div className="recurring-fields-container">
+                        <h4 className="recurring-header">
                             🔄 Cooldown Settings
                         </h4>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                            <div className="form-group" style={{ margin: 0 }}>
+                        <div className="recurring-grid">
+                            <div className="form-group form-group-no-margin">
                                 <label>Minimum Days Between ⏱️</label>
                                 <input
                                     type="number"
                                     value={formData.recurrenceMinDays}
-                                    style={minDaysError ? { borderColor: '#ff4d4f' } : {}}
+                                    className={minDaysError ? 'error-input' : ''}
                                     onChange={(e) => {
                                         const val = Number(e.target.value);
                                         const updates: Partial<TaskFormData> = { recurrenceMinDays: val };
@@ -233,13 +219,13 @@ const TaskForm: React.FC<TaskFormProps> = ({
                                     max={365}
                                     required
                                 />
-                                {minDaysError && <small className="error-text" style={{ color: '#ff4d4f', marginTop: '4px', display: 'block' }}>{minDaysError}</small>}
-                                <small style={{ color: 'var(--text-secondary)', fontSize: 'var(--font-size-xs)' }}>
+                                {minDaysError && <small className="error-text">{minDaysError}</small>}
+                                <small className="help-text">
                                     Wait at least <strong>{formData.recurrenceMinDays}</strong> {t('tasks.days_count', { count: formData.recurrenceMinDays })} after completion
                                 </small>
                             </div>
 
-                            <div className="form-group" style={{ margin: 0 }}>
+                            <div className="form-group form-group-no-margin">
                                 <label>Maximum Days Between ⌛</label>
                                 <input
                                     type="number"
@@ -256,7 +242,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
                                     max={365}
                                     required
                                 />
-                                <small style={{ color: 'var(--text-secondary)', fontSize: 'var(--font-size-xs)' }}>
+                                <small className="help-text">
                                     Should be done within <strong>{formData.recurrenceMaxDays}</strong> {t('tasks.days_count', { count: formData.recurrenceMaxDays })}
                                 </small>
                             </div>
@@ -288,13 +274,13 @@ const TaskForm: React.FC<TaskFormProps> = ({
                             <option value="Sunday">Sunday</option>
                         </select>
                     )}
-                    <small style={{ color: 'var(--text-secondary)', fontSize: 'var(--font-size-xs)' }}>
+                    <small className="help-text">
                         {formData.scheduleType === 'daily' ? 'When the task is due each day' : 'Which day of the week this task occurs'}
                     </small>
                 </div>
             )}
 
-            <div className="form-actions" style={{ gridColumn: '1 / -1' }}>
+            <div className="form-actions form-actions-full">
                 {onCancel && (
                     <button type="button" className="btn btn-secondary" onClick={onCancel}>
                         Cancel
@@ -305,7 +291,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
                 </button>
             </div>
 
-            {error && <div className="error-message" style={{ gridColumn: '1 / -1' }}>{error}</div>}
+            {error && <div className="error-message error-message-full">{error}</div>}
         </form>
     );
 };

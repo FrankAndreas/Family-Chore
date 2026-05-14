@@ -580,5 +580,14 @@ This file captures accumulated knowledge from development sessions. The Libraria
 - **Test Alignment**: When a "God Object" (like `crud.py`) is decoupled into domain-specific services, the legacy tests inevitably break with `AttributeError`. A methodical update to test imports and calls is required before considering a refactor complete.
 - **Python 3.14 Constraints**: The `externally-managed-environment` rule via PEP 668 restricts global pip installations on modern Linux distributions. Bypassing this with `--break-system-packages` is viable for localized CI execution logic, but container-based isolation or `pipx` is the standard for production.
 
+## 📅 2026-05-14: Backend Architecture & Performance Remediation
+
+### Session Context
+- **Event Loop Blocking**: Identifying disk I/O blocks inside `async def` routes is critical for performance at scale. Replacing standard `open()` writes with `run_in_threadpool` prevents chunk uploads from halting parallel requests.
+- **N+1 SQLAlchemy Resolvers**: When Pydantic schemas serialize related components (e.g. `TaskInstance` serializing `.task` and `.user`), failing to pre-join via `joinedload` causes sequential `SELECT` firing per loop iteration. Eager loading completely mitigates this.
+- **Pydantic Settings Refactor**: Migrating from scattered `os.getenv` into a structured `BaseSettings` object enforces safety nets and allows unified type parsing at boot, ensuring all edge cases are handled before FastAPI boots.
+
 ### Gotchas
-- **Mypy strictness**: Even standard library abstractions like `jwt.decode` returning `Any` will fail strict static type validation if the function contract specifies `Dict[str, Any]`. Use `cast(Dict[str, Any], ...)` explicitly to pass `mypy`.
+- **Pydantic Settings vs Standalone Fallbacks**: When transitioning configuration logic, default hardcoded parameters inside `BaseSettings` (like `JWT_SECRET_KEY = "your-secret-key"`) can destructively overwrite or bypass pre-existing standalone `.env` key-generation flows (such as `security.py`). Never inject fallback parameters inside settings if external mechanisms independently manage those credentials.
+- **Test Environments**: Verifying asynchronous background task modifications (like `/backups/run`) is trivially achieved locally via the FastAPI `TestClient`, which safely emulates full HTTP interactions against decoupled routes.
+

@@ -1,4 +1,4 @@
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
 from contextlib import asynccontextmanager
@@ -7,6 +7,7 @@ import asyncio
 import json
 import os
 from apscheduler.schedulers.background import BackgroundScheduler
+from .config import settings
 from apscheduler.triggers.cron import CronTrigger
 
 from sqlalchemy import inspect
@@ -105,7 +106,7 @@ def run_backup_job():
 async def lifespan(app: FastAPI):
     # --- Startup ---
     # 1. Run migrations first to ensure schema is up-to-date (unless running tests)
-    if os.getenv("TESTING") != "True":
+    if settings.TESTING != "True":
         alembic_cfg = Config("backend/alembic.ini")
 
         # Check if we need to stamp (backwards compatibility for existing SQLite)
@@ -211,7 +212,7 @@ async def domain_error_handler(request: Request, exc: DomainError):
     )
 
 # M1: Retrieve CORS internal network origins from environment or default to local Vite/React servers
-cors_origins_env = os.environ.get("CORS_ORIGINS", "")
+cors_origins_env = settings.CORS_ORIGINS
 if cors_origins_env:
     allow_origins = [origin.strip() for origin in cors_origins_env.split(",") if origin.strip()]
 else:
@@ -257,10 +258,10 @@ app.include_router(notif_router.router)
 
 
 @app.post("/backups/run", tags=["System"], dependencies=[Depends(get_current_admin_user)])
-def trigger_manual_backup():
+def trigger_manual_backup(background_tasks: BackgroundTasks):
     """Manually trigger a backup in the background."""
-    run_backup_job()
-    return {"status": "Backup completed"}
+    background_tasks.add_task(run_backup_job)
+    return {"status": "Backup queued in background"}
 
 
 # --- SSE Endpoint ---

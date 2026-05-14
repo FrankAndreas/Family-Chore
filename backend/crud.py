@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from datetime import datetime, timezone
 from typing import Optional, List
 from . import models, schemas, security
@@ -183,7 +183,10 @@ def get_user_daily_tasks(
         minute=0,
         second=0,
         microsecond=0)
-    return db.query(models.TaskInstance).filter(
+    return db.query(models.TaskInstance).options(
+        joinedload(models.TaskInstance.task),
+        joinedload(models.TaskInstance.user)
+    ).filter(
         models.TaskInstance.user_id == user_id,
         models.TaskInstance.due_time >= start_of_day,
         models.TaskInstance.status == "PENDING"  # Only show pending tasks
@@ -198,7 +201,10 @@ def get_all_pending_tasks(db: Session) -> List[models.TaskInstance]:
         minute=0,
         second=0,
         microsecond=0)
-    return db.query(models.TaskInstance).filter(
+    return db.query(models.TaskInstance).options(
+        joinedload(models.TaskInstance.task),
+        joinedload(models.TaskInstance.user)
+    ).filter(
         models.TaskInstance.due_time >= start_of_day,
         models.TaskInstance.status == "PENDING"
     ).all()
@@ -206,8 +212,12 @@ def get_all_pending_tasks(db: Session) -> List[models.TaskInstance]:
 
 def get_review_queue(db: Session) -> List[models.TaskInstance]:
     """Get all tasks currently waiting for admin review."""
-    return db.query(models.TaskInstance).filter(
-        models.TaskInstance.status == "IN_REVIEW").all()
+    return db.query(models.TaskInstance).options(
+        joinedload(models.TaskInstance.task),
+        joinedload(models.TaskInstance.user)
+    ).filter(
+        models.TaskInstance.status == "IN_REVIEW"
+    ).all()
 
 # --- Reward CRUD ---
 

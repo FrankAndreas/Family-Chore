@@ -1,0 +1,55 @@
+.task-form .error-input {
+    border-color: var(--error, #e53e3e);
+}
+
+.task-form .error-text {
+    color: var(--error, #e53e3e);
+    margin-top: 4px;
+    display: block;
+}
+
+.task-form .help-text {
+    color: var(--text-secondary);
+    font-size: var(--font-size-xs);
+}
+
+.task-form .help-text-block {
+    color: var(--text-secondary);
+    font-size: var(--font-size-xs);
+    margin-top: 0.25rem;
+    display: block;
+}
+
+.task-form .recurring-fields-container {
+    grid-column: 1 / -1;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1));
+    border-radius: 12px;
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    margin-top: 0.5rem;
+}
+
+.task-form .recurring-header {
+    margin: 0 0 1rem 0;
+    color: var(--primary);
+    font-size: 1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.task-form .recurring-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.task-form .form-group-no-margin {
+    margin: 0;
+}
+
+.task-form .form-actions-full,
+.task-form .error-message-full {
+    grid-column: 1 / -1;
+}

@@ -3,8 +3,9 @@ import {
     getUserNotifications, markNotificationRead, markAllNotificationsRead,
     getVapidPublicKey, subscribePush, unsubscribePush
 } from '../api';
-import type { Notification, User } from '../types';
+import type { Notification } from '../types';
 import { useToast } from './ToastContext';
+import { useUser } from './UserContext';
 
 // Helper to convert VAPID key
 function urlBase64ToUint8Array(base64String: string) {
@@ -37,10 +38,10 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 interface NotificationProviderProps {
     children: ReactNode;
-    currentUser: User | null;
 }
 
-export const NotificationProvider: React.FC<NotificationProviderProps> = ({ children, currentUser }) => {
+export const NotificationProvider: React.FC<NotificationProviderProps> = ({ children }) => {
+    const { currentUser } = useUser();
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [isPushSupported, setIsPushSupported] = useState(false);
     const [pushSubscribed, setPushSubscribed] = useState(false);

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { useUser } from '../../context/UserContext';
 import { useTranslation, Trans } from 'react-i18next';
 import { getRewards, createReward, setUserGoal, redeemReward, updateReward, deleteReward } from '../../api';
-import type { Reward, User } from '../../types';
+import type { Reward } from '../../types';
 import { TIER_THRESHOLDS } from '../../constants';
 import { triggerConfetti } from '../../utils/confetti';
 import { SkeletonLoader } from '../../components/SkeletonLoader';
@@ -19,13 +19,8 @@ import RewardCard from './RewardHub/RewardCard';
 import RewardForm from './RewardHub/RewardForm';
 import type { RewardFormData } from './RewardHub/RewardForm';
 
-interface DashboardContext {
-    currentUser: User;
-    refreshUser: () => Promise<void>;
-}
-
 const RewardHub: React.FC = () => {
-    const { currentUser, refreshUser } = useOutletContext<DashboardContext>();
+    const { currentUser, refreshUser } = useUser();
     const { t } = useTranslation();
     const [rewards, setRewards] = useState<Reward[]>([]);
     const [loading, setLoading] = useState(true);

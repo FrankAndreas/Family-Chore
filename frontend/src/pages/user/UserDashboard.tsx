@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { useUser } from '../../context/UserContext';
 import { useTranslation } from 'react-i18next';
 import { getUserDailyTasks, completeTask, getTasks, getUserTransactions, uploadTaskPhoto } from '../../api';
-import type { TaskInstance, Task, User, Transaction, TransactionFilters } from '../../types';
+import type { TaskInstance, Task, Transaction, TransactionFilters } from '../../types';
 import { SkeletonLoader } from '../../components/SkeletonLoader';
 import PhotoDropzone from '../../components/PhotoDropzone';
 import Toast from '../../components/Toast';
@@ -11,11 +11,6 @@ import { useDebounce } from '../../hooks/useDebounce';
 import { useSwipeTabs } from '../../hooks/useSwipeTabs';
 import '../../styles/SharedDashboard.css';
 import './UserDashboard.css';
-
-interface DashboardContext {
-    currentUser: User;
-    refreshUser: () => Promise<void>;
-}
 
 // Extended TaskInstance with task details
 interface TaskInstanceWithDetails extends TaskInstance {
@@ -26,7 +21,7 @@ interface TaskInstanceWithDetails extends TaskInstance {
 
 const UserDashboard: React.FC = () => {
     const { t } = useTranslation();
-    const { currentUser, refreshUser } = useOutletContext<DashboardContext>();
+    const { currentUser, refreshUser } = useUser();
     const [tasks, setTasks] = useState<TaskInstanceWithDetails[]>([]);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loading, setLoading] = useState(true);

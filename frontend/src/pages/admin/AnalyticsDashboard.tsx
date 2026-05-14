@@ -1,13 +1,13 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useOutletContext, Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
+import { useUser } from '../../context/UserContext';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
     PieChart, Pie, Cell
 } from 'recharts';
 import type { WeeklyStats, DistributionStat, HeatmapResponse, AnalyticsSummary } from '../../api';
 import { getWeeklyStats, getPointsDistribution, getHeatmapData, getAnalyticsSummary } from '../../api';
-import type { User } from '../../types';
 import { SkeletonLoader } from '../../components/SkeletonLoader';
 import { useToast } from '../../hooks/useToast';
 import Toast from '../../components/Toast';
@@ -18,13 +18,9 @@ import './AnalyticsDashboard.css';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
-interface DashboardContext {
-    currentUser: User;
-}
-
 const AnalyticsDashboard: React.FC = () => {
     const { t } = useTranslation();
-    const { currentUser } = useOutletContext<DashboardContext>();
+    const { currentUser } = useUser();
     const [weeklyData, setWeeklyData] = useState<WeeklyStats[]>([]);
     const [distributionData, setDistributionData] = useState<DistributionStat[]>([]);
     const [heatmapData, setHeatmapData] = useState<HeatmapResponse | null>(null);

@@ -1,4 +1,3 @@
-import os
 import smtplib
 import logging
 import json
@@ -8,6 +7,7 @@ from email.message import EmailMessage
 from fastapi import BackgroundTasks
 from .database import SessionLocal
 from .services import notifications
+from .config import settings
 
 try:
     from pywebpush import webpush, WebPushException
@@ -18,13 +18,13 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 # Default config for SMTP/Resend
-SMTP_SERVER = os.getenv("SMTP_SERVER", "")
-SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
-SMTP_USERNAME = os.getenv("SMTP_USERNAME", "")
-SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
-DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "chorespec@example.com")
+SMTP_SERVER = settings.SMTP_SERVER
+SMTP_PORT = settings.SMTP_PORT
+SMTP_USERNAME = settings.SMTP_USERNAME
+SMTP_PASSWORD = settings.SMTP_PASSWORD
+DEFAULT_FROM_EMAIL = settings.DEFAULT_FROM_EMAIL
 
-VAPID_CLAIMS_EMAIL = os.getenv("VAPID_CLAIMS_EMAIL", "mailto:admin@example.com")
+VAPID_CLAIMS_EMAIL = settings.VAPID_CLAIMS_EMAIL
 
 # Resolve the backend directory (where .env and private_key.pem live)
 _BACKEND_DIR = Path(__file__).resolve().parent
@@ -77,8 +77,8 @@ def _generate_vapid_keys() -> tuple[str, str]:
 
 def _load_vapid_keys() -> tuple[str, str]:
     """Load VAPID keys from env vars, or auto-generate if missing."""
-    private_key = os.getenv("VAPID_PRIVATE_KEY", "")
-    public_key = os.getenv("VAPID_PUBLIC_KEY", "")
+    private_key = settings.VAPID_PRIVATE_KEY
+    public_key = settings.VAPID_PUBLIC_KEY
 
     if private_key and public_key:
         return private_key, public_key

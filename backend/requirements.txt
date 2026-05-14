@@ -2,6 +2,7 @@ fastapi
 uvicorn
 sqlalchemy
 pydantic
+pydantic-settings
 python-multipart
 passlib[bcrypt]>=1.7.4
 bcrypt>=4.0.0,<4.1  # Pin bcrypt: passlib 1.7.4 is incompatible with bcrypt >=4.1

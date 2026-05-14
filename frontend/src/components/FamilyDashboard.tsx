@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { completeTask, redeemRewardSplit } from '../api';
 import { useTranslation } from 'react-i18next';
 import type { TaskInstance, Reward } from '../types';
@@ -54,8 +54,7 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
         if (activeTab === "history") {
             refreshTransactions({}, true);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [activeTab]);
+    }, [activeTab, refreshTransactions]);
     const handleCompleteClick = (task: TaskInstance) => {
         setSelectedTask(task);
     };
@@ -99,12 +98,16 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
 
     // formatDate, getUserName, getAffordableRewards moved to sub-components
 
-    const groupedTasks = users.reduce((acc, user) => {
-        acc[user.id] = tasks.filter(t => t.user_id === user.id);
-        return acc;
-    }, {} as Record<number, TaskInstance[]>);
+    const groupedTasks = useMemo(() => {
+        return users.reduce((acc, user) => {
+            acc[user.id] = tasks.filter(t => t.user_id === user.id);
+            return acc;
+        }, {} as Record<number, TaskInstance[]>);
+    }, [users, tasks]);
 
-    const unknownTasks = tasks.filter(t => !users.find(u => u.id === t.user_id));
+    const unknownTasks = useMemo(() => {
+        return tasks.filter(t => !users.find(u => u.id === t.user_id));
+    }, [users, tasks]);
 
     if (loading) return (
         <div className="family-dashboard fade-in">

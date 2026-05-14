@@ -1,9 +1,8 @@
-import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
+from .config import settings
 
-SQLALCHEMY_DATABASE_URL = os.getenv(
-    "DATABASE_URL", "sqlite:///./chorespec_mvp.db")
+SQLALCHEMY_DATABASE_URL = settings.DATABASE_URL
 
 # Only add check_same_thread for SQLite
 connect_args = {}

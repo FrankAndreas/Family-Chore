@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import api from '../api';
 import type { Transaction } from '../types';
 
@@ -11,10 +11,16 @@ export function useTransactions() {
     const [hasMoreHistory, setHasMoreHistory] = useState(true);
     const [filters, setFilters] = useState<Record<string, unknown>>({});
 
+    const stateRef = useRef({ filters, historyPage });
+    useEffect(() => {
+        stateRef.current = { filters, historyPage };
+    }, [filters, historyPage]);
+
     const refreshTransactions = useCallback(async (newFilters = {}, reset = false) => {
-        const updatedFilters = { ...filters, ...newFilters };
+        const { filters: currentFilters, historyPage: currentPageState } = stateRef.current;
+        const updatedFilters = { ...currentFilters, ...newFilters };
         setFilters(updatedFilters);
-        const currentPage = reset ? 1 : historyPage;
+        const currentPage = reset ? 1 : currentPageState;
         if (reset) setHistoryPage(1);
 
         try {
@@ -35,7 +41,7 @@ export function useTransactions() {
         } catch (error) {
             console.error("Failed to refresh transactions", error);
         }
-    }, [filters, historyPage]);
+    }, []);
 
     const loadMoreHistory = useCallback(() => {
         setHistoryPage(prev => prev + 1);

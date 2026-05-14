@@ -1,20 +1,15 @@
 import React from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import type { User } from '../types';
+import { useUser } from '../context/UserContext';
 import './DashboardLayout.css';
 import { NotificationCenter } from '../components/NotificationCenter';
 import { useNotifications } from '../context/NotificationContext';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import Modal from '../components/Modal';
 
-interface DashboardLayoutProps {
-    currentUser: User;
-    onLogout: () => void;
-    refreshUser: () => Promise<void>;
-}
-
-const DashboardLayout: React.FC<DashboardLayoutProps> = ({ currentUser, onLogout, refreshUser }) => {
+const DashboardLayout: React.FC = () => {
+    const { currentUser, logout: onLogout } = useUser();
     const navigate = useNavigate();
     const location = useLocation();
     const { t } = useTranslation();
@@ -239,7 +234,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ currentUser, onLogout
                         </ol>
                     </nav>
                 )}
-                <Outlet context={{ currentUser, refreshUser }} />
+                <Outlet />
             </main>
 
             {showShortcutsHelp && (
