@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
@@ -38,7 +38,7 @@ def get_weekly_activity(db: Session = Depends(get_db)):
         ...
     ]
     """
-    today = datetime.now().date()
+    today = datetime.now(timezone.utc).date()
     seven_days_ago = today - timedelta(days=6)
 
     # Query completed tasks in the last 7 days
@@ -109,7 +109,7 @@ def get_heatmap_data(
     """
     Returns per-user, per-day task completion counts for heatmap visualisation.
     """
-    today = datetime.now().date()
+    today = datetime.now(timezone.utc).date()
     start_date = today - timedelta(days=days - 1)
 
     # Pre-build date range
@@ -157,7 +157,7 @@ def get_analytics_summary(db: Session = Depends(get_db)) -> AnalyticsSummary:
     """
     Returns aggregated summary stats: total tasks this week, top performer, and streaks.
     """
-    today = datetime.now().date()
+    today = datetime.now(timezone.utc).date()
     week_start = today - timedelta(days=6)
 
     # Total completed tasks this week

@@ -143,14 +143,16 @@ def send_email_background(background_tasks: BackgroundTasks, to_email: str, subj
     background_tasks.add_task(send_email_sync, to_email, subject, body)
 
 
-def send_push_sync(subscription_info: dict, payload: dict):
+def send_push_sync(subscription_info: dict, payload: dict) -> bool:
+    """Send a push notification. Returns True on success, False on failure.
+    Returns None if the subscription is gone (410) so callers can clean up."""
     if not webpush:
         logger.error("pywebpush not installed. Cannot send push.")
-        return
+        return False
 
     if not VAPID_PRIVATE_KEY or not VAPID_PUBLIC_KEY:
         logger.info(f"[MOCK PUSH] To: {subscription_info.get('endpoint')} | Payload: {payload}")
-        return
+        return True
 
     try:
         webpush(
@@ -160,11 +162,12 @@ def send_push_sync(subscription_info: dict, payload: dict):
             vapid_claims={"sub": VAPID_CLAIMS_EMAIL}
         )
         logger.info(f"Successfully sent push notification to {subscription_info.get('endpoint')}")
+        return True
     except WebPushException as ex:
         logger.error(f"Failed to send push: {ex}")
         if ex.response and ex.response.status_code == 410:
-            logger.info("Subscription expired/removed. Should delete from DB.")
-            # In a production app, we would remove the sub from the DB here
+            return False  # Signal caller to delete this subscription
+        return False
 
 
 def send_push_to_user_sync(user_id: int, title: str, message: str, data: dict = None):
@@ -179,6 +182,7 @@ def send_push_to_user_sync(user_id: int, title: str, message: str, data: dict = 
             "body": message,
             "data": data or {}
         }
+        stale_endpoints = []
         for sub in subs:
             sub_info = {
                 "endpoint": sub.endpoint,
@@ -187,7 +191,13 @@ def send_push_to_user_sync(user_id: int, title: str, message: str, data: dict = 
                     "p256dh": sub.p256dh
                 }
             }
-            send_push_sync(sub_info, payload)
+            success = send_push_sync(sub_info, payload)
+            if not success:
+                stale_endpoints.append(str(sub.endpoint))
+
+        for endpoint in stale_endpoints:
+            notifications.delete_push_subscription(db, endpoint)
+            logger.info(f"Removed stale push subscription: {endpoint}")
     finally:
         db.close()
 

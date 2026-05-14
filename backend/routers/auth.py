@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy.orm import Session
 import logging
 
 from .. import schemas, crud, security
 from ..database import get_db
+from ..rate_limiter import limiter
 
 logger = logging.getLogger(__name__)
 
@@ -11,7 +12,8 @@ router = APIRouter(tags=["Auth"])
 
 
 @router.post("/login/", response_model=schemas.Token)
-def login(user_credentials: schemas.UserLogin, response: Response, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def login(request: Request, user_credentials: schemas.UserLogin, response: Response, db: Session = Depends(get_db)):
     logger.info(f"Login attempt for user: {user_credentials.nickname}")
     user = crud.get_user_by_nickname(db, nickname=user_credentials.nickname)
     if not user:

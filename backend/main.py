@@ -9,6 +9,9 @@ import os
 from apscheduler.schedulers.background import BackgroundScheduler
 from .config import settings
 from apscheduler.triggers.cron import CronTrigger
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from .rate_limiter import limiter
 
 from sqlalchemy import inspect
 from alembic.config import Config
@@ -202,6 +205,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="ChoreSpec MVP", lifespan=lifespan)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
 
 
 @app.exception_handler(DomainError)

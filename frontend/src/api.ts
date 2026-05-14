@@ -2,6 +2,20 @@ import axios from 'axios';
 
 import type { LoginResponse, User } from './types';
 
+// ── In-memory token store ───────────────────────────────────────
+// Kept in module scope (not localStorage) so XSS cannot read it.
+// The httpOnly cookie handles all axios requests automatically via
+// withCredentials; this variable is only needed for the SSE URL.
+let _authToken: string | null = null;
+
+export function setAuthToken(token: string | null): void {
+    _authToken = token;
+}
+
+export function getAuthToken(): string | null {
+    return _authToken;
+}
+
 // ── Force-logout callback (registered by App.tsx) ──────────────
 // Allows the axios interceptor to signal the React tree on 401,
 // replacing window.location.reload() with a clean state transition.
@@ -20,17 +34,6 @@ const api = axios.create({
     withCredentials: true,
 });
 
-// Add request interceptor to inject JWT
-api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('auth_token');
-    if (token && config.headers) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-}, (error) => {
-    return Promise.reject(error);
-});
-
 // Extend AxiosRequestConfig to support skipAuthRedirect flag
 declare module 'axios' {
     interface AxiosRequestConfig {
@@ -47,7 +50,7 @@ api.interceptors.response.use(
             const skipRedirect = error.config?.skipAuthRedirect || error.config?.url?.includes('/login');
             if (!skipRedirect) {
                 localStorage.removeItem('user');
-                localStorage.removeItem('auth_token');
+                setAuthToken(null);
                 // Signal the React tree to clear auth state and show Login
                 if (_forceLogoutCallback) {
                     _forceLogoutCallback();
