@@ -37,7 +37,7 @@ def _compress_and_save(buf: io.BytesIO, path: str, max_dim: int = MAX_THUMBNAIL_
     """Resize and convert image to WebP. Runs in a threadpool to avoid blocking the event loop."""
     with Image.open(buf) as img:
         img = img.convert("RGB")  # Normalises RGBA, palette, and CMYK to 3-channel
-        img.thumbnail((max_dim, max_dim), Image.LANCZOS)
+        img.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
         img.save(path, format="WEBP", quality=82, optimize=True)
 
 
