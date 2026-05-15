@@ -11,7 +11,8 @@ def complete_task_instance(
     db: Session,
     instance_id: int,
     actual_user_id: int,
-    current_time: Optional[datetime] = None
+    current_time: Optional[datetime] = None,
+    skip_ownership_check: bool = False,
 ) -> schemas.TaskInstance:
     instance = db.query(models.TaskInstance).filter(
         models.TaskInstance.id == instance_id).first()
@@ -21,7 +22,7 @@ def complete_task_instance(
     if instance.status == "COMPLETED":
         return schemas.TaskInstance.model_validate(instance)  # Already done
 
-    if instance.user_id != actual_user_id:
+    if not skip_ownership_check and instance.user_id != actual_user_id:
         from ..exceptions import AuthorizationError
         raise AuthorizationError("You can only complete tasks assigned to you")
 

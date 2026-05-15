@@ -2,7 +2,7 @@ import io
 import os
 import uuid
 
-from typing import List
+from typing import List, Optional
 import logging
 
 from PIL import Image, UnidentifiedImageError
@@ -114,24 +114,34 @@ def read_all_pending_tasks(db: Session = Depends(get_db)):
 async def complete_task(
     instance_id: int,
     background_tasks: BackgroundTasks,
+    actual_user_id: Optional[int] = None,
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     logger.info(
         f"Attempting to complete task instance: {instance_id} by user {current_user.id}")
 
-    # Pre-fetch task name for notification messages (before DTO conversion loses ORM access)
     orm_instance = db.query(models.TaskInstance).filter(
         models.TaskInstance.id == instance_id).first()
-    task_name = orm_instance.task.name if orm_instance and orm_instance.task else "Unknown"
+    if not orm_instance:
+        raise HTTPException(status_code=404, detail="Task instance not found")
 
-    # Admins may complete any task on behalf of the assigned user.
-    # Non-admins are restricted to their own tasks (enforced in the service).
+    task_name = orm_instance.task.name if orm_instance.task else "Unknown"
     user_is_admin = is_admin(current_user)
-    completing_user_id = int(orm_instance.user_id) if user_is_admin and orm_instance else int(current_user.id)
+
+    if user_is_admin:
+        # Admin: honour an explicit actual_user_id override (FamilyDashboard ClaimModal),
+        # otherwise default to the task's assigned user.
+        completing_user_id = actual_user_id if actual_user_id is not None else int(orm_instance.user_id)
+    else:
+        # Non-admin: can only complete tasks assigned to themselves.
+        if int(orm_instance.user_id) != int(current_user.id):
+            raise HTTPException(status_code=403, detail="Not authorized to complete this task")
+        completing_user_id = int(current_user.id)
 
     instance = tasks_service.complete_task_instance(
-        db, instance_id=instance_id, actual_user_id=completing_user_id)
+        db, instance_id=instance_id, actual_user_id=completing_user_id,
+        skip_ownership_check=user_is_admin)
 
     logger.info(
         f"Task completed successfully: instance {instance_id} by user {instance.user_id}")
