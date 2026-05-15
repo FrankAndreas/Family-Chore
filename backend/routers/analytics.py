@@ -218,6 +218,11 @@ def get_heatmap_day_details(
     Returns the list of completed tasks for a specific user on a specific date.
     Used when clicking a heatmap cell.
     """
+    try:
+        datetime.strptime(date, "%Y-%m-%d")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="date must be in YYYY-MM-DD format")
+
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")

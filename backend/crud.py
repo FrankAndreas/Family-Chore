@@ -26,7 +26,9 @@ def create_user(db: Session, user: schemas.UserCreate) -> models.User:
     db_user = models.User(
         nickname=user.nickname,
         login_pin=hashed_pin,
-        role_id=user.role_id
+        role_id=user.role_id,
+        email=user.email,
+        notifications_enabled=user.notifications_enabled,
     )
     db.add(db_user)
     db.commit()
@@ -364,7 +366,7 @@ def set_system_setting(db: Session, key: str, value: str,
 
 
 def update_user_language(db: Session, user_id: int,
-                         language: str) -> Optional[models.User]:
+                         language: Optional[str]) -> Optional[models.User]:
     """Update user's preferred language."""
     user = get_user(db, user_id)
     if user:

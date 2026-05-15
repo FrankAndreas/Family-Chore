@@ -191,7 +191,7 @@ def update_user_language(user_id: int, lang_update: schemas.UserLanguageUpdate,
     # Authorization: Only Admin or the user themselves
     require_self_or_admin(current_user, user_id)
     user = crud.update_user_language(
-        db, user_id=user_id, language=lang_update.preferred_language or "")
+        db, user_id=user_id, language=lang_update.preferred_language)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user

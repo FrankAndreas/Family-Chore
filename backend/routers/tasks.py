@@ -192,9 +192,13 @@ async def complete_task(
 
 
 @router.post("/tasks/{instance_id}/upload-photo",
-             response_model=schemas.TaskInstance,
-             dependencies=[Depends(get_current_user)])
-async def upload_task_photo(instance_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
+             response_model=schemas.TaskInstance)
+async def upload_task_photo(
+    instance_id: int,
+    file: UploadFile = File(...),
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     """Upload a photo for task verification using multipart/form-data.
 
     Accepts any image format supported by Pillow. The file is streamed into memory
@@ -207,6 +211,9 @@ async def upload_task_photo(instance_id: int, file: UploadFile = File(...), db: 
         models.TaskInstance.id == instance_id).first()
     if not instance:
         raise HTTPException(status_code=404, detail="Task instance not found")
+
+    if not is_admin(current_user) and int(instance.user_id) != int(current_user.id):
+        raise HTTPException(status_code=403, detail="Not authorized to upload photo for this task")
 
     if not file.content_type or not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="File must be an image")
