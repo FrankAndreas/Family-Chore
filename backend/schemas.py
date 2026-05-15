@@ -1,5 +1,5 @@
 from typing import Optional, List
-from pydantic import BaseModel, Field, field_validator, model_validator, ConfigDict
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator, ConfigDict
 from datetime import datetime, date
 
 # --- System Settings Schemas ---
@@ -63,7 +63,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     login_pin: str = Field(..., pattern=r'^\d{4}$', description="4-digit PIN")
-    email: Optional[str] = Field(None, description="User's email address")
+    email: Optional[EmailStr] = Field(None, description="User's email address")
     notifications_enabled: bool = Field(
         True, description="Whether notifications are enabled")
 
@@ -84,7 +84,7 @@ class UserUpdate(BaseModel):
     """Schema for updating user profile settings."""
     nickname: Optional[str] = None
     role_id: Optional[int] = None
-    email: Optional[str] = None
+    email: Optional[EmailStr] = None
     notifications_enabled: Optional[bool] = None
 
 

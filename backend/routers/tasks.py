@@ -99,6 +99,8 @@ def read_user_daily_tasks(
 
 @router.get("/tasks/pending", response_model=List[schemas.TaskInstance], dependencies=[Depends(get_current_user)])
 def read_all_pending_tasks(db: Session = Depends(get_db)):
+    """Return all pending tasks across users — intentionally open to all authenticated
+    users so the Family Dashboard can display the family-wide task feed."""
     return crud.get_all_pending_tasks(db)
 
 
