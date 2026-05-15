@@ -49,6 +49,9 @@ def set_user_goal(user_id: int, reward_id: int,
                   db: Session = Depends(get_db)):
     # Authorization: Only Admin or the user themselves can set their goal
     require_self_or_admin(current_user, user_id)
+    # Validate reward first so we get a distinct 404 vs. user not found
+    if not crud.get_reward(db, reward_id):
+        raise HTTPException(status_code=404, detail="Reward not found")
     user = crud.set_user_goal(db, user_id=user_id, reward_id=reward_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")

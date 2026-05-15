@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 
 from ..database import get_db
@@ -88,7 +88,7 @@ def get_points_distribution(db: Session = Depends(get_db)):
     Returns the distribution of lifetime points among all users.
     Useful for 'Fairness' pie charts.
     """
-    users = db.query(User).all()
+    users = db.query(User).options(joinedload(User.role)).all()
 
     distribution = []
     for user in users:

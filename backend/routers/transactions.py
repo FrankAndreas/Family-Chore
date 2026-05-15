@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from .. import schemas, crud, models
 from ..database import get_db
-from ..dependencies import get_current_user, require_self_or_admin
+from ..dependencies import get_current_user, get_current_admin_user, require_self_or_admin
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ def read_user_transactions(
     )
 
 
-@router.get("/transactions", response_model=List[schemas.Transaction], dependencies=[Depends(get_current_user)])
+@router.get("/transactions", response_model=List[schemas.Transaction], dependencies=[Depends(get_current_admin_user)])
 def read_all_transactions(
     skip: int = 0,
     limit: int = 100,

@@ -271,6 +271,9 @@ def delete_reward(db: Session, reward_id: int) -> bool:
 
 def set_user_goal(db: Session, user_id: int,
                   reward_id: int) -> Optional[models.User]:
+    reward = db.query(models.Reward).filter(models.Reward.id == reward_id).first()
+    if not reward:
+        return None
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if user:
         user.current_goal_reward_id = reward_id

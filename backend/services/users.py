@@ -17,8 +17,8 @@ def apply_penalty(
     if not user:
         raise UserNotFoundError()
 
-    # Deduct points (can be negative)
-    user.current_points -= penalty.points
+    new_points = int(user.current_points) - penalty.points
+    user.current_points = new_points if new_points > 0 else 0
     now_dt = current_time or datetime.now(timezone.utc)
 
     # Create transaction

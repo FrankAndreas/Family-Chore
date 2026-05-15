@@ -263,10 +263,10 @@ class TestPenalty:
         # Act
         result = users_service.apply_penalty(seeded_db, user.id, penalty_req)
 
-        # Assert
+        # Assert — points are clamped to 0; users cannot go negative
         assert result.success is True
-        assert result.remaining_points == -10
+        assert result.remaining_points == 0
 
         seeded_db.refresh(user)
-        assert user.current_points == -10
+        assert user.current_points == 0
         assert user.lifetime_points == 10
