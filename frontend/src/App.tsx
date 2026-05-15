@@ -11,6 +11,7 @@ import NotFoundPage from './pages/NotFoundPage';
 import { SkeletonLoader } from './components/SkeletonLoader';
 import type { User } from './types';
 import { getUsers, registerForceLogout, setAuthToken } from './api';
+import { ADMIN_ROLE_NAME } from './constants';
 import './App.css';
 import './index.css';
 
@@ -96,7 +97,7 @@ function App() {
                     {/* Redirect root to appropriate dashboard */}
                     <Route
                       index
-                      element={<Navigate to={currentUser.role.name === 'Admin' ? '/admin' : '/dashboard'} replace />}
+                      element={<Navigate to={currentUser.role.name === ADMIN_ROLE_NAME ? '/admin' : '/dashboard'} replace />}
                     />
 
                     {/* Admin Routes */}

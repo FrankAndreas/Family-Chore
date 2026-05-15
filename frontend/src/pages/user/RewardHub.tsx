@@ -3,7 +3,7 @@ import { useUser } from '../../context/UserContext';
 import { useTranslation, Trans } from 'react-i18next';
 import { getRewards, createReward, setUserGoal, redeemReward, updateReward, deleteReward } from '../../api';
 import type { Reward } from '../../types';
-import { TIER_THRESHOLDS } from '../../constants';
+import { TIER_THRESHOLDS, ADMIN_ROLE_NAME } from '../../constants';
 import { triggerConfetti } from '../../utils/confetti';
 import { SkeletonLoader } from '../../components/SkeletonLoader';
 import Modal from '../../components/Modal';
@@ -192,7 +192,7 @@ const RewardHub: React.FC = () => {
     };
 
     const tierStats = getTierProgress();
-    const isAdmin = currentUser.role.name === 'Admin';
+    const isAdmin = currentUser.role.name === ADMIN_ROLE_NAME;
 
     // Celebration Logic: trigger if points increase across a threshold
     const prevPoints = React.useRef(currentUser.lifetime_points);
@@ -354,7 +354,7 @@ const RewardHub: React.FC = () => {
                         <Trans i18nKey="rewards.subtitle" values={{ points: currentUser.current_points }} components={{ 1: <strong /> }} />
                     </p>
                 </div>
-                {currentUser.role.name === 'Admin' && (
+                {currentUser.role.name === ADMIN_ROLE_NAME && (
                     <button
                         className="btn btn-primary"
                         onClick={() => setShowCreateForm(!showCreateForm)}
@@ -398,7 +398,7 @@ const RewardHub: React.FC = () => {
                 <div className="empty-state">
                     <div className="empty-state-icon">🎁</div>
                     <h3>No Rewards Available</h3>
-                    <p>{t('rewards.empty_state.message')} {currentUser.role.name === 'Admin' && t('rewards.empty_state.admin_hint')}</p>
+                    <p>{t('rewards.empty_state.message')} {currentUser.role.name === ADMIN_ROLE_NAME && t('rewards.empty_state.admin_hint')}</p>
                 </div>
             )}
 

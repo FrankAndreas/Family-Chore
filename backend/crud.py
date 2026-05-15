@@ -31,9 +31,6 @@ def create_user(db: Session, user: schemas.UserCreate) -> models.User:
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
-    # Re-query to ensure relationships are loaded
-    db_user = db.query(models.User).filter(
-        models.User.id == db_user.id).first()
     return db_user
 
 

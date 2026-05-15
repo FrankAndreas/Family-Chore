@@ -1,3 +1,5 @@
+export const ADMIN_ROLE_NAME = 'Admin';
+
 export const TIER_THRESHOLDS = {
     BRONZE: 0,
     SILVER: 300,

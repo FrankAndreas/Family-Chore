@@ -5,6 +5,7 @@ import { useUser } from '../context/UserContext';
 import { useNotifications } from '../context/NotificationContext';
 import { updateUser } from '../api';
 import { useToast } from '../context/ToastContext';
+import { ADMIN_ROLE_NAME } from '../constants';
 
 import '../styles/SharedDashboard.css';
 
@@ -57,7 +58,7 @@ const SettingsPage: React.FC = () => {
                 <div className="section">
                     <LanguageSwitcher
                         userId={currentUser?.id}
-                        isAdmin={currentUser?.role.name === 'Admin'}
+                        isAdmin={currentUser?.role.name === ADMIN_ROLE_NAME}
                     />
                 </div>
 

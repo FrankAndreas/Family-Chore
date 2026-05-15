@@ -7,6 +7,7 @@ import { NotificationCenter } from '../components/NotificationCenter';
 import { useNotifications } from '../context/NotificationContext';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import Modal from '../components/Modal';
+import { ADMIN_ROLE_NAME } from '../constants';
 
 const DashboardLayout: React.FC = () => {
     const { currentUser, logout: onLogout } = useUser();
@@ -66,7 +67,7 @@ const DashboardLayout: React.FC = () => {
         };
     }, [isResizing, resize, stopResizing]);
 
-    const isAdmin = currentUser.role.name === 'Admin';
+    const isAdmin = currentUser.role.name === ADMIN_ROLE_NAME;
 
     const isActive = (path: string) => location.pathname === path;
 

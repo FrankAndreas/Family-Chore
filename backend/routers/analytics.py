@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
@@ -219,7 +219,9 @@ def get_heatmap_day_details(
     Used when clicking a heatmap cell.
     """
     user = db.query(User).filter(User.id == user_id).first()
-    nickname = str(user.nickname) if user else "Unknown"
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    nickname = str(user.nickname)
 
     instances = (
         db.query(TaskInstance)

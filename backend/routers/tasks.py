@@ -23,13 +23,6 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["Tasks"])
 
 
-# Legacy chunk-writer — superseded by _compress_and_save (kept per STRICT_NO_DELETE)
-# def _write_chunk(path: str, chunk: bytes, append: bool = True):
-#     mode = "ab" if append else "wb"
-#     with open(path, mode) as f:
-#         f.write(chunk)
-
-
 MAX_THUMBNAIL_DIM = 1280  # px — longest edge; preserves aspect ratio
 
 

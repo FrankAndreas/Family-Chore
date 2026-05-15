@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getRoles, updateRole, createRole, deleteRole, getRoleUsers } from '../../api';
 import type { Role } from '../../types';
 import { useTranslation } from 'react-i18next';
+import { ADMIN_ROLE_NAME } from '../../constants';
 import { SkeletonLoader } from '../../components/SkeletonLoader';
 import '../../styles/SharedDashboard.css';
 import './Dashboard.css';
@@ -305,7 +306,7 @@ const RoleManagement: React.FC = () => {
                     <div key={role.id} className="role-card glass-panel">
                         <div className="role-header">
                             <div className="role-icon">
-                                {role.name === 'Admin' ? '👑' :
+                                {role.name === ADMIN_ROLE_NAME ? '👑' :
                                     role.name === 'Teenager' ? '🎧' :
                                         role.name === 'Child' ? '🧸' :
                                             role.name === 'Contributor' ? '👤' : '🏷️'}
@@ -363,7 +364,7 @@ const RoleManagement: React.FC = () => {
                                 )}
                             </div>
                             <p className="role-description">
-                                {role.name === 'Admin' ? 'System administrators with full access.' :
+                                {role.name === ADMIN_ROLE_NAME ? 'System administrators with full access.' :
                                     role.name === 'Teenager' ? 'Older children with higher responsibility.' :
                                         role.name === 'Child' ? 'Younger children with basic chores.' :
                                             role.name === 'Contributor' ? 'Standard contributors.' :
