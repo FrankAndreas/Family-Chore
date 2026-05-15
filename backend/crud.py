@@ -77,8 +77,7 @@ def delete_user(db: Session, user_id: int) -> bool:
     delete_user_transactions(db, user_id)
     db.query(models.Notification).filter(
         models.Notification.user_id == user_id).delete()
-    db.query(models.PushSubscription).filter(
-        models.PushSubscription.user_id == user_id).delete()
+    # PushSubscription is covered by cascade="all, delete-orphan" on User.push_subscriptions
 
     # Finally delete the user
     db.delete(db_user)
@@ -292,9 +291,11 @@ def get_reward(db: Session, reward_id: int) -> Optional[models.Reward]:
 # --- Transaction CRUD ---
 
 
-def get_user_transactions(db: Session, user_id: int, skip: int = 0, limit: int = 100,
-                          txn_type: str = None, search: str = None,
-                          start_date: datetime = None, end_date: datetime = None) -> List[models.Transaction]:
+def get_user_transactions(
+        db: Session, user_id: int, skip: int = 0, limit: int = 100,
+        txn_type: Optional[str] = None, search: Optional[str] = None,
+        start_date: Optional[datetime] = None, end_date: Optional[datetime] = None
+) -> List[models.Transaction]:
     """Get transaction history for a specific user with filters."""
     query = db.query(models.Transaction).filter(
         models.Transaction.user_id == user_id)
@@ -313,9 +314,11 @@ def get_user_transactions(db: Session, user_id: int, skip: int = 0, limit: int =
                           ).offset(skip).limit(limit).all()
 
 
-def get_all_transactions(db: Session, skip: int = 0, limit: int = 100,
-                         user_id: int = None, txn_type: str = None, search: str = None,
-                         start_date: datetime = None, end_date: datetime = None) -> List[models.Transaction]:
+def get_all_transactions(
+        db: Session, skip: int = 0, limit: int = 100,
+        user_id: Optional[int] = None, txn_type: Optional[str] = None, search: Optional[str] = None,
+        start_date: Optional[datetime] = None, end_date: Optional[datetime] = None
+) -> List[models.Transaction]:
     """Get global transaction history with filters."""
     query = db.query(models.Transaction)
 
@@ -345,7 +348,7 @@ def get_system_setting(
 
 
 def set_system_setting(db: Session, key: str, value: str,
-                       description: str = None) -> models.SystemSettings:
+                       description: Optional[str] = None) -> models.SystemSettings:
     setting = get_system_setting(db, key)
     if setting:
         setting.value = value

@@ -2,7 +2,7 @@ import os
 import glob
 import sqlite3
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Dict
 
 logger = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ class BackupManager:
         if not os.path.exists(self.db_path):
             raise FileNotFoundError(f"Database file not found: {self.db_path}")
 
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         backup_filename = f"chorespec_mvp_{timestamp}.db"
         backup_path = os.path.join(self.backup_dir, backup_filename)
 
@@ -45,12 +45,12 @@ class BackupManager:
         pattern = os.path.join(self.backup_dir, "chorespec_mvp_*.db")
         backup_files = glob.glob(pattern)
 
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
 
         for file_path in backup_files:
             try:
                 # Get file modification time
-                file_time = datetime.fromtimestamp(os.path.getmtime(file_path))
+                file_time = datetime.fromtimestamp(os.path.getmtime(file_path), tz=timezone.utc)
                 age_days = (now - file_time).days
 
                 if age_days > retention_days:
@@ -74,7 +74,7 @@ class BackupManager:
                 size = os.path.getsize(file_path)
                 backups.append({
                     "filename": os.path.basename(file_path),
-                    "created_at": datetime.fromtimestamp(timestamp).isoformat(),
+                    "created_at": datetime.fromtimestamp(timestamp, tz=timezone.utc).isoformat(),
                     "size_bytes": size
                 })
             except Exception:
