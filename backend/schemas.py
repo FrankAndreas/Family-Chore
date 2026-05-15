@@ -193,7 +193,9 @@ class TaskUpdate(BaseModel):
         """Validate schedule_type and related fields if they're being updated."""
         # If schedule_type is being updated, validate related fields
         if self.schedule_type:
-            if self.schedule_type == "daily" and self.default_due_time:
+            if self.schedule_type == "daily":
+                if not self.default_due_time:
+                    raise ValueError('default_due_time (HH:MM) is required when setting schedule_type to daily')
                 try:
                     hour, minute = map(int, self.default_due_time.split(':'))
                     if not (0 <= hour < 24 and 0 <= minute < 60):
@@ -202,9 +204,12 @@ class TaskUpdate(BaseModel):
                 except (ValueError, AttributeError):
                     raise ValueError(
                         'For daily tasks, default_due_time must be in HH:MM format')
-            elif self.schedule_type == "weekly" and self.default_due_time:
+            elif self.schedule_type == "weekly":
                 valid_days = ["Monday", "Tuesday", "Wednesday",
                               "Thursday", "Friday", "Saturday", "Sunday"]
+                if not self.default_due_time:
+                    raise ValueError(
+                        f'default_due_time is required when setting schedule_type to weekly: {", ".join(valid_days)}')
                 if self.default_due_time not in valid_days:
                     raise ValueError(
                         f'For weekly tasks, default_due_time must be a day name: {", ".join(valid_days)}')

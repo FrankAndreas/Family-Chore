@@ -82,7 +82,7 @@ export const NotificationCenter: React.FC = () => {
                             notifications.map(notification => (
                                 <div
                                     key={notification.id}
-                                    className={`notification-item ${notification.read === 0 ? 'unread' : ''}`}
+                                    className={`notification-item ${!notification.read ? 'unread' : ''}`}
                                     onClick={() => handleNotificationClick(notification.id)}
                                     role="menuitem"
                                     tabIndex={0}
@@ -96,7 +96,7 @@ export const NotificationCenter: React.FC = () => {
                                         <div className="notification-message">{notification.message}</div>
                                         <span className="notification-time">{formatTime(notification.created_at)}</span>
                                     </div>
-                                    {notification.read === 0 && <div className="unread-dot" aria-label="Unread" />}
+                                    {!notification.read && <div className="unread-dot" aria-label="Unread" />}
                                 </div>
                             ))
                         )}

@@ -74,7 +74,11 @@ def redeem_reward_split(
         raise InsufficientPointsError(
             f"Total contribution ({total_points}) does not equal reward cost ({reward.cost_points})")
 
-    # Validate all users exist and have enough points
+    # Validate all users exist and have enough points.
+    # NOTE: on SQLite writes are serialised so a TOCTOU race here is
+    # impossible in practice.  When migrating to Postgres, replace the
+    # per-user SELECT with .with_for_update() to acquire row locks before
+    # the balance check.
     users_data = []
     for contrib in contributions:
         if contrib["points"] == 0:

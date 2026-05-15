@@ -135,7 +135,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         }
     };
 
-    const unreadCount = notifications.filter(n => n.read === 0).length;
+    const unreadCount = notifications.filter(n => !n.read).length;
 
     // Push Notification Logic
     const subscribeToPush = async () => {

@@ -56,7 +56,7 @@ export interface Notification {
     type: string; // 'TASK_ASSIGNED', 'TASK_COMPLETED', 'REWARD_REDEEMED', 'SYSTEM'
     title: string;
     message: string;
-    read: number; // 0 or 1
+    read: boolean;
     created_at: string;
     data?: string;
 }
