@@ -127,11 +127,14 @@ def run_backup_job():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # --- Startup ---
-    # 1. Run migrations first to ensure schema is up-to-date (unless running tests)
-    if settings.TESTING != "True":
+    # 1. Schema setup
+    if settings.TESTING == "True":
+        # Tests use an in-memory / temp DB — create tables directly.
+        models.Base.metadata.create_all(bind=engine)
+    else:
         alembic_cfg = Config("backend/alembic.ini")
 
-        # Check if we need to stamp (backwards compatibility for existing SQLite)
+        # Backwards compatibility: stamp existing DBs that predate Alembic tracking.
         with engine.connect() as conn:
             inspector = inspect(conn)
             has_users = inspector.has_table("users")
@@ -144,9 +147,7 @@ async def lifespan(app: FastAPI):
         logger.info("Running Alembic upgrade to 'head'.")
         alembic_command.upgrade(alembic_cfg, "head")
 
-    # 2. Ensure tables exist (will create new tables if any)
-    models.Base.metadata.create_all(bind=engine)
-    # Seed initial data
+    # 2. Seed initial data
     try:
         from .seed_data import seed_data
         seed_data()
