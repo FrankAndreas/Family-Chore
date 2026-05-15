@@ -161,3 +161,48 @@ def test_get_pending_tasks(client, db_session, seeded_db):
     resp = client.get("/tasks/pending")
     assert resp.status_code == 200
     assert isinstance(resp.json(), list)
+
+
+def test_upload_photo_forbidden_for_other_user(client, db_session, seeded_db, admin_user):
+    """Non-admin cannot upload a photo for a task that belongs to another user."""
+    from backend.dependencies import get_current_user
+    from backend.main import app
+
+    # Use Child role so is_admin() returns False for this user
+    child_role = db_session.query(models.Role).filter(models.Role.name == "Child").first()
+    admin_role = db_session.query(models.Role).filter(models.Role.name == "Admin").first()
+
+    child_user = models.User(nickname="ChildUploader", login_pin="0000", role_id=child_role.id)
+    db_session.add(child_user)
+    db_session.commit()
+
+    task = models.Task(
+        name="PhotoTask2", description="D", base_points=10,
+        assigned_role_id=admin_role.id, schedule_type="daily",
+        default_due_time="12:00", requires_photo_verification=True,
+    )
+    db_session.add(task)
+    db_session.commit()
+
+    # Instance owned by admin_user — child_user should be blocked from uploading
+    admin_instance = models.TaskInstance(
+        task_id=task.id, user_id=admin_user.id,
+        due_time=datetime.now(), status="PENDING",
+    )
+    db_session.add(admin_instance)
+    db_session.commit()
+
+    # Temporarily override get_current_user to act as child_user (uses same test DB)
+    app.dependency_overrides[get_current_user] = lambda: child_user
+
+    import io
+    fake_image = io.BytesIO(b"\xff\xd8\xff")
+    resp = client.post(
+        f"/tasks/{admin_instance.id}/upload-photo",
+        files={"file": ("photo.jpg", fake_image, "image/jpeg")},
+    )
+
+    # Restore to admin so teardown works correctly
+    app.dependency_overrides[get_current_user] = lambda: admin_user
+
+    assert resp.status_code == 403

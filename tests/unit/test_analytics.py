@@ -384,3 +384,26 @@ class TestAnalytics:
         points = {t["task_name"]: t["base_points"] for t in data["tasks"]}
         assert points["Wash Dishes"] == 10
         assert points["Vacuum Room"] == 15
+
+
+def test_heatmap_details_invalid_date_returns_400(client, seeded_db):
+    """An invalid date string should return 400, not silently return empty results."""
+    role = seeded_db.query(models.Role).filter(models.Role.name == "Child").first()
+    user = models.User(nickname="DateCheckUser", login_pin="0000", role_id=role.id)
+    seeded_db.add(user)
+    seeded_db.commit()
+
+    resp = client.get(
+        "/analytics/heatmap/details",
+        params={"user_id": user.id, "date": "not-a-date"},
+    )
+    assert resp.status_code == 400
+    assert "YYYY-MM-DD" in resp.json()["detail"]
+
+
+def test_heatmap_details_unknown_user_returns_404(client, seeded_db):
+    resp = client.get(
+        "/analytics/heatmap/details",
+        params={"user_id": 99999, "date": "2024-01-01"},
+    )
+    assert resp.status_code == 404

@@ -20,6 +20,41 @@ def test_create_user(db_session, seeded_db):
     assert user.current_points == 0
 
 
+def test_create_user_persists_email_and_notifications(db_session, seeded_db):
+    """email and notifications_enabled must be saved, not silently dropped."""
+    role = db_session.query(models.Role).filter(models.Role.name == "Child").first()
+
+    user = crud.create_user(db_session, schemas.UserCreate(
+        nickname="EmailKid",
+        login_pin="1234",
+        role_id=role.id,
+        email="kid@example.com",
+        notifications_enabled=False,
+    ))
+
+    db_session.refresh(user)
+    assert user.email == "kid@example.com"
+    assert user.notifications_enabled is False
+
+
+def test_update_user_language_none_clears_preference(db_session, seeded_db):
+    """Passing None should store NULL, not an empty string."""
+    role = db_session.query(models.Role).filter(models.Role.name == "Child").first()
+    user = crud.create_user(db_session, schemas.UserCreate(
+        nickname="LangKid", login_pin="1234", role_id=role.id
+    ))
+
+    # Set a language first
+    crud.update_user_language(db_session, user.id, "de")
+    db_session.refresh(user)
+    assert user.preferred_language == "de"
+
+    # Clear it
+    crud.update_user_language(db_session, user.id, None)
+    db_session.refresh(user)
+    assert user.preferred_language is None
+
+
 def test_get_user_by_nickname(db_session, seeded_db):
     # Create user
     role = db_session.query(models.Role).filter(
