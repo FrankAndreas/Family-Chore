@@ -8,7 +8,7 @@ cd frontend && npm run lint || exit 1
 
 # Frontend TypeScript
 echo "📋 Frontend TypeScript..."
-npx tsc --noEmit || exit 1
+npx tsc -b || exit 1
 
 # Backend flake8
 echo "🐍 Backend flake8..."
