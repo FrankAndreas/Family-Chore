@@ -2,7 +2,7 @@ import datetime
 from typing import List, Optional
 import logging
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from .. import schemas, crud, models
@@ -21,7 +21,7 @@ def read_user_transactions(
     skip: int = 0,
     limit: int = 100,
     txn_type: Optional[str] = None,
-    search: Optional[str] = None,
+    search: Optional[str] = Query(default=None, max_length=200),
     start_date: Optional[datetime.datetime] = None,
     end_date: Optional[datetime.datetime] = None,
     current_user: models.User = Depends(get_current_user),
@@ -41,7 +41,7 @@ def read_all_transactions(
     limit: int = 100,
     user_id: Optional[int] = None,
     txn_type: Optional[str] = None,
-    search: Optional[str] = None,
+    search: Optional[str] = Query(default=None, max_length=200),
     start_date: Optional[datetime.datetime] = None,
     end_date: Optional[datetime.datetime] = None,
     db: Session = Depends(get_db)

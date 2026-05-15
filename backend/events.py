@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from typing import List
+from typing import List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ class EventBroadcaster:
         if queue in self.clients:
             self.clients.remove(queue)
 
-    async def broadcast(self, event_type: str, data: dict = None):
+    async def broadcast(self, event_type: str, data: Optional[dict] = None):
         """Broadcast event to all connected clients."""
         message = {"type": event_type, "data": data}
         for queue in self.clients:

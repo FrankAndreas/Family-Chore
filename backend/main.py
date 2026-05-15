@@ -6,6 +6,7 @@ import logging
 import asyncio
 import json
 import os
+from pathlib import Path
 from apscheduler.schedulers.background import BackgroundScheduler
 from .config import settings
 from apscheduler.triggers.cron import CronTrigger
@@ -89,7 +90,25 @@ def scheduled_daily_reset():
         db.close()
 
 
-backup_manager = BackupManager()
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent
+_UPLOADS_DIR = _PROJECT_ROOT / "uploads"
+_BACKUPS_DIR = _PROJECT_ROOT / "backups"
+
+
+def _db_path_from_url(database_url: str) -> str:
+    """Extract the file path from a sqlite:/// URL, relative to the project root."""
+    if database_url.startswith("sqlite:///"):
+        path = database_url[len("sqlite:///"):]
+        if path:
+            resolved = Path(path)
+            return str(resolved if resolved.is_absolute() else _PROJECT_ROOT / resolved)
+    return str(_PROJECT_ROOT / "chorespec_mvp.db")
+
+
+backup_manager = BackupManager(
+    db_path=_db_path_from_url(settings.DATABASE_URL),
+    backup_dir=str(_BACKUPS_DIR),
+)
 
 
 def run_backup_job():
@@ -238,16 +257,14 @@ app.add_middleware(
 )
 
 # Ensure uploads directory exists
-os.makedirs("uploads", exist_ok=True)
+_UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 @app.get("/uploads/{filename}", tags=["System"])
 def get_uploaded_file(filename: str, current_user: models.User = Depends(get_current_user)):
     """Serve uploaded files only to authenticated users."""
-    from pathlib import Path
-    uploads_dir = Path("uploads").resolve()
-    file_path = (uploads_dir / filename).resolve()
-    if not str(file_path).startswith(str(uploads_dir) + os.sep):
+    file_path = (_UPLOADS_DIR / filename).resolve()
+    if not str(file_path).startswith(str(_UPLOADS_DIR) + os.sep):
         raise HTTPException(status_code=400, detail="Invalid filename")
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="File not found")

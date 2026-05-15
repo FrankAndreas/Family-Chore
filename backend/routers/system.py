@@ -31,13 +31,13 @@ def export_tasks(db: Session = Depends(get_db)):
         export_items.append(schemas.TaskExportItem(
             name=str(task.name),
             description=str(task.description) if task.description else "",
-            base_points=int(str(task.base_points)),
+            base_points=int(task.base_points),
             assigned_role=str(roles.get(task.assigned_role_id))
             if task.assigned_role_id and roles.get(task.assigned_role_id) else None,
             schedule_type=str(task.schedule_type),
             default_due_time=str(task.default_due_time) if task.default_due_time else "",
-            recurrence_min_days=int(str(task.recurrence_min_days)) if task.recurrence_min_days is not None else None,
-            recurrence_max_days=int(str(task.recurrence_max_days)) if task.recurrence_max_days is not None else None,
+            recurrence_min_days=int(task.recurrence_min_days) if task.recurrence_min_days is not None else None,
+            recurrence_max_days=int(task.recurrence_max_days) if task.recurrence_max_days is not None else None,
             requires_photo_verification=bool(task.requires_photo_verification),
         ))
 

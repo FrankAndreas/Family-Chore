@@ -1,6 +1,7 @@
 import io
 import os
 import uuid
+from pathlib import Path
 
 from typing import List, Optional
 import logging
@@ -234,7 +235,9 @@ async def upload_task_photo(
     # Phase 2: Compress and save to disk via Pillow in a threadpool (non-blocking)
     # Output is always .webp regardless of input format.
     unique_filename = f"{uuid.uuid4().hex}.webp"
-    file_path = os.path.join("uploads", unique_filename)
+    uploads_dir = Path(__file__).resolve().parent.parent.parent / "uploads"
+    uploads_dir.mkdir(parents=True, exist_ok=True)
+    file_path = str(uploads_dir / unique_filename)
 
     try:
         await run_in_threadpool(_compress_and_save, buf, file_path)

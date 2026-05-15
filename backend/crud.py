@@ -152,7 +152,7 @@ def delete_task(db: Session, task_id: int) -> bool:
 
     # Get IDs of instances that will be deleted
     instance_ids = [
-        inst.id for inst in db.query(models.TaskInstance.id).filter(
+        row[0] for row in db.query(models.TaskInstance.id).filter(
             models.TaskInstance.task_id == task_id
         ).all()
     ]
