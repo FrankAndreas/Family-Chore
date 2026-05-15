@@ -119,7 +119,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         if (!currentUser) return;
         try {
             await markNotificationRead(id);
-            setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: 1 } : n));
+            setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
         } catch (error) {
             console.error("Failed to mark as read", error);
         }
@@ -129,7 +129,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         if (!currentUser) return;
         try {
             await markAllNotificationsRead();
-            setNotifications(prev => prev.map(n => ({ ...n, read: 1 })));
+            setNotifications(prev => prev.map(n => ({ ...n, read: true })));
         } catch (error) {
             console.error("Failed to mark all as read", error);
         }
