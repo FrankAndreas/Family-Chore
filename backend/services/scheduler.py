@@ -138,6 +138,9 @@ def perform_daily_reset_if_needed(
     if not is_reset_needed(db, reference_time):
         return 0
 
+    from .streak_tracker import reset_expired_streaks
+    reset_expired_streaks(db, reference_time)
+
     count = generate_daily_instances(db, reference_time)
 
     today = (reference_time or datetime.now(timezone.utc)).date()

@@ -144,8 +144,7 @@ def send_email_background(background_tasks: BackgroundTasks, to_email: str, subj
 
 
 def send_push_sync(subscription_info: dict, payload: dict) -> bool:
-    """Send a push notification. Returns True on success, False on failure.
-    Returns None if the subscription is gone (410) so callers can clean up."""
+    """Send a push notification. Returns True on success, False on failure (including 410 gone)."""
     if not webpush:
         logger.error("pywebpush not installed. Cannot send push.")
         return False

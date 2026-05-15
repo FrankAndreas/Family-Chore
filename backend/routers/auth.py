@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 import logging
 
 from .. import schemas, crud, security
+from ..config import settings
 from ..database import get_db
 from ..rate_limiter import limiter
 
@@ -51,7 +52,8 @@ def login(request: Request, user_credentials: schemas.UserLogin, response: Respo
         key="access_token",
         value=f"Bearer {access_token}",
         httponly=True,
-        samesite="lax"
+        samesite="lax",
+        secure=settings.TESTING != "True",
     )
 
     return schemas.Token(
