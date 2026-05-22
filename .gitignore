@@ -46,3 +46,5 @@ node_modules/
 *.log
 PLAN.md
 STATE.md
+pytest_output.txt
+_review_notes.txt
