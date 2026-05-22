@@ -114,12 +114,12 @@ class TaskInstance(Base):
     __tablename__ = "task_instances"
 
     id = Column(Integer, primary_key=True, index=True)
-    task_id = Column(Integer, ForeignKey("tasks.id"), nullable=False)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    task_id = Column(Integer, ForeignKey("tasks.id"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
 
     due_time = Column(DateTime, nullable=False)
     completed_at = Column(DateTime, nullable=True)
-    status = Column(String, nullable=False, default="PENDING")
+    status = Column(String, nullable=False, default="PENDING", index=True)
 
     completion_photo_url = Column(String, nullable=True)
 
@@ -135,7 +135,7 @@ class Transaction(Base):
     __tablename__ = "transactions"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
 
     type = Column(String, nullable=False)  # 'EARN', 'REDEEM', or 'PENALTY'
 
@@ -148,7 +148,7 @@ class Transaction(Base):
         Integer, ForeignKey("task_instances.id"), nullable=True)
 
     timestamp = Column(DateTime, nullable=False,
-                       default=lambda: datetime.datetime.now(timezone.utc))
+                       default=lambda: datetime.datetime.now(timezone.utc), index=True)
 
     # Relationships
     user = relationship("User", back_populates="transactions")
@@ -161,7 +161,7 @@ class Notification(Base):
     __tablename__ = "notifications"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
 
     # 'TASK_ASSIGNED', 'TASK_COMPLETED', 'REWARD_REDEEMED', 'SYSTEM'
     type = Column(String, nullable=False)
@@ -184,7 +184,7 @@ class PushSubscription(Base):
     __tablename__ = "push_subscriptions"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
 
     endpoint = Column(String, unique=True, nullable=False)
     p256dh = Column(String, nullable=False)
