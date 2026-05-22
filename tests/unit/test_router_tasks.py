@@ -16,13 +16,13 @@ def test_create_task_api(client, db_session, seeded_db):
         "schedule_type": "daily",
         "default_due_time": "12:00"
     })
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     assert resp.json()["name"] == "APITask"
 
 
 def test_get_tasks_api(client, db_session, seeded_db):
     resp = client.get("/tasks/")
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
 
 
 def test_update_task_api(client, db_session, seeded_db):
@@ -38,12 +38,12 @@ def test_update_task_api(client, db_session, seeded_db):
     # Update
     resp = client.put(
         f"/tasks/{t['id']}", json={"name": "UpdatedName", "description": "Desc"})
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     assert resp.json()["name"] == "UpdatedName"
 
     # Update non-existent
     resp = client.put("/tasks/9999", json={"name": "Ghost"})
-    assert resp.status_code == 404
+    assert resp.status_code == 404, resp.text
 
 
 def test_delete_task_api(client, db_session, seeded_db):
@@ -58,7 +58,7 @@ def test_delete_task_api(client, db_session, seeded_db):
 
     # Delete
     resp = client.delete(f"/tasks/{t['id']}")
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
 
     # Verify gone
     resp = client.get("/tasks/")
@@ -67,12 +67,12 @@ def test_delete_task_api(client, db_session, seeded_db):
 
     # Delete non-existent
     resp = client.delete("/tasks/9999")
-    assert resp.status_code == 404
+    assert resp.status_code == 404, resp.text
 
 
 def test_export_tasks_api(client, db_session, seeded_db):
     resp = client.get("/tasks/export")
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     data = resp.json()
     assert "tasks" in data
     assert data["version"] == "1.0"
@@ -93,14 +93,14 @@ def test_import_tasks_api(client, db_session, seeded_db):
         "skip_duplicates": True
     }
     resp = client.post("/tasks/import", json=payload)
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     data = resp.json()
     assert data["success"] is True
     assert "ImportedTask" in data["created"]
 
     # Test duplicate skip
     resp = client.post("/tasks/import", json=payload)
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     assert "ImportedTask" in resp.json()["skipped"]
 
 
@@ -127,7 +127,7 @@ def test_complete_task_instance_api(client, db_session, seeded_db):
 
     # Complete
     resp = client.post(f"/tasks/{instance.id}/complete")
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     assert resp.json()["status"] == "COMPLETED"
 
     # Verify points
@@ -137,7 +137,7 @@ def test_complete_task_instance_api(client, db_session, seeded_db):
 
     # Complete non-existent
     resp = client.post("/tasks/9999/complete")
-    assert resp.status_code == 404
+    assert resp.status_code == 404, resp.text
 
 
 def test_get_user_daily_tasks(client, db_session, seeded_db):
@@ -153,13 +153,13 @@ def test_get_user_daily_tasks(client, db_session, seeded_db):
         uid = users[0]["id"]
 
     resp = client.get(f"/tasks/daily/{uid}")
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     assert isinstance(resp.json(), list)
 
 
 def test_get_pending_tasks(client, db_session, seeded_db):
     resp = client.get("/tasks/pending")
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     assert isinstance(resp.json(), list)
 
 
@@ -205,4 +205,4 @@ def test_upload_photo_forbidden_for_other_user(client, db_session, seeded_db, ad
     # Restore to admin so teardown works correctly
     app.dependency_overrides[get_current_user] = lambda: admin_user
 
-    assert resp.status_code == 403
+    assert resp.status_code == 403, resp.text

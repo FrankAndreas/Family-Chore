@@ -12,7 +12,7 @@ def test_create_user_api(client, db_session, seeded_db):
         "login_pin": "5678",
         "role_id": role.id
     })
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
     data = response.json()
     assert data["nickname"] == "APIUser"
     assert "id" in data
@@ -35,7 +35,7 @@ def test_create_user_duplicate_nickname(client, db_session, seeded_db):
         "login_pin": "1234",
         "role_id": role.id
     })
-    assert response.status_code == 400
+    assert response.status_code == 400, response.text
     assert "Nickname already registered" in response.json()["detail"]
 
 
@@ -52,23 +52,23 @@ def test_login_flow(client, db_session, seeded_db):
     # Correct login
     resp = client.post(
         "/login/", json={"nickname": "LoginUser", "login_pin": "9999"})
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     assert resp.json()["user"]["nickname"] == "LoginUser"
 
     # Wrong PIN
     resp = client.post(
         "/login/", json={"nickname": "LoginUser", "login_pin": "0000"})
-    assert resp.status_code == 401
+    assert resp.status_code == 401, resp.text
 
     # Wrong User
     resp = client.post(
         "/login/", json={"nickname": "Ghost", "login_pin": "9999"})
-    assert resp.status_code == 401
+    assert resp.status_code == 401, resp.text
 
 
 def test_get_roles(client, seeded_db):
     resp = client.get("/roles/")
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     roles = resp.json()
     assert len(roles) >= 4  # Admin, Contributor, Teenager, Child
 
@@ -76,13 +76,13 @@ def test_get_roles(client, seeded_db):
 def test_create_role_api(client, db_session, seeded_db):
     resp = client.post(
         "/roles/", json={"name": "NewRole", "multiplier_value": 2.0})
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     assert resp.json()["name"] == "NewRole"
 
     # Duplicate
     resp = client.post(
         "/roles/", json={"name": "NewRole", "multiplier_value": 2.0})
-    assert resp.status_code == 400
+    assert resp.status_code == 400, resp.text
 
 
 def test_update_role_api(client, db_session, seeded_db):
@@ -93,12 +93,12 @@ def test_update_role_api(client, db_session, seeded_db):
 
     # Update
     resp = client.put(f"/roles/{role_id}", json={"multiplier_value": 3.0})
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
     assert resp.json()["multiplier_value"] == 3.0
 
     # Invalid multiplier
     resp = client.put(f"/roles/{role_id}", json={"multiplier_value": -1.0})
-    assert resp.status_code == 400
+    assert resp.status_code == 400, resp.text
 
 
 def test_delete_role_api(client, db_session, seeded_db):
@@ -109,7 +109,7 @@ def test_delete_role_api(client, db_session, seeded_db):
 
     # Delete
     resp = client.delete(f"/roles/{role_id}")
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
 
     # Verify gone
     resp = client.get("/roles/")
@@ -131,11 +131,11 @@ def test_delete_role_with_users_reassign(client, db_session, seeded_db):
 
     # Delete Role 1 without params -> Fail
     resp = client.delete(f"/roles/{r1['id']}")
-    assert resp.status_code == 400
+    assert resp.status_code == 400, resp.text
 
     # Delete Role 1 with reassign -> Success
     resp = client.delete(f"/roles/{r1['id']}?reassign_to_role_id={r2['id']}")
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
 
     # Verify User is now in Role 2
     # Login again to check role_id
