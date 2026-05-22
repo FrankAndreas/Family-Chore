@@ -55,9 +55,9 @@ const PhotoDropzone: React.FC<PhotoDropzoneProps> = ({ instanceId, photo, onPhot
     }, [instanceId, onPhotoChange]);
 
     return (
-        <div className="photo-upload-section mt-3">
+        <div className="photo-upload-section">
             <label
-                className="dropzone-container flex-col-center border-dashed border-2 rounded-md p-4 bg-secondary cursor-pointer max-w-sm w-full mx-auto"
+                className="dropzone-container"
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}

@@ -63,7 +63,22 @@
     padding-bottom: var(--spacing-sm);
 }
 
+.photo-upload-section {
+    margin-top: var(--spacing-sm);
+}
+
 .dropzone-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 24rem;
+    margin: 0 auto;
+    padding: var(--spacing-md);
+    border: 2px dashed var(--border-color);
+    border-radius: 6px;
+    background-color: var(--bg-secondary, rgba(255, 255, 255, 0.05));
+    cursor: pointer;
     transition: all 0.2s ease;
 }
 
