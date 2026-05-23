@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 from typing import List
 import logging
@@ -20,9 +20,9 @@ def create_reward(reward: schemas.RewardCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/rewards/", response_model=List[schemas.Reward], dependencies=[Depends(get_current_user)])
-def read_rewards(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    rewards = crud.get_rewards(db, skip=skip, limit=limit)
-    return rewards
+def read_rewards(response: Response, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    response.headers["Cache-Control"] = "private, max-age=60"
+    return crud.get_rewards(db, skip=skip, limit=limit)
 
 
 @router.put("/rewards/{reward_id}", response_model=schemas.Reward, dependencies=[Depends(get_current_admin_user)])

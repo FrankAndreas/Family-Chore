@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 from typing import List
 import logging
@@ -38,9 +38,9 @@ def create_role(role: schemas.RoleCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/roles/", response_model=List[schemas.Role], dependencies=[Depends(get_current_user)])
-def read_roles(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    roles = crud.get_roles(db, skip=skip, limit=limit)
-    return roles
+def read_roles(response: Response, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    response.headers["Cache-Control"] = "private, max-age=60"
+    return crud.get_roles(db, skip=skip, limit=limit)
 
 
 @router.get("/roles/{role_id}/users", response_model=schemas.RoleUsersResponse,
