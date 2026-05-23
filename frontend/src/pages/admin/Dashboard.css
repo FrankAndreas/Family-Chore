@@ -503,3 +503,18 @@
     color: #f56565 !important;
     font-weight: 600;
 }
+
+.pagination-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-sm);
+}
+
+.pagination-info {
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+    min-width: 4rem;
+    text-align: center;
+}

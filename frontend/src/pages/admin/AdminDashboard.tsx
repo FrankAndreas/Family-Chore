@@ -28,9 +28,12 @@ const AdminDashboard: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const debouncedSearch = useDebounce(searchTerm, 300);
     const [filters, setFilters] = useState<TransactionFilters>({});
+    const [txPage, setTxPage] = useState(0);
+    const TX_PAGE_SIZE = 10;
 
     useEffect(() => {
         setFilters(prev => ({ ...prev, search: debouncedSearch || undefined }));
+        setTxPage(0);
     }, [debouncedSearch]);
 
     const fetchData = useCallback(async () => {
@@ -309,42 +312,70 @@ const AdminDashboard: React.FC = () => {
                     <div className="empty-state">
                         <p>No recent activity matching your filters.</p>
                     </div>
-                ) : (
-                    <div className="table-container">
-                        <table className="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>User</th>
-                                    <th>Action</th>
-                                    <th>Points</th>
-                                    <th>Details</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {transactions.map(tx => (
-                                    <tr key={tx.id}>
-                                        <td>{formatDate(tx.timestamp)}</td>
-                                        <td>{getUserName(tx.user_id)}</td>
-                                        <td>
-                                            <span className={`badge ${tx.type === 'EARN' ? 'badge-success' : 'badge-warning'}`}>
-                                                {tx.type}
-                                            </span>
-                                        </td>
-                                        <td className={tx.awarded_points >= 0 ? 'text-success' : 'text-danger'}>
-                                            {tx.awarded_points > 0 ? '+' : ''}{tx.awarded_points}
-                                        </td>
-                                        <td>
-                                            {tx.description || (tx.type === 'EARN' ?
-                                                `Task Completion (Base: ${tx.base_points_value})` :
-                                                'Reward Redemption')}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
+                ) : (() => {
+                    const pageStart = txPage * TX_PAGE_SIZE;
+                    const paginated = transactions.slice(pageStart, pageStart + TX_PAGE_SIZE);
+                    const totalPages = Math.ceil(transactions.length / TX_PAGE_SIZE);
+                    return (
+                        <>
+                            <div className="table-container">
+                                <table className="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>User</th>
+                                            <th>Action</th>
+                                            <th>Points</th>
+                                            <th>Details</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {paginated.map(tx => (
+                                            <tr key={tx.id}>
+                                                <td>{formatDate(tx.timestamp)}</td>
+                                                <td>{getUserName(tx.user_id)}</td>
+                                                <td>
+                                                    <span className={`badge ${tx.type === 'EARN' ? 'badge-success' : 'badge-warning'}`}>
+                                                        {tx.type}
+                                                    </span>
+                                                </td>
+                                                <td className={tx.awarded_points >= 0 ? 'text-success' : 'text-danger'}>
+                                                    {tx.awarded_points > 0 ? '+' : ''}{tx.awarded_points}
+                                                </td>
+                                                <td>
+                                                    {tx.description || (tx.type === 'EARN' ?
+                                                        `Task Completion (Base: ${tx.base_points_value})` :
+                                                        'Reward Redemption')}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {totalPages > 1 && (
+                                <div className="pagination-bar">
+                                    <button
+                                        className="btn btn-secondary"
+                                        onClick={() => setTxPage(p => p - 1)}
+                                        disabled={txPage === 0}
+                                    >
+                                        ← Prev
+                                    </button>
+                                    <span className="pagination-info">
+                                        {txPage + 1} / {totalPages}
+                                    </span>
+                                    <button
+                                        className="btn btn-secondary"
+                                        onClick={() => setTxPage(p => p + 1)}
+                                        disabled={txPage >= totalPages - 1}
+                                    >
+                                        Next →
+                                    </button>
+                                </div>
+                            )}
+                        </>
+                    );
+                })()}
             </div>
 
             {/* Rejection Reason Modal */}
