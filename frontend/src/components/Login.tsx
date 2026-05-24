@@ -55,7 +55,7 @@ export default function Login({ onLogin, onFamilyDashboard }: LoginProps) {
             onLogin(response.data.user);
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
-            setError(err.response?.data?.detail || t('login.error.default'));
+            setError(err.response?.data?.detail || t('login.error.loginFailed'));
         } finally {
             setLoading(false);
         }
