@@ -5,6 +5,9 @@ class Settings(BaseSettings):
     TESTING: str = "False"
     DATABASE_URL: str = "sqlite:///./sql_app.db"
     CORS_ORIGINS: str = ""
+    # Set to True only when serving over HTTPS. Defaults to False so the app
+    # works on plain HTTP deployments (e.g. home NAS behind a local reverse proxy).
+    COOKIE_SECURE: bool = False
 
     # SMTP Settings
     SMTP_SERVER: str = ""

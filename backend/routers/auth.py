@@ -53,7 +53,7 @@ def login(request: Request, user_credentials: schemas.UserLogin, response: Respo
         value=f"Bearer {access_token}",
         httponly=True,
         samesite="lax",
-        secure=settings.TESTING != "True",
+        secure=settings.COOKIE_SECURE,
     )
 
     return schemas.Token(

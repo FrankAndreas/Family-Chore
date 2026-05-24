@@ -30,6 +30,7 @@ services:
       - DATABASE_URL=postgresql://chorespec_admin:chorespec_password@db:5432/chorespec
       # Legacy SQLite fallback: - DATABASE_URL=sqlite:///./data/chorespec.db
       # --- Production Secrets (uncomment and set for deployment) ---
+      # - COOKIE_SECURE=true   # Enable only when serving over HTTPS
       # - JWT_SECRET_KEY=<generate-a-64-char-hex-string>
       # - VAPID_PRIVATE_KEY=<path-or-pem-content>
       # - VAPID_PUBLIC_KEY=<application-server-key>
