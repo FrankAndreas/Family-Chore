@@ -21,13 +21,20 @@ def upgrade() -> None:
     """Upgrade schema."""
     # if_not_exists=True guards against SQLite's non-transactional DDL: if a
     # prior run created some indexes before crashing, re-running won't fail.
-    op.create_index(op.f('ix_notifications_user_id'), 'notifications', ['user_id'], unique=False, if_not_exists=True)
-    op.create_index(op.f('ix_push_subscriptions_user_id'), 'push_subscriptions', ['user_id'], unique=False, if_not_exists=True)
-    op.create_index(op.f('ix_task_instances_status'), 'task_instances', ['status'], unique=False, if_not_exists=True)
-    op.create_index(op.f('ix_task_instances_task_id'), 'task_instances', ['task_id'], unique=False, if_not_exists=True)
-    op.create_index(op.f('ix_task_instances_user_id'), 'task_instances', ['user_id'], unique=False, if_not_exists=True)
-    op.create_index(op.f('ix_transactions_timestamp'), 'transactions', ['timestamp'], unique=False, if_not_exists=True)
-    op.create_index(op.f('ix_transactions_user_id'), 'transactions', ['user_id'], unique=False, if_not_exists=True)
+    op.create_index(op.f('ix_notifications_user_id'), 'notifications', ['user_id'],
+                    unique=False, if_not_exists=True)
+    op.create_index(op.f('ix_push_subscriptions_user_id'), 'push_subscriptions', ['user_id'],
+                    unique=False, if_not_exists=True)
+    op.create_index(op.f('ix_task_instances_status'), 'task_instances', ['status'],
+                    unique=False, if_not_exists=True)
+    op.create_index(op.f('ix_task_instances_task_id'), 'task_instances', ['task_id'],
+                    unique=False, if_not_exists=True)
+    op.create_index(op.f('ix_task_instances_user_id'), 'task_instances', ['user_id'],
+                    unique=False, if_not_exists=True)
+    op.create_index(op.f('ix_transactions_timestamp'), 'transactions', ['timestamp'],
+                    unique=False, if_not_exists=True)
+    op.create_index(op.f('ix_transactions_user_id'), 'transactions', ['user_id'],
+                    unique=False, if_not_exists=True)
 
 
 def downgrade() -> None:
