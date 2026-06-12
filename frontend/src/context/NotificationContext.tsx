@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import {
     getUserNotifications, markNotificationRead, markAllNotificationsRead,
-    getVapidPublicKey, subscribePush, unsubscribePush, getAuthToken
+    getVapidPublicKey, subscribePush, unsubscribePush, getSseToken
 } from '../api';
 import type { Notification } from '../types';
 import { useToast } from './ToastContext';
@@ -80,7 +80,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     useEffect(() => {
         if (!currentUser) return;
 
-        const token = getAuthToken() || '';
+        const token = getSseToken() || '';
         const eventSource = new EventSource(`${API_BASE}/events?token=${encodeURIComponent(token)}`);
 
         eventSource.onopen = () => {

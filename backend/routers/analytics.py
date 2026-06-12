@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 
 from ..database import get_db
-from ..dependencies import get_current_user
+from ..dependencies import get_current_user, require_self_or_admin
 from ..models import User, Task, TaskInstance
 from ..schemas import (
     HeatmapDay, UserHeatmap, HeatmapResponse,
@@ -207,17 +207,19 @@ def get_analytics_summary(db: Session = Depends(get_db)) -> AnalyticsSummary:
 @router.get(
     "/heatmap/details",
     response_model=HeatmapDayDetails,
-    dependencies=[Depends(get_current_user)],
 )
 def get_heatmap_day_details(
     user_id: int = Query(..., description="User ID"),
     date: str = Query(..., description="Date in YYYY-MM-DD format"),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> HeatmapDayDetails:
     """
     Returns the list of completed tasks for a specific user on a specific date.
     Used when clicking a heatmap cell.
     """
+    require_self_or_admin(current_user, user_id)
+
     try:
         datetime.strptime(date, "%Y-%m-%d")
     except ValueError:

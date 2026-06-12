@@ -46,18 +46,23 @@ def login(request: Request, user_credentials: schemas.UserLogin, response: Respo
         f"Login successful for user: {user_credentials.nickname} (ID: {user.id})")
 
     access_token = security.create_access_token(data={"sub": str(user.id)})
+    sse_token = security.create_sse_token(int(user.id))
 
-    # Set the HttpOnly cookie for static file access
+    # Set the HttpOnly cookie for static file access.
+    # max_age aligns cookie lifetime with the JWT expiry so the browser
+    # automatically clears it rather than relying on session expiry alone.
     response.set_cookie(
         key="access_token",
         value=f"Bearer {access_token}",
         httponly=True,
         samesite="lax",
         secure=settings.COOKIE_SECURE,
+        max_age=security.ACCESS_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
     )
 
     return schemas.Token(
         access_token=access_token,
         token_type="bearer",
         user=schemas.User.model_validate(user),
+        sse_token=sse_token,
     )

@@ -7,6 +7,9 @@ import type { LoginResponse, User } from './types';
 // The httpOnly cookie handles all axios requests automatically via
 // withCredentials; this variable is only needed for the SSE URL.
 let _authToken: string | null = null;
+// Short-lived (1-hour) token issued alongside the session token,
+// used only for the SSE query-string to minimise log-exposure window.
+let _sseToken: string | null = null;
 
 export function setAuthToken(token: string | null): void {
     _authToken = token;
@@ -14,6 +17,14 @@ export function setAuthToken(token: string | null): void {
 
 export function getAuthToken(): string | null {
     return _authToken;
+}
+
+export function setSseToken(token: string | null): void {
+    _sseToken = token;
+}
+
+export function getSseToken(): string | null {
+    return _sseToken;
 }
 
 // ── Force-logout callback (registered by App.tsx) ──────────────
@@ -66,6 +77,7 @@ export const login = (nickname: string, login_pin: string) =>
     api.post<LoginResponse>('/login/', { nickname, login_pin });
 
 export const getUsers = () => api.get('/users/');
+export const getUsersAdmin = () => api.get('/users/admin');
 
 export const createUser = (nickname: string, login_pin: string, role_id: number) =>
     api.post('/users/', { nickname, login_pin, role_id });

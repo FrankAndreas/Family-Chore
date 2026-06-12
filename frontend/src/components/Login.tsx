@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { login, setAuthToken } from '../api';
+import { login, setAuthToken, setSseToken } from '../api';
 import type { User } from '../types';
 import './Login.css';
 
@@ -52,6 +52,7 @@ export default function Login({ onLogin, onFamilyDashboard }: LoginProps) {
         try {
             const response = await login(nickname, pin);
             setAuthToken(response.data.access_token);
+            setSseToken(response.data.sse_token || null);
             onLogin(response.data.user);
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {

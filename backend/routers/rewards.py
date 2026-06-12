@@ -97,7 +97,7 @@ async def redeem_reward(reward_id: int,
 
 @router.post("/rewards/{reward_id}/redeem-split",
              response_model=schemas.SplitRedemptionResponse,
-             dependencies=[Depends(get_current_user)])
+             dependencies=[Depends(get_current_admin_user)])
 async def redeem_reward_split(
     reward_id: int,
     request: schemas.SplitRedemptionRequest,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getUsers, getTasks, triggerDailyReset, getAllTransactions, getReviewQueue, reviewTask } from '../../api';
+import { getUsersAdmin, getTasks, triggerDailyReset, getAllTransactions, getReviewQueue, reviewTask } from '../../api';
 import type { User, Task, Transaction, TransactionFilters, TaskInstance } from '../../types';
 import { useTranslation } from 'react-i18next';
 import { SkeletonLoader } from '../../components/SkeletonLoader';
@@ -39,7 +39,7 @@ const AdminDashboard: React.FC = () => {
     const fetchData = useCallback(async () => {
         try {
             const [usersRes, tasksRes, transactionsRes, reviewRes] = await Promise.all([
-                getUsers(),
+                getUsersAdmin(),
                 getTasks(),
                 getAllTransactions({ limit: 50, ...filters }),
                 getReviewQueue()

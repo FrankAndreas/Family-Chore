@@ -92,7 +92,8 @@ class UserPasswordReset(BaseModel):
     new_pin: str = Field(..., pattern=r'^\d{4}$', description="New 4-digit PIN")
 
 
-class User(UserBase):
+class UserPublic(UserBase):
+    """Safe user representation for any authenticated caller — omits email."""
     id: int
     current_points: int
     lifetime_points: int
@@ -100,17 +101,22 @@ class User(UserBase):
     preferred_language: Optional[str] = None
     current_streak: int = 0
     last_task_date: Optional[date] = None
-    email: Optional[str] = None
     notifications_enabled: bool = True
     role: Role
 
     model_config = ConfigDict(from_attributes=True)
 
 
+class User(UserPublic):
+    """Full user representation for the owner or an admin — includes email."""
+    email: Optional[str] = None
+
+
 class Token(BaseModel):
     access_token: str
     token_type: str
     user: User
+    sse_token: str = ""
 
 # --- Task Schemas ---
 

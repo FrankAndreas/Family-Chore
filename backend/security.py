@@ -45,6 +45,7 @@ def _load_jwt_secret() -> str:
 SECRET_KEY = _load_jwt_secret()
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_DAYS = 7
+SSE_TOKEN_EXPIRE_MINUTES = 60  # short-lived token for SSE query-string use
 
 
 def get_password_hash(password: str) -> str:
@@ -68,6 +69,14 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
+
+def create_sse_token(user_id: int) -> str:
+    """Create a short-lived (1-hour) token for the SSE query-string."""
+    return create_access_token(
+        data={"sub": str(user_id), "sse": True},
+        expires_delta=timedelta(minutes=SSE_TOKEN_EXPIRE_MINUTES),
+    )
 
 
 def verify_token(token: str) -> Optional[Dict[str, Any]]:

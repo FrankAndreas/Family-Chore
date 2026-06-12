@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import api from '../api';
+import api, { getSseToken } from '../api';
 import type { TaskInstance, User, Reward } from '../types';
 
 const getPendingTasksPublic = () => api.get('/tasks/pending', { skipAuthRedirect: true });
@@ -68,7 +68,7 @@ export function useFamilyDashboardData(onTasksUpdated?: () => void, onRewardsUpd
     useEffect(() => {
         loadData();
 
-        const token = localStorage.getItem('auth_token') || '';
+        const token = getSseToken() || '';
         const eventSource = new EventSource(`${API_BASE}/events?token=${encodeURIComponent(token)}`);
         eventSourceRef.current = eventSource;
 

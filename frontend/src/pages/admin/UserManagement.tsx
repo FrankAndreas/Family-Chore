@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useUser } from '../../context/UserContext';
-import { getUsers, createUser, getRoles, penalizeUser, updateUser, resetUserPassword, deleteUser } from '../../api';
+import { getUsersAdmin, createUser, getRoles, penalizeUser, updateUser, resetUserPassword, deleteUser } from '../../api';
 import type { User, Role } from '../../types';
 import { SkeletonLoader } from '../../components/SkeletonLoader';
 import { useTranslation } from 'react-i18next';
@@ -43,7 +43,7 @@ const UserManagement: React.FC = () => {
 
     const fetchData = async () => {
         try {
-            const [usersRes, rolesRes] = await Promise.all([getUsers(), getRoles()]);
+            const [usersRes, rolesRes] = await Promise.all([getUsersAdmin(), getRoles()]);
             setUsers(usersRes.data);
             setRoles(rolesRes.data);
             if (rolesRes.data.length > 0) {
