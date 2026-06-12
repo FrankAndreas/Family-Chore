@@ -16,7 +16,8 @@
         "pts": "pts",
         "not_found_title": "404 - Page Not Found",
         "not_found_desc": "Oops! It looks like you've wandered off the map. This page doesn't exist.",
-        "back_to_home": "Take Me Home 🏠"
+        "back_to_home": "Take Me Home 🏠",
+        "error_loading": "Failed to load data. Please try again."
     },
     "login": {
         "title": "Welcome to ChoreSpec",
@@ -185,7 +186,18 @@
         "cooldownRange": "Cooldown Range",
         "canReappear": "Can reappear",
         "overdue": "Overdue",
-        "examples": "Examples: Vacuum (3-5 days), Car Wash (7-10 days), Deep Clean (4-6 days)"
+        "examples": "Examples: Vacuum (3-5 days), Car Wash (7-10 days), Deep Clean (4-6 days)",
+        "assignedToHint": "Select \"All Family Members\" for tasks anyone can do",
+        "dueTimeHint": "When the task is due each day",
+        "dueDayHint": "Which day of the week this task occurs",
+        "saving": "Saving...",
+        "validation": {
+            "nameRequired": "Task name is required",
+            "descRequired": "Description is required",
+            "pointsMin": "Base points must be at least 1",
+            "minDaysMin": "Minimum days must be at least 1",
+            "minDaysExceedsMax": "Minimum days cannot exceed maximum days"
+        }
     },
     "rewards": {
         "title": "Reward Hub",
@@ -248,6 +260,16 @@
         "tier_progress": {
             "title": "{{tier}} Progress",
             "max_level": "Max Level Reached! 🏆"
+        },
+        "toasts": {
+            "create_success": "Reward created successfully! 🎉",
+            "goal_success": "Goal set successfully! 🎯",
+            "redeem_success": "🎉 \"{{name}}\" redeemed successfully!",
+            "tier_unlocked": "🎉 Congratulations! You've reached the {{tier}} tier!",
+            "redeem_error": "Failed to redeem reward. Please try again.",
+            "load_error": "Failed to load rewards",
+            "create_error": "Failed to create reward",
+            "goal_error": "Failed to set goal"
         }
     },
     "users": {
@@ -299,7 +321,6 @@
             "saved": "Settings saved successfully! ✅",
             "saveFailed": "Failed to save settings"
         },
-        "moreSettingsDesc": "Profile customization, notification preferences, and more.",
         "settingsSavedSuccess": "Settings saved successfully!",
         "settingsSavedError": "Failed to save settings. Please try again.",
         "notificationsDesc": "Configure how you receive updates and reminders.",

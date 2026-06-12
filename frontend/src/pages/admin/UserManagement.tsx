@@ -4,12 +4,14 @@ import { getUsersAdmin, createUser, getRoles, penalizeUser, updateUser, resetUse
 import type { User, Role } from '../../types';
 import { SkeletonLoader } from '../../components/SkeletonLoader';
 import { useTranslation } from 'react-i18next';
+import { useToast } from '../../context/ToastContext';
 import '../../styles/SharedDashboard.css';
 import './Dashboard.css';
 
 const UserManagement: React.FC = () => {
     const { t } = useTranslation();
     const { currentUser } = useUser();
+    const { showToast } = useToast();
     const [users, setUsers] = useState<User[]>([]);
     const [roles, setRoles] = useState<Role[]>([]);
     const [loading, setLoading] = useState(true);
@@ -26,6 +28,9 @@ const UserManagement: React.FC = () => {
     const [penaltyPoints, setPenaltyPoints] = useState<number | ''>('');
     const [penaltyReason, setPenaltyReason] = useState<string>('');
     const [penaltyError, setPenaltyError] = useState<string>('');
+
+    const [showPin, setShowPin] = useState(false);
+    const [showEditPin, setShowEditPin] = useState(false);
 
     // Edit/Delete state
     const [selectedUserForEdit, setSelectedUserForEdit] = useState<User | null>(null);
@@ -67,13 +72,14 @@ const UserManagement: React.FC = () => {
 
         try {
             await createUser(nickname, pin, roleId);
+            showToast(t('users.messages.created'), 'success');
             setShowAddForm(false);
             setNickname('');
             setPin('');
-            fetchData(); // Refresh list
+            fetchData();
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
-            setError(err.response?.data?.detail || 'Failed to create user');
+            setError(err.response?.data?.detail || t('users.messages.createFailed'));
         }
     };
 
@@ -135,6 +141,7 @@ const UserManagement: React.FC = () => {
                 await resetUserPassword(selectedUserForEdit.id, editNewPin);
             }
 
+            showToast(`${editNickname} updated successfully`, 'success');
             setSelectedUserForEdit(null);
             fetchData();
         } catch (err: unknown) {
@@ -149,6 +156,7 @@ const UserManagement: React.FC = () => {
 
         try {
             await deleteUser(selectedUserForDelete.id);
+            showToast(`${selectedUserForDelete.nickname} deleted`, 'success');
             setSelectedUserForDelete(null);
             fetchData();
         } catch (err: unknown) {
@@ -193,8 +201,9 @@ const UserManagement: React.FC = () => {
                     <h2>Add New User</h2>
                     <form onSubmit={handleCreateUser} className="form-grid">
                         <div className="form-group">
-                            <label>Nickname</label>
+                            <label htmlFor="newUserNickname">Nickname</label>
                             <input
+                                id="newUserNickname"
                                 type="text"
                                 value={nickname}
                                 onChange={(e) => setNickname(e.target.value)}
@@ -203,19 +212,32 @@ const UserManagement: React.FC = () => {
                             />
                         </div>
                         <div className="form-group">
-                            <label>4-Digit PIN</label>
-                            <input
-                                type="password"
-                                value={pin}
-                                onChange={(e) => setPin(e.target.value)}
-                                maxLength={4}
-                                required
-                                placeholder="****"
-                            />
+                            <label htmlFor="newUserPin">4-Digit PIN</label>
+                            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                                <input
+                                    id="newUserPin"
+                                    type={showPin ? 'text' : 'password'}
+                                    value={pin}
+                                    onChange={(e) => setPin(e.target.value)}
+                                    maxLength={4}
+                                    required
+                                    placeholder="****"
+                                    style={{ paddingRight: '2.5rem', flex: 1 }}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPin(v => !v)}
+                                    aria-label={showPin ? t('login.hidePin') : t('login.showPin')}
+                                    style={{ position: 'absolute', right: '0.5rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: '1rem' }}
+                                >
+                                    {showPin ? '🙈' : '👁️'}
+                                </button>
+                            </div>
                         </div>
                         <div className="form-group">
-                            <label>Role</label>
+                            <label htmlFor="newUserRole">Role</label>
                             <select
+                                id="newUserRole"
                                 value={roleId}
                                 onChange={(e) => setRoleId(Number(e.target.value))}
                             >
@@ -297,8 +319,9 @@ const UserManagement: React.FC = () => {
 
                             <form onSubmit={handlePenalize} className="form-grid">
                                 <div className="form-group">
-                                    <label>Points to Deduct</label>
+                                    <label htmlFor="penaltyPoints">Points to Deduct</label>
                                     <input
+                                        id="penaltyPoints"
                                         type="number"
                                         value={penaltyPoints}
                                         onChange={(e) => setPenaltyPoints(e.target.value ? Number(e.target.value) : '')}
@@ -308,8 +331,9 @@ const UserManagement: React.FC = () => {
                                     />
                                 </div>
                                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                                    <label>Reason</label>
+                                    <label htmlFor="penaltyReason">Reason</label>
                                     <input
+                                        id="penaltyReason"
                                         type="text"
                                         value={penaltyReason}
                                         onChange={(e) => setPenaltyReason(e.target.value)}
@@ -345,8 +369,9 @@ const UserManagement: React.FC = () => {
                         <div className="modal-body">
                             <form onSubmit={handleUpdateUser} className="form-grid">
                                 <div className="form-group">
-                                    <label>Nickname</label>
+                                    <label htmlFor="editUserNickname">Nickname</label>
                                     <input
+                                        id="editUserNickname"
                                         type="text"
                                         value={editNickname}
                                         onChange={(e) => setEditNickname(e.target.value)}
@@ -354,8 +379,9 @@ const UserManagement: React.FC = () => {
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label>Role</label>
+                                    <label htmlFor="editUserRole">Role</label>
                                     <select
+                                        id="editUserRole"
                                         value={editRoleId}
                                         onChange={(e) => setEditRoleId(Number(e.target.value))}
                                     >
@@ -367,14 +393,26 @@ const UserManagement: React.FC = () => {
                                     </select>
                                 </div>
                                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                                    <label>Reset PIN (Leave blank to keep current)</label>
+                                    <label htmlFor="editUserPin">Reset PIN (Leave blank to keep current)</label>
+                                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                                     <input
-                                        type="password"
+                                        id="editUserPin"
+                                        type={showEditPin ? 'text' : 'password'}
                                         value={editNewPin}
                                         onChange={(e) => setEditNewPin(e.target.value)}
                                         maxLength={4}
                                         placeholder="****"
+                                        style={{ paddingRight: '2.5rem', flex: 1 }}
                                     />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowEditPin(v => !v)}
+                                        aria-label={showEditPin ? t('login.hidePin') : t('login.showPin')}
+                                        style={{ position: 'absolute', right: '0.5rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: '1rem' }}
+                                    >
+                                        {showEditPin ? '🙈' : '👁️'}
+                                    </button>
+                                    </div>
                                 </div>
 
                                 {editError && <div className="error-message" style={{ gridColumn: '1 / -1' }}>{editError}</div>}

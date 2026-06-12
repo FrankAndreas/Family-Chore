@@ -32,9 +32,8 @@ const TaskForm: React.FC<TaskFormProps> = ({
     onSubmit,
     onCancel,
     error,
-    submitButtonText = 'Create Task',
+    submitButtonText,
     submitting = false,
-
 }) => {
     const { t } = useTranslation();
     const [nameError, setNameError] = React.useState('');
@@ -42,35 +41,66 @@ const TaskForm: React.FC<TaskFormProps> = ({
     const [pointsError, setPointsError] = React.useState('');
     const [minDaysError, setMinDaysError] = React.useState('');
 
-    const validate = () => {
+    const validateField = (field: string) => {
+        if (field === 'name' || field === 'all') {
+            if (!formData.name.trim()) {
+                setNameError(t('tasks.validation.nameRequired'));
+            } else {
+                setNameError('');
+            }
+        }
+        if (field === 'description' || field === 'all') {
+            if (!formData.description.trim()) {
+                setDescError(t('tasks.validation.descRequired'));
+            } else {
+                setDescError('');
+            }
+        }
+        if (field === 'basePoints' || field === 'all') {
+            if (formData.basePoints < 1) {
+                setPointsError(t('tasks.validation.pointsMin'));
+            } else {
+                setPointsError('');
+            }
+        }
+        if ((field === 'recurrenceMinDays' || field === 'all') && formData.scheduleType === 'recurring') {
+            if (formData.recurrenceMinDays < 1) {
+                setMinDaysError(t('tasks.validation.minDaysMin'));
+            } else if (formData.recurrenceMinDays > formData.recurrenceMaxDays) {
+                setMinDaysError(t('tasks.validation.minDaysExceedsMax'));
+            } else {
+                setMinDaysError('');
+            }
+        }
+    };
+
+    const validateAll = (): boolean => {
         let valid = true;
+
         if (!formData.name.trim()) {
-            setNameError('Task name is required');
+            setNameError(t('tasks.validation.nameRequired'));
             valid = false;
         } else {
             setNameError('');
         }
-
         if (!formData.description.trim()) {
-            setDescError('Description is required');
+            setDescError(t('tasks.validation.descRequired'));
             valid = false;
         } else {
             setDescError('');
         }
-
         if (formData.basePoints < 1) {
-            setPointsError('Base points must be at least 1');
+            setPointsError(t('tasks.validation.pointsMin'));
             valid = false;
         } else {
             setPointsError('');
         }
-
         if (formData.scheduleType === 'recurring') {
             if (formData.recurrenceMinDays < 1) {
-                setMinDaysError('Minimum days must be at least 1');
+                setMinDaysError(t('tasks.validation.minDaysMin'));
                 valid = false;
             } else if (formData.recurrenceMinDays > formData.recurrenceMaxDays) {
-                setMinDaysError('Minimum days cannot exceed maximum days');
+                setMinDaysError(t('tasks.validation.minDaysExceedsMax'));
                 valid = false;
             } else {
                 setMinDaysError('');
@@ -82,15 +112,25 @@ const TaskForm: React.FC<TaskFormProps> = ({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (validate()) {
+        if (validateAll()) {
             onSubmit(e);
         }
     };
 
+    const WEEKDAY_OPTIONS = [
+        { value: 'Monday', label: t('weekdays.monday') },
+        { value: 'Tuesday', label: t('weekdays.tuesday') },
+        { value: 'Wednesday', label: t('weekdays.wednesday') },
+        { value: 'Thursday', label: t('weekdays.thursday') },
+        { value: 'Friday', label: t('weekdays.friday') },
+        { value: 'Saturday', label: t('weekdays.saturday') },
+        { value: 'Sunday', label: t('weekdays.sunday') },
+    ];
+
     return (
         <form onSubmit={handleSubmit} className="form-grid task-form">
             <div className="form-group">
-                <label htmlFor="taskName">Task Name</label>
+                <label htmlFor="taskName">{t('tasks.fields.name')}</label>
                 <input
                     id="taskName"
                     type="text"
@@ -100,14 +140,14 @@ const TaskForm: React.FC<TaskFormProps> = ({
                         onChange({ name: e.target.value });
                         if (nameError) setNameError('');
                     }}
-                    onBlur={validate}
+                    onBlur={() => validateField('name')}
                     required
                     placeholder="e.g. Wash Dishes"
                 />
                 {nameError && <small className="error-text">{nameError}</small>}
             </div>
             <div className="form-group">
-                <label htmlFor="taskDescription">Description</label>
+                <label htmlFor="taskDescription">{t('tasks.fields.description')}</label>
                 <input
                     id="taskDescription"
                     type="text"
@@ -117,14 +157,14 @@ const TaskForm: React.FC<TaskFormProps> = ({
                         onChange({ description: e.target.value });
                         if (descError) setDescError('');
                     }}
-                    onBlur={validate}
+                    onBlur={() => validateField('description')}
                     required
                     placeholder="e.g. Load and start the dishwasher"
                 />
                 {descError && <small className="error-text">{descError}</small>}
             </div>
             <div className="form-group">
-                <label htmlFor="taskBasePoints">Base Points</label>
+                <label htmlFor="taskBasePoints">{t('tasks.fields.basePoints')}</label>
                 <input
                     id="taskBasePoints"
                     type="number"
@@ -134,7 +174,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
                         onChange({ basePoints: Number(e.target.value) });
                         if (pointsError) setPointsError('');
                     }}
-                    onBlur={validate}
+                    onBlur={() => validateField('basePoints')}
                     min={1}
                     max={1000}
                     required
@@ -142,118 +182,123 @@ const TaskForm: React.FC<TaskFormProps> = ({
                 {pointsError && <small className="error-text">{pointsError}</small>}
             </div>
             <div className="form-group">
-                <label>Assigned To</label>
+                <label htmlFor="taskAssignedTo">{t('tasks.fields.assignedTo')}</label>
                 <select
+                    id="taskAssignedTo"
                     value={formData.assignedRoleId || 0}
                     onChange={(e) => {
                         const value = Number(e.target.value);
                         onChange({ assignedRoleId: value === 0 ? 0 : value });
                     }}
                 >
-                    <option value={0}>🏠 All Family Members</option>
+                    <option value={0}>🏠 {t('tasks.assignedToAll')}</option>
                     {roles.map(role => (
                         <option key={role.id} value={role.id}>
                             {role.name}
                         </option>
                     ))}
                 </select>
-                <small className="help-text">
-                    Select "All Family Members" for tasks anyone can do
-                </small>
+                <small className="help-text">{t('tasks.assignedToHint')}</small>
             </div>
             <div className="form-group">
-                <label>Schedule Type</label>
+                <label htmlFor="taskScheduleType">{t('tasks.fields.scheduleType')}</label>
                 <select
+                    id="taskScheduleType"
                     value={formData.scheduleType}
                     onChange={(e) => {
                         const newType = e.target.value;
                         const updates: Partial<TaskFormData> = { scheduleType: newType };
-                        // Reset due time to appropriate default
                         if (newType === 'daily') {
                             updates.defaultDueTime = '17:00';
                         } else if (newType === 'weekly') {
                             updates.defaultDueTime = 'Monday';
-                        } else {  // recurring
+                        } else {
                             updates.defaultDueTime = 'recurring';
                         }
                         onChange(updates);
                     }}
                     className="schedule-select"
                 >
-                    <option value="daily">📅 Daily - Task appears every day</option>
-                    <option value="weekly">📆 Weekly - Task appears on specific weekday</option>
-                    <option value="recurring">🔄 Recurring - Task with cooldown period</option>
+                    <option value="daily">📅 {t('tasks.scheduleTypes.daily')}</option>
+                    <option value="weekly">📆 {t('tasks.scheduleTypes.weekly')}</option>
+                    <option value="recurring">🔄 {t('tasks.scheduleTypes.recurring')}</option>
                 </select>
                 <small className="help-text-block">
-                    {formData.scheduleType === 'daily' && '⏰ Appears at the same time every day'}
-                    {formData.scheduleType === 'weekly' && '🗓️ Appears once per week on chosen day'}
-                    {formData.scheduleType === 'recurring' && '⏳ Reappears after cooldown period expires'}
+                    {formData.scheduleType === 'daily' && `⏰ ${t('tasks.scheduleInfo.daily')}`}
+                    {formData.scheduleType === 'weekly' && `🗓️ ${t('tasks.scheduleInfo.weekly')}`}
+                    {formData.scheduleType === 'recurring' && `⏳ ${t('tasks.scheduleInfo.recurring')}`}
                 </small>
             </div>
 
             {formData.scheduleType === 'recurring' ? (
-                <>
-                    <div className="recurring-fields-container">
-                        <h4 className="recurring-header">
-                            🔄 Cooldown Settings
-                        </h4>
+                <div className="recurring-fields-container">
+                    <h4 className="recurring-header">
+                        🔄 {t('tasks.cooldownSettings')}
+                    </h4>
 
-                        <div className="recurring-grid">
-                            <div className="form-group form-group-no-margin">
-                                <label>Minimum Days Between ⏱️</label>
-                                <input
-                                    type="number"
-                                    value={formData.recurrenceMinDays}
-                                    className={minDaysError ? 'error-input' : ''}
-                                    onChange={(e) => {
-                                        const val = Number(e.target.value);
-                                        const updates: Partial<TaskFormData> = { recurrenceMinDays: val };
-                                        if (val > formData.recurrenceMaxDays) {
-                                            updates.recurrenceMaxDays = val;
-                                        }
-                                        onChange(updates);
-                                        if (minDaysError) setMinDaysError('');
-                                    }}
-                                    onBlur={validate}
-                                    min={1}
-                                    max={365}
-                                    required
-                                />
-                                {minDaysError && <small className="error-text">{minDaysError}</small>}
-                                <small className="help-text">
-                                    Wait at least <strong>{formData.recurrenceMinDays}</strong> {t('tasks.days_count', { count: formData.recurrenceMinDays })} after completion
-                                </small>
-                            </div>
+                    <div className="recurring-grid">
+                        <div className="form-group form-group-no-margin">
+                            <label htmlFor="taskMinDays">{t('tasks.fields.minDays')} ⏱️</label>
+                            <input
+                                id="taskMinDays"
+                                type="number"
+                                value={formData.recurrenceMinDays}
+                                className={minDaysError ? 'error-input' : ''}
+                                onChange={(e) => {
+                                    const val = Number(e.target.value);
+                                    const updates: Partial<TaskFormData> = { recurrenceMinDays: val };
+                                    if (val > formData.recurrenceMaxDays) {
+                                        updates.recurrenceMaxDays = val;
+                                    }
+                                    onChange(updates);
+                                    if (minDaysError) setMinDaysError('');
+                                }}
+                                onBlur={() => validateField('recurrenceMinDays')}
+                                min={1}
+                                max={365}
+                                required
+                            />
+                            {minDaysError && <small className="error-text">{minDaysError}</small>}
+                            <small className="help-text">
+                                {t('tasks.waitAtLeast')} <strong>{formData.recurrenceMinDays}</strong>{' '}
+                                {t('tasks.days_count', { count: formData.recurrenceMinDays })}{' '}
+                                {t('tasks.afterCompletion')}
+                            </small>
+                        </div>
 
-                            <div className="form-group form-group-no-margin">
-                                <label>Maximum Days Between ⌛</label>
-                                <input
-                                    type="number"
-                                    value={formData.recurrenceMaxDays}
-                                    onChange={(e) => {
-                                        const val = Number(e.target.value);
-                                        const updates: Partial<TaskFormData> = { recurrenceMaxDays: val };
-                                        if (val < formData.recurrenceMinDays) {
-                                            updates.recurrenceMinDays = val;
-                                        }
-                                        onChange(updates);
-                                    }}
-                                    min={1}
-                                    max={365}
-                                    required
-                                />
-                                <small className="help-text">
-                                    Should be done within <strong>{formData.recurrenceMaxDays}</strong> {t('tasks.days_count', { count: formData.recurrenceMaxDays })}
-                                </small>
-                            </div>
+                        <div className="form-group form-group-no-margin">
+                            <label htmlFor="taskMaxDays">{t('tasks.fields.maxDays')} ⌛</label>
+                            <input
+                                id="taskMaxDays"
+                                type="number"
+                                value={formData.recurrenceMaxDays}
+                                onChange={(e) => {
+                                    const val = Number(e.target.value);
+                                    const updates: Partial<TaskFormData> = { recurrenceMaxDays: val };
+                                    if (val < formData.recurrenceMinDays) {
+                                        updates.recurrenceMinDays = val;
+                                    }
+                                    onChange(updates);
+                                }}
+                                min={1}
+                                max={365}
+                                required
+                            />
+                            <small className="help-text">
+                                {t('tasks.shouldBeDoneWithin')} <strong>{formData.recurrenceMaxDays}</strong>{' '}
+                                {t('tasks.days_count', { count: formData.recurrenceMaxDays })}
+                            </small>
                         </div>
                     </div>
-                </>
+                </div>
             ) : (
                 <div className="form-group">
-                    <label>{formData.scheduleType === 'daily' ? 'Due Time' : 'Due Day'}</label>
+                    <label htmlFor="taskDueTime">
+                        {formData.scheduleType === 'daily' ? t('tasks.fields.dueTime') : t('tasks.fields.dueDay')}
+                    </label>
                     {formData.scheduleType === 'daily' ? (
                         <input
+                            id="taskDueTime"
                             type="time"
                             value={formData.defaultDueTime}
                             onChange={(e) => onChange({ defaultDueTime: e.target.value })}
@@ -261,21 +306,18 @@ const TaskForm: React.FC<TaskFormProps> = ({
                         />
                     ) : (
                         <select
+                            id="taskDueTime"
                             value={formData.defaultDueTime}
                             onChange={(e) => onChange({ defaultDueTime: e.target.value })}
                             required
                         >
-                            <option value="Monday">Monday</option>
-                            <option value="Tuesday">Tuesday</option>
-                            <option value="Wednesday">Wednesday</option>
-                            <option value="Thursday">Thursday</option>
-                            <option value="Friday">Friday</option>
-                            <option value="Saturday">Saturday</option>
-                            <option value="Sunday">Sunday</option>
+                            {WEEKDAY_OPTIONS.map(({ value, label }) => (
+                                <option key={value} value={value}>{label}</option>
+                            ))}
                         </select>
                     )}
                     <small className="help-text">
-                        {formData.scheduleType === 'daily' ? 'When the task is due each day' : 'Which day of the week this task occurs'}
+                        {formData.scheduleType === 'daily' ? t('tasks.dueTimeHint') : t('tasks.dueDayHint')}
                     </small>
                 </div>
             )}
@@ -283,11 +325,11 @@ const TaskForm: React.FC<TaskFormProps> = ({
             <div className="form-actions form-actions-full">
                 {onCancel && (
                     <button type="button" className="btn btn-secondary" onClick={onCancel}>
-                        Cancel
+                        {t('common.cancel')}
                     </button>
                 )}
                 <button type="submit" className="btn btn-primary" disabled={submitting}>
-                    {submitting ? 'Saving...' : submitButtonText}
+                    {submitting ? t('tasks.saving') : (submitButtonText ?? t('tasks.createTask'))}
                 </button>
             </div>
 

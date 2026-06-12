@@ -121,12 +121,7 @@ const SettingsPage: React.FC = () => {
                     </button>
                 </div>
 
-                <div className="section glass-panel mt-5">
-                    <h3>{t('settings.moreSettings')}</h3>
-                    <p className="text-secondary mt-2">
-                        {t('settings.moreSettingsDesc')}
-                    </p>
-                </div>
+
             </div>
         </div>
     );

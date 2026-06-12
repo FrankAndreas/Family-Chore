@@ -10,7 +10,15 @@ interface HeatmapProps {
     userId: number;
 }
 
-const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+const DAY_LABELS = [
+    { short: 'Mo', key: 'weekdays.monday' },
+    { short: 'Tu', key: 'weekdays.tuesday' },
+    { short: 'We', key: 'weekdays.wednesday' },
+    { short: 'Th', key: 'weekdays.thursday' },
+    { short: 'Fr', key: 'weekdays.friday' },
+    { short: 'Sa', key: 'weekdays.saturday' },
+    { short: 'Su', key: 'weekdays.sunday' },
+];
 
 const intensityClass = (count: number): string => {
     if (count === 0) return 'heatmap-cell--empty';
@@ -84,8 +92,10 @@ const Heatmap: React.FC<HeatmapProps> = ({ days, nickname, userId }) => {
             {/* Day-of-week labels */}
             <div className="heatmap-wrapper">
                 <div className="heatmap-labels">
-                    {DAY_LABELS.map((l, i) => (
-                        <span key={i} className="heatmap-label">{l}</span>
+                    {DAY_LABELS.map(({ short, key }) => (
+                        <span key={key} className="heatmap-label" aria-label={t(key)}>
+                            {short}
+                        </span>
                     ))}
                 </div>
 

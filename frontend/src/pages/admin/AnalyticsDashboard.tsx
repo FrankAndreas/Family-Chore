@@ -198,6 +198,22 @@ const AnalyticsDashboard: React.FC = () => {
             </div>
 
             {/* Family Progress Heatmap */}
+            {heatmapData && heatmapData.users.length === 0 && (
+                <section className="heatmap-section">
+                    <div className="heatmap-section__header">
+                        <h2 className="section-title">
+                            🗓️ {t('analytics.family_heatmap', { days: heatmapDays })}
+                        </h2>
+                        <TimeRangeSelector
+                            selectedDays={heatmapDays}
+                            onChange={handleTimeRangeChange}
+                        />
+                    </div>
+                    <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                        <p>{t('analytics.no_tasks')}</p>
+                    </div>
+                </section>
+            )}
             {heatmapData && heatmapData.users.length > 0 && (
                 <section className="heatmap-section">
                     <div className="heatmap-section__header">

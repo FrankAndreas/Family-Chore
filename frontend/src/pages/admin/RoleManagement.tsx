@@ -4,6 +4,7 @@ import type { Role } from '../../types';
 import { useTranslation } from 'react-i18next';
 import { ADMIN_ROLE_NAME } from '../../constants';
 import { SkeletonLoader } from '../../components/SkeletonLoader';
+import Modal from '../../components/Modal';
 import '../../styles/SharedDashboard.css';
 import './Dashboard.css';
 
@@ -25,95 +26,95 @@ function DeleteRoleModal({ role, users, roles, onConfirm, onCancel }: DeleteModa
     const availableRoles = roles.filter(r => r.id !== role.id);
 
     return (
-        <div className="modal-overlay" onClick={onCancel}>
-            <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '500px' }}>
-                <h2 style={{ color: '#ef4444', marginBottom: '1rem' }}>⚠️ Delete Role: {role.name}</h2>
-
-                {users.length > 0 ? (
-                    <>
-                        <p style={{ marginBottom: '1rem' }}>
-                            This role has <strong>{users.length} user(s)</strong> assigned:
-                        </p>
-                        <div style={{
-                            background: 'rgba(255,255,255,0.05)',
-                            borderRadius: '8px',
-                            padding: '0.75rem',
-                            marginBottom: '1rem'
-                        }}>
-                            {users.map(u => (
-                                <span key={u.id} style={{
-                                    display: 'inline-block',
-                                    background: 'rgba(139, 92, 246, 0.2)',
-                                    padding: '0.25rem 0.5rem',
-                                    borderRadius: '12px',
-                                    marginRight: '0.5rem',
-                                    marginBottom: '0.25rem'
-                                }}>
-                                    {u.nickname}
-                                </span>
-                            ))}
-                        </div>
-
-                        <p style={{ marginBottom: '0.5rem' }}>
-                            <strong>Select a new role</strong> for these users:
-                        </p>
-                        <select
-                            value={selectedRoleId || ''}
-                            onChange={e => setSelectedRoleId(Number(e.target.value))}
-                            style={{
-                                width: '100%',
-                                padding: '0.75rem',
-                                marginBottom: '1.5rem',
-                                borderRadius: '8px',
-                                background: '#1e1e2e',
-                                border: '1px solid rgba(255,255,255,0.3)',
-                                color: '#ffffff',
-                                fontSize: '1rem'
-                            }}
-                        >
-                            <option value="" style={{ background: '#1e1e2e', color: '#ffffff' }}>-- Select Role --</option>
-                            {availableRoles.map(r => (
-                                <option key={r.id} value={r.id} style={{ background: '#1e1e2e', color: '#ffffff' }}>
-                                    {r.name} (×{r.multiplier_value})
-                                </option>
-                            ))}
-                        </select>
-                    </>
-                ) : (
-                    <p style={{ marginBottom: '1.5rem' }}>
-                        No users are assigned to this role. It can be deleted safely.
+        <Modal
+            isOpen={true}
+            onClose={onCancel}
+            title={`⚠️ Delete Role: ${role.name}`}
+        >
+            {users.length > 0 ? (
+                <>
+                    <p style={{ marginBottom: '1rem' }}>
+                        This role has <strong>{users.length} user(s)</strong> assigned:
                     </p>
-                )}
+                    <div style={{
+                        background: 'rgba(255,255,255,0.05)',
+                        borderRadius: '8px',
+                        padding: '0.75rem',
+                        marginBottom: '1rem'
+                    }}>
+                        {users.map(u => (
+                            <span key={u.id} style={{
+                                display: 'inline-block',
+                                background: 'rgba(139, 92, 246, 0.2)',
+                                padding: '0.25rem 0.5rem',
+                                borderRadius: '12px',
+                                marginRight: '0.5rem',
+                                marginBottom: '0.25rem'
+                            }}>
+                                {u.nickname}
+                            </span>
+                        ))}
+                    </div>
 
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                    <button
-                        className="btn btn-secondary"
-                        onClick={onCancel}
-                        style={{ flex: 1 }}
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        className="btn btn-primary"
-                        onClick={() => {
-                            if (users.length === 0) {
-                                onConfirm(0); // No reassignment needed
-                            } else if (selectedRoleId) {
-                                onConfirm(selectedRoleId);
-                            }
-                        }}
-                        disabled={users.length > 0 && !selectedRoleId}
+                    <p style={{ marginBottom: '0.5rem' }}>
+                        <strong>Select a new role</strong> for these users:
+                    </p>
+                    <select
+                        value={selectedRoleId || ''}
+                        onChange={e => setSelectedRoleId(Number(e.target.value))}
                         style={{
-                            flex: 1,
-                            background: '#ef4444',
-                            opacity: (users.length > 0 && !selectedRoleId) ? 0.5 : 1
+                            width: '100%',
+                            padding: '0.75rem',
+                            marginBottom: '1.5rem',
+                            borderRadius: '8px',
+                            background: '#1e1e2e',
+                            border: '1px solid rgba(255,255,255,0.3)',
+                            color: '#ffffff',
+                            fontSize: '1rem'
                         }}
                     >
-                        🗑️ Delete Role
-                    </button>
-                </div>
+                        <option value="" style={{ background: '#1e1e2e', color: '#ffffff' }}>-- Select Role --</option>
+                        {availableRoles.map(r => (
+                            <option key={r.id} value={r.id} style={{ background: '#1e1e2e', color: '#ffffff' }}>
+                                {r.name} (×{r.multiplier_value})
+                            </option>
+                        ))}
+                    </select>
+                </>
+            ) : (
+                <p style={{ marginBottom: '1.5rem' }}>
+                    No users are assigned to this role. It can be deleted safely.
+                </p>
+            )}
+
+            <div style={{ display: 'flex', gap: '1rem' }}>
+                <button
+                    className="btn btn-secondary"
+                    onClick={onCancel}
+                    style={{ flex: 1 }}
+                >
+                    Cancel
+                </button>
+                <button
+                    className="btn btn-primary"
+                    onClick={() => {
+                        if (users.length === 0) {
+                            onConfirm(0);
+                        } else if (selectedRoleId) {
+                            onConfirm(selectedRoleId);
+                        }
+                    }}
+                    disabled={users.length > 0 && !selectedRoleId}
+                    style={{
+                        flex: 1,
+                        background: '#ef4444',
+                        opacity: (users.length > 0 && !selectedRoleId) ? 0.5 : 1
+                    }}
+                >
+                    🗑️ Delete Role
+                </button>
             </div>
-        </div>
+        </Modal>
     );
 }
 
@@ -121,6 +122,7 @@ const RoleManagement: React.FC = () => {
     const { t } = useTranslation();
     const [roles, setRoles] = useState<Role[]>([]);
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState('');
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editValue, setEditValue] = useState<string>('');
     const [error, setError] = useState('');
@@ -140,11 +142,13 @@ const RoleManagement: React.FC = () => {
     }, []);
 
     const fetchRoles = async () => {
+        setLoadError('');
         try {
             const response = await getRoles();
             setRoles(response.data);
         } catch (err) {
             console.error('Failed to fetch roles', err);
+            setLoadError(t('roles.messages.loadFailed'));
         } finally {
             setLoading(false);
         }
@@ -266,14 +270,24 @@ const RoleManagement: React.FC = () => {
             {success && <div className="success-message mb-lg fade-in">{success}</div>}
             {error && <div className="error-message mb-lg fade-in">{error}</div>}
 
+            {loadError && (
+                <div className="empty-state" style={{ borderColor: '#ef4444' }}>
+                    <p style={{ color: '#ef4444' }}>⚠️ {loadError}</p>
+                    <button className="btn btn-secondary btn-sm mt-m" onClick={fetchRoles}>
+                        Retry Loading
+                    </button>
+                </div>
+            )}
+
             {/* Add Role Form */}
             {showAddForm && (
                 <div className="glass-panel mb-lg fade-in" style={{ padding: '1.5rem' }}>
                     <h3 style={{ marginBottom: '1rem' }}>➕ Create New Role</h3>
                     <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                         <div style={{ flex: '2', minWidth: '200px' }}>
-                            <label className="form-label">Role Name</label>
+                            <label className="form-label" htmlFor="newRoleName">Role Name</label>
                             <input
+                                id="newRoleName"
                                 type="text"
                                 className="form-input"
                                 placeholder="e.g., Grandparent"
@@ -282,8 +296,9 @@ const RoleManagement: React.FC = () => {
                             />
                         </div>
                         <div style={{ flex: '1', minWidth: '120px' }}>
-                            <label className="form-label">Multiplier</label>
+                            <label className="form-label" htmlFor="newRoleMultiplier">Multiplier</label>
                             <input
+                                id="newRoleMultiplier"
                                 type="number"
                                 step="0.1"
                                 min="0.1"

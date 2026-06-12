@@ -16,7 +16,8 @@
         "pts": "Pkt",
         "not_found_title": "404 - Seite nicht gefunden",
         "not_found_desc": "Hoppla! Es sieht so aus, als hätten Sie sich verirrt. Diese Seite existiert nicht.",
-        "back_to_home": "Bring mich nach Hause 🏠"
+        "back_to_home": "Bring mich nach Hause 🏠",
+        "error_loading": "Daten konnten nicht geladen werden. Bitte versuche es erneut."
     },
     "login": {
         "title": "Willkommen bei ChoreSpec",
@@ -37,8 +38,7 @@
             "pinFormat": "PIN muss genau 4 Ziffern haben",
             "userNotFound": "Benutzer nicht gefunden",
             "incorrectPin": "Falsche PIN",
-            "loginFailed": "Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut.",
-            "familyAdminDesc": "Gewährt vollen Zugriff auf das Familien-Dashboard. Wird benötigt, um den Bereich Aufgaben als Erwachsener zu sehen."
+            "loginFailed": "Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut."
         }
     },
     "navigation": {
@@ -186,7 +186,18 @@
         "cooldownRange": "Abkühlzeitbereich",
         "canReappear": "Kann wieder erscheinen",
         "overdue": "Überfällig",
-        "examples": "Beispiele: Staubsaugen (3-5 Tage), Autowäsche (7-10 Tage), Gründliche Reinigung (4-6 Tage)"
+        "examples": "Beispiele: Staubsaugen (3-5 Tage), Autowäsche (7-10 Tage), Gründliche Reinigung (4-6 Tage)",
+        "assignedToHint": "\"Alle Familienmitglieder\" wählen für Aufgaben, die jeder erledigen kann",
+        "dueTimeHint": "Wann die Aufgabe jeden Tag fällig ist",
+        "dueDayHint": "An welchem Wochentag diese Aufgabe anfällt",
+        "saving": "Wird gespeichert...",
+        "validation": {
+            "nameRequired": "Aufgabenname ist erforderlich",
+            "descRequired": "Beschreibung ist erforderlich",
+            "pointsMin": "Basispunkte müssen mindestens 1 betragen",
+            "minDaysMin": "Minimale Tage müssen mindestens 1 betragen",
+            "minDaysExceedsMax": "Minimale Tage können die maximalen Tage nicht überschreiten"
+        }
     },
     "rewards": {
         "title": "Prämien-Shop",
@@ -276,7 +287,7 @@
             "created": "Benutzer erfolgreich erstellt! 🎉",
             "createFailed": "Benutzer konnte nicht erstellt werden",
             "loadFailed": "Benutzer konnten nicht geladen werden",
-            "adminInfo": "Der Status des Hauptadministrators kann nicht geändert werden."
+            "familyAdminDesc": "Gewährt vollen Zugriff auf das Familien-Dashboard. Wird benötigt, um den Bereich Aufgaben als Erwachsener zu sehen."
         }
     },
     "roles": {
@@ -310,7 +321,6 @@
             "saved": "Einstellungen erfolgreich gespeichert! ✅",
             "saveFailed": "Einstellungen konnten nicht gespeichert werden"
         },
-        "moreSettingsDesc": "Profilanpassung, Benachrichtigungseinstellungen und mehr.",
         "settingsSavedSuccess": "Einstellungen erfolgreich gespeichert!",
         "settingsSavedError": "Einstellungen konnten nicht gespeichert werden. Bitte versuchen Sie es erneut.",
         "notificationsDesc": "Konfigurieren Sie, wie Sie Updates und Erinnerungen erhalten.",
