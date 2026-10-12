@@ -1,7 +1,7 @@
 import datetime
 from datetime import timezone
-from sqlalchemy import Boolean, Column, Integer, String, Float, ForeignKey, DateTime, Date, Text
-from sqlalchemy.orm import relationship
+from sqlalchemy import Boolean, Integer, String, Float, ForeignKey, DateTime, Date, Text
+from sqlalchemy.orm import mapped_column, relationship
 from .database import Base
 
 # System Settings (for family-wide configurations)
@@ -10,11 +10,11 @@ from .database import Base
 class SystemSettings(Base):
     __tablename__ = "system_settings"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = mapped_column(Integer, primary_key=True, index=True)
     # e.g., "default_language"
-    key = Column(String, unique=True, nullable=False)
-    value = Column(String, nullable=False)  # e.g., "en" or "de"
-    description = Column(Text, nullable=True)
+    key = mapped_column(String, unique=True, nullable=False)
+    value = mapped_column(String, nullable=False)  # e.g., "en" or "de"
+    description = mapped_column(Text, nullable=True)
 
 # 1.1 Roles (Multiplier Configuration)
 
@@ -22,9 +22,9 @@ class SystemSettings(Base):
 class Role(Base):
     __tablename__ = "roles"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, unique=True, nullable=False)
-    multiplier_value = Column(Float, nullable=False, default=1.0)
+    id = mapped_column(Integer, primary_key=True, index=True)
+    name = mapped_column(String, unique=True, nullable=False)
+    multiplier_value = mapped_column(Float, nullable=False, default=1.0)
 
     # Relationships
     users = relationship("User", back_populates="role")
@@ -35,28 +35,28 @@ class Role(Base):
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
-    role_id = Column(Integer, ForeignKey("roles.id"), nullable=False)
-    nickname = Column(String, unique=True, nullable=False)
-    login_pin = Column(String, nullable=False)
+    id = mapped_column(Integer, primary_key=True, index=True)
+    role_id = mapped_column(Integer, ForeignKey("roles.id"), nullable=False)
+    nickname = mapped_column(String, unique=True, nullable=False)
+    login_pin = mapped_column(String, nullable=False)
 
-    current_points = Column(Integer, nullable=False, default=0)
-    lifetime_points = Column(Integer, nullable=False, default=0)
+    current_points = mapped_column(Integer, nullable=False, default=0)
+    lifetime_points = mapped_column(Integer, nullable=False, default=0)
 
-    current_goal_reward_id = Column(
+    current_goal_reward_id = mapped_column(
         Integer, ForeignKey("rewards.id"), nullable=True)
 
     # Notifications & Contact
-    email = Column(String, unique=True, nullable=True)
-    notifications_enabled = Column(Boolean, default=True)
+    email = mapped_column(String, unique=True, nullable=True)
+    notifications_enabled = mapped_column(Boolean, default=True)
 
     # Language preference (null = use system default)
     # e.g., "de", "en", or null
-    preferred_language = Column(String, nullable=True)
+    preferred_language = mapped_column(String, nullable=True)
 
     # Gamification Polish
-    current_streak = Column(Integer, nullable=False, default=0)
-    last_task_date = Column(Date, nullable=True)
+    current_streak = mapped_column(Integer, nullable=False, default=0)
+    last_task_date = mapped_column(Date, nullable=True)
 
     # Relationships
     role = relationship("Role", back_populates="users")
@@ -72,37 +72,37 @@ class User(Base):
 class Reward(Base):
     __tablename__ = "rewards"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False)
-    cost_points = Column(Integer, nullable=False)
-    description = Column(Text)
-    tier_level = Column(Integer, default=0)
+    id = mapped_column(Integer, primary_key=True, index=True)
+    name = mapped_column(String, nullable=False)
+    cost_points = mapped_column(Integer, nullable=False)
+    description = mapped_column(Text)
+    tier_level = mapped_column(Integer, default=0)
 
 
 # 1.3 Tasks (Chore Templates)
 class Task(Base):
     __tablename__ = "tasks"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False)
-    description = Column(Text, nullable=False)
-    base_points = Column(Integer, nullable=False)
+    id = mapped_column(Integer, primary_key=True, index=True)
+    name = mapped_column(String, nullable=False)
+    description = mapped_column(Text, nullable=False)
+    base_points = mapped_column(Integer, nullable=False)
 
-    assigned_role_id = Column(Integer, ForeignKey("roles.id"), nullable=True)
+    assigned_role_id = mapped_column(Integer, ForeignKey("roles.id"), nullable=True)
 
     # Scheduling
-    schedule_type = Column(String, nullable=False, default="daily")
+    schedule_type = mapped_column(String, nullable=False, default="daily")
     # e.g., "17:00" for daily, "Monday" for weekly, or ignored for recurring
-    default_due_time = Column(String, nullable=False)
+    default_due_time = mapped_column(String, nullable=False)
 
     # Recurring task configuration (for schedule_type="recurring")
     # Min days between completions (e.g., 3)
-    recurrence_min_days = Column(Integer, nullable=True)
+    recurrence_min_days = mapped_column(Integer, nullable=True)
     # Max days between completions (e.g., 5)
-    recurrence_max_days = Column(Integer, nullable=True)
+    recurrence_max_days = mapped_column(Integer, nullable=True)
 
     # V1.1 Fields
-    requires_photo_verification = Column(Boolean, default=False)
+    requires_photo_verification = mapped_column(Boolean, default=False)
 
     # Relationships
     assigned_role = relationship("Role", back_populates="tasks")
@@ -113,15 +113,15 @@ class Task(Base):
 class TaskInstance(Base):
     __tablename__ = "task_instances"
 
-    id = Column(Integer, primary_key=True, index=True)
-    task_id = Column(Integer, ForeignKey("tasks.id"), nullable=False, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    id = mapped_column(Integer, primary_key=True, index=True)
+    task_id = mapped_column(Integer, ForeignKey("tasks.id"), nullable=False, index=True)
+    user_id = mapped_column(Integer, ForeignKey("users.id"), nullable=False, index=True)
 
-    due_time = Column(DateTime, nullable=False)
-    completed_at = Column(DateTime, nullable=True)
-    status = Column(String, nullable=False, default="PENDING", index=True)
+    due_time = mapped_column(DateTime, nullable=False)
+    completed_at = mapped_column(DateTime, nullable=True)
+    status = mapped_column(String, nullable=False, default="PENDING", index=True)
 
-    completion_photo_url = Column(String, nullable=True)
+    completion_photo_url = mapped_column(String, nullable=True)
 
     # Relationships
     task = relationship("Task", back_populates="instances")
@@ -134,21 +134,21 @@ class TaskInstance(Base):
 class Transaction(Base):
     __tablename__ = "transactions"
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    id = mapped_column(Integer, primary_key=True, index=True)
+    user_id = mapped_column(Integer, ForeignKey("users.id"), nullable=False, index=True)
 
-    type = Column(String, nullable=False)  # 'EARN', 'REDEEM', or 'PENALTY'
+    type = mapped_column(String, nullable=False)  # 'EARN', 'REDEEM', or 'PENALTY'
 
-    base_points_value = Column(Integer, nullable=False)
-    multiplier_used = Column(Float, nullable=False)
-    awarded_points = Column(Integer, nullable=False)
-    description = Column(String, nullable=True)  # Snapshot of task/reward name
+    base_points_value = mapped_column(Integer, nullable=False)
+    multiplier_used = mapped_column(Float, nullable=False)
+    awarded_points = mapped_column(Integer, nullable=False)
+    description = mapped_column(String, nullable=True)  # Snapshot of task/reward name
 
-    reference_instance_id = Column(
+    reference_instance_id = mapped_column(
         Integer, ForeignKey("task_instances.id"), nullable=True)
 
-    timestamp = Column(DateTime, nullable=False,
-                       default=lambda: datetime.datetime.now(timezone.utc), index=True)
+    timestamp = mapped_column(DateTime, nullable=False,
+                              default=lambda: datetime.datetime.now(timezone.utc), index=True)
 
     # Relationships
     user = relationship("User", back_populates="transactions")
@@ -160,20 +160,20 @@ class Transaction(Base):
 class Notification(Base):
     __tablename__ = "notifications"
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    id = mapped_column(Integer, primary_key=True, index=True)
+    user_id = mapped_column(Integer, ForeignKey("users.id"), nullable=False, index=True)
 
     # 'TASK_ASSIGNED', 'TASK_COMPLETED', 'REWARD_REDEEMED', 'SYSTEM'
-    type = Column(String, nullable=False)
-    title = Column(String, nullable=False)
-    message = Column(String, nullable=False)
+    type = mapped_column(String, nullable=False)
+    title = mapped_column(String, nullable=False)
+    message = mapped_column(String, nullable=False)
 
-    read = Column(Boolean, default=False)
+    read = mapped_column(Boolean, default=False)
 
-    created_at = Column(DateTime, nullable=False,
-                        default=lambda: datetime.datetime.now(timezone.utc))
+    created_at = mapped_column(DateTime, nullable=False,
+                               default=lambda: datetime.datetime.now(timezone.utc))
     # JSON string for extra data (e.g. {"task_id": 123})
-    data = Column(Text, nullable=True)
+    data = mapped_column(Text, nullable=True)
 
     # Relationships
     user = relationship("User", back_populates="notifications")
@@ -183,14 +183,14 @@ class Notification(Base):
 class PushSubscription(Base):
     __tablename__ = "push_subscriptions"
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    id = mapped_column(Integer, primary_key=True, index=True)
+    user_id = mapped_column(Integer, ForeignKey("users.id"), nullable=False, index=True)
 
-    endpoint = Column(String, unique=True, nullable=False)
-    p256dh = Column(String, nullable=False)
-    auth = Column(String, nullable=False)
+    endpoint = mapped_column(String, unique=True, nullable=False)
+    p256dh = mapped_column(String, nullable=False)
+    auth = mapped_column(String, nullable=False)
 
-    created_at = Column(DateTime, nullable=False, default=lambda: datetime.datetime.now(timezone.utc))
+    created_at = mapped_column(DateTime, nullable=False, default=lambda: datetime.datetime.now(timezone.utc))
 
     # Relationships
     user = relationship("User", back_populates="push_subscriptions")

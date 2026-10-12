@@ -37,13 +37,11 @@ def user_exists(seeded_db, client, context, nickname, role_name):
     return user
 
 
-@given(parsers.parse('a recurring task exists:\n{task_table}'))
-def recurring_task_exists(seeded_db, client, task_table, context):
+@given('a recurring task exists:')
+def recurring_task_exists(seeded_db, client, datatable, context):
     """Create a recurring task from table data."""
-    lines = [line.strip()
-             for line in task_table.strip().split('\n') if line.strip()]
-    data_line = lines[1] if len(lines) > 1 else lines[0]
-    parts = [p.strip() for p in data_line.split('|') if p.strip()]
+    data_row = datatable[1] if len(datatable) > 1 else datatable[0]
+    parts = [p.strip() for p in data_row if p.strip()]
 
     name = parts[0]
     description = parts[1]
@@ -72,13 +70,11 @@ def recurring_task_exists(seeded_db, client, task_table, context):
     context['task_name'] = name
 
 
-@given(parsers.parse('a recurring task exists for all family members:\n{task_table}'))
-def recurring_task_for_all(client, task_table, context):
+@given('a recurring task exists for all family members:')
+def recurring_task_for_all(client, datatable, context):
     """Create a recurring task for all family members."""
-    lines = [line.strip()
-             for line in task_table.strip().split('\n') if line.strip()]
-    data_line = lines[1] if len(lines) > 1 else lines[0]
-    parts = [p.strip() for p in data_line.split('|') if p.strip()]
+    data_row = datatable[1] if len(datatable) > 1 else datatable[0]
+    parts = [p.strip() for p in data_row if p.strip()]
 
     name = parts[0]
     description = parts[1]
@@ -150,13 +146,11 @@ def user_completed_task(seeded_db, client, context, nickname, task_name):
 
 # When steps
 
-@when(parsers.parse('I create a recurring task with:\n{task_table}'))
-def create_recurring_task(seeded_db, client, task_table, context):
+@when('I create a recurring task with:')
+def create_recurring_task(seeded_db, client, datatable, context):
     """Create a recurring task from table data."""
-    lines = [line.strip()
-             for line in task_table.strip().split('\n') if line.strip()]
-    data_line = lines[1] if len(lines) > 1 else lines[0]
-    parts = [p.strip() for p in data_line.split('|') if p.strip()]
+    data_row = datatable[1] if len(datatable) > 1 else datatable[0]
+    parts = [p.strip() for p in data_row if p.strip()]
 
     name = parts[0]
     description = parts[1]
@@ -185,13 +179,11 @@ def create_recurring_task(seeded_db, client, task_table, context):
         context['created_task'] = response.json()
 
 
-@when(parsers.parse('I create a recurring task missing max_days:\n{task_table}'))
-def create_recurring_task_missing_max(seeded_db, client, task_table, context):
+@when('I create a recurring task missing max_days:')
+def create_recurring_task_missing_max(seeded_db, client, datatable, context):
     """Create a recurring task with missing max_days."""
-    lines = [line.strip()
-             for line in task_table.strip().split('\n') if line.strip()]
-    data_line = lines[1] if len(lines) > 1 else lines[0]
-    parts = [p.strip() for p in data_line.split('|') if p.strip()]
+    data_row = datatable[1] if len(datatable) > 1 else datatable[0]
+    parts = [p.strip() for p in data_row if p.strip()]
 
     name = parts[0]
     description = parts[1]

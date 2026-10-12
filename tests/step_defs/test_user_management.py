@@ -17,21 +17,19 @@ def system_initialized(seeded_db):
     return seeded_db
 
 
-@given(parsers.parse('the following roles exist:\n{roles_table}'))
-def roles_exist(seeded_db, roles_table):
+@given('the following roles exist:')
+def roles_exist(seeded_db, datatable):
     """Verify roles exist in database."""
     # Roles are already created by seeded_db fixture
     pass
 
 
-@given(parsers.parse('a user exists with:\n{user_table}'))
-def user_exists(seeded_db, client, user_table, context):
+@given('a user exists with:')
+def user_exists(seeded_db, client, datatable, context):
     """Create a user from table data."""
-    lines = [line.strip()
-             for line in user_table.strip().split('\n') if line.strip()]
     # Skip header line
-    data_line = lines[1] if len(lines) > 1 else lines[0]
-    parts = [p.strip() for p in data_line.split('|') if p.strip()]
+    data_row = datatable[1] if len(datatable) > 1 else datatable[0]
+    parts = [p.strip() for p in data_row if p.strip()]
 
     nickname = parts[0]
     login_pin = parts[1]
@@ -54,13 +52,11 @@ def user_exists(seeded_db, client, user_table, context):
 
 # When steps
 
-@when(parsers.parse('I create a new user with:\n{user_table}'))
-def create_user(seeded_db, client, user_table, context):
+@when('I create a new user with:')
+def create_user(seeded_db, client, datatable, context):
     """Create a new user from table data."""
-    lines = [line.strip()
-             for line in user_table.strip().split('\n') if line.strip()]
-    data_line = lines[1] if len(lines) > 1 else lines[0]
-    parts = [p.strip() for p in data_line.split('|') if p.strip()]
+    data_row = datatable[1] if len(datatable) > 1 else datatable[0]
+    parts = [p.strip() for p in data_row if p.strip()]
 
     nickname = parts[0]
     login_pin = parts[1]

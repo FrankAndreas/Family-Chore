@@ -38,13 +38,11 @@ def user_with_points(seeded_db, client, nickname, role_name, points, context):
     context[f'user_{nickname}'] = {"id": user.id, "nickname": user.nickname}
 
 
-@given(parsers.parse('a reward exists:\n{reward_table}'))
-def reward_exists(client, reward_table, context):
+@given('a reward exists:')
+def reward_exists(client, datatable, context):
     """Create a reward from table data."""
-    lines = [line.strip()
-             for line in reward_table.strip().split('\n') if line.strip()]
-    data_line = lines[1] if len(lines) > 1 else lines[0]
-    parts = [p.strip() for p in data_line.split('|') if p.strip()]
+    data_row = datatable[1] if len(datatable) > 1 else datatable[0]
+    parts = [p.strip() for p in data_row if p.strip()]
 
     name = parts[0]
     cost = int(parts[1])
@@ -149,14 +147,12 @@ def verify_current_goal(seeded_db, nickname, reward_name):
     assert user.current_goal.name == reward_name
 
 
-@then(parsers.parse('the goal should show:\n{table}'))
-def verify_goal_metrics(seeded_db, context, table):
+@then('the goal should show:')
+def verify_goal_metrics(seeded_db, context, datatable):
     """Verify goal calculation metrics."""
     # This logic would typically be in the frontend, but we verify the backend data supports it
-    lines = [line.strip()
-             for line in table.strip().split('\n') if line.strip()]
-    data_line = lines[1] if len(lines) > 1 else lines[0]
-    parts = [p.strip() for p in data_line.split('|') if p.strip()]
+    data_row = datatable[1] if len(datatable) > 1 else datatable[0]
+    parts = [p.strip() for p in data_row if p.strip()]
 
     expected_cost = int(parts[0])
     expected_earned = int(parts[1])
