@@ -137,10 +137,6 @@ const RoleManagement: React.FC = () => {
     const [deleteTarget, setDeleteTarget] = useState<Role | null>(null);
     const [deleteUsers, setDeleteUsers] = useState<RoleUser[]>([]);
 
-    useEffect(() => {
-        fetchRoles();
-    }, []);
-
     const fetchRoles = async () => {
         setLoadError('');
         try {
@@ -153,6 +149,24 @@ const RoleManagement: React.FC = () => {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        let ignore = false;
+        getRoles()
+            .then((response) => {
+                if (!ignore) setRoles(response.data);
+            })
+            .catch((err) => {
+                console.error('Failed to fetch roles', err);
+                if (!ignore) setLoadError(t('roles.messages.loadFailed'));
+            })
+            .finally(() => {
+                if (!ignore) setLoading(false);
+            });
+        return () => {
+            ignore = true;
+        };
+    }, [t]);
 
     const startEditing = (role: Role) => {
         setEditingId(role.id);

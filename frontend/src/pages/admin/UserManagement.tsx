@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useUser } from '../../context/UserContext';
 import { getUsersAdmin, createUser, getRoles, penalizeUser, updateUser, resetUserPassword, deleteUser } from '../../api';
 import type { User, Role } from '../../types';
@@ -42,24 +42,40 @@ const UserManagement: React.FC = () => {
     const [selectedUserForDelete, setSelectedUserForDelete] = useState<User | null>(null);
     const [deleteError, setDeleteError] = useState('');
 
-    useEffect(() => {
-        fetchData();
+    const loadData = () => Promise.all([getUsersAdmin(), getRoles()]);
+
+    const applyData = useCallback(([usersRes, rolesRes]: Awaited<ReturnType<typeof loadData>>) => {
+        setUsers(usersRes.data);
+        setRoles(rolesRes.data);
+        if (rolesRes.data.length > 0) {
+            setRoleId(rolesRes.data[0].id);
+        }
     }, []);
 
     const fetchData = async () => {
         try {
-            const [usersRes, rolesRes] = await Promise.all([getUsersAdmin(), getRoles()]);
-            setUsers(usersRes.data);
-            setRoles(rolesRes.data);
-            if (rolesRes.data.length > 0) {
-                setRoleId(rolesRes.data[0].id);
-            }
+            applyData(await loadData());
         } catch (err) {
             console.error('Failed to fetch data', err);
         } finally {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        let ignore = false;
+        loadData()
+            .then((data) => {
+                if (!ignore) applyData(data);
+            })
+            .catch((err) => console.error('Failed to fetch data', err))
+            .finally(() => {
+                if (!ignore) setLoading(false);
+            });
+        return () => {
+            ignore = true;
+        };
+    }, [applyData]);
 
     const handleCreateUser = async (e: React.FormEvent) => {
         e.preventDefault();

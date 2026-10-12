@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getUsersAdmin, getTasks, triggerDailyReset, getAllTransactions, getReviewQueue, reviewTask } from '../../api';
 import type { User, Task, Transaction, TransactionFilters, TaskInstance } from '../../types';
@@ -31,33 +31,56 @@ const AdminDashboard: React.FC = () => {
     const [txPage, setTxPage] = useState(0);
     const TX_PAGE_SIZE = 10;
 
-    useEffect(() => {
-        setFilters(prev => ({ ...prev, search: debouncedSearch || undefined }));
-        setTxPage(0);
-    }, [debouncedSearch]);
+    // Search is derived from the debounced input rather than copied into filters by an effect
+    const txFilters = useMemo<TransactionFilters>(
+        () => ({ ...filters, search: debouncedSearch || undefined }),
+        [filters, debouncedSearch]
+    );
 
-    const fetchData = useCallback(async () => {
-        try {
-            const [usersRes, tasksRes, transactionsRes, reviewRes] = await Promise.all([
-                getUsersAdmin(),
-                getTasks(),
-                getAllTransactions({ limit: 50, ...filters }),
-                getReviewQueue()
-            ]);
+    // Back to the first page whenever the search term settles on a new value
+    const [pagedSearch, setPagedSearch] = useState(debouncedSearch);
+    if (debouncedSearch !== pagedSearch) {
+        setPagedSearch(debouncedSearch);
+        setTxPage(0);
+    }
+
+    const loadDashboard = useCallback(() => Promise.all([
+        getUsersAdmin(),
+        getTasks(),
+        getAllTransactions({ limit: 50, ...txFilters }),
+        getReviewQueue()
+    ]), [txFilters]);
+
+    const applyDashboard = useCallback(
+        ([usersRes, tasksRes, transactionsRes, reviewRes]: Awaited<ReturnType<typeof loadDashboard>>) => {
             setUsers(usersRes.data);
             setTasks(tasksRes.data);
             setTransactions(transactionsRes.data);
             setReviewQueue(reviewRes.data);
+        }, []);
+
+    const fetchData = async () => {
+        try {
+            applyDashboard(await loadDashboard());
         } catch (err) {
             console.error('Failed to fetch dashboard data', err);
-        } finally {
-            setLoading(false);
         }
-    }, [filters]);
+    };
 
     useEffect(() => {
-        fetchData();
-    }, [fetchData]);
+        let ignore = false;
+        loadDashboard()
+            .then((data) => {
+                if (!ignore) applyDashboard(data);
+            })
+            .catch((err) => console.error('Failed to fetch dashboard data', err))
+            .finally(() => {
+                if (!ignore) setLoading(false);
+            });
+        return () => {
+            ignore = true;
+        };
+    }, [loadDashboard, applyDashboard]);
 
     const handleDailyReset = async () => {
         setResetting(true);

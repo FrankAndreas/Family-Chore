@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getTasks, createTask, updateTask, deleteTask, getRoles, exportTasks } from '../../api';
 import type { Task, Role } from '../../types';
 import { SkeletonLoader } from '../../components/SkeletonLoader';
@@ -40,34 +40,56 @@ const TaskManagement: React.FC = () => {
     });
     const [error, setError] = useState('');
 
-    useEffect(() => {
-        fetchData();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+    const loadData = () => Promise.all([getTasks(), getRoles()]);
+
+    const applyData = useCallback(([tasksRes, rolesRes]: Awaited<ReturnType<typeof loadData>>) => {
+        setTasks(tasksRes.data);
+        setRoles(rolesRes.data);
+        if (rolesRes.data.length > 0) {
+            // Default the form's role to the first one if none is chosen yet
+            setFormData(prev => prev.assignedRoleId === 0 ? { ...prev, assignedRoleId: rolesRes.data[0].id } : prev);
+        }
     }, []);
+
+    const handleLoadError = useCallback((err: unknown) => {
+        console.error('Failed to fetch data', err);
+        let errorMsg = 'Failed to load tasks and roles. Please verify database connection and schema.';
+        if (err && typeof err === 'object' && 'response' in err) {
+            const response = (err as { response: { data?: { detail?: string } } }).response;
+            errorMsg = response?.data?.detail || errorMsg;
+        }
+        setError(errorMsg);
+        showToast(errorMsg, 'error');
+    }, [showToast]);
 
     const fetchData = async () => {
         setLoading(true);
         setError('');
         try {
-            const [tasksRes, rolesRes] = await Promise.all([getTasks(), getRoles()]);
-            setTasks(tasksRes.data);
-            setRoles(rolesRes.data);
-            if (rolesRes.data.length > 0 && formData.assignedRoleId === 0) {
-                setFormData(prev => ({ ...prev, assignedRoleId: rolesRes.data[0].id }));
-            }
+            applyData(await loadData());
         } catch (err: unknown) {
-            console.error('Failed to fetch data', err);
-            let errorMsg = 'Failed to load tasks and roles. Please verify database connection and schema.';
-            if (err && typeof err === 'object' && 'response' in err) {
-                const response = (err as { response: { data?: { detail?: string } } }).response;
-                errorMsg = response?.data?.detail || errorMsg;
-            }
-            setError(errorMsg);
-            showToast(errorMsg, 'error');
+            handleLoadError(err);
         } finally {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        let ignore = false;
+        loadData()
+            .then((data) => {
+                if (!ignore) applyData(data);
+            })
+            .catch((err: unknown) => {
+                if (!ignore) handleLoadError(err);
+            })
+            .finally(() => {
+                if (!ignore) setLoading(false);
+            });
+        return () => {
+            ignore = true;
+        };
+    }, [applyData, handleLoadError]);
 
     const resetForm = () => {
         setFormData({

@@ -16,6 +16,24 @@ import TimeRangeSelector from '../../components/TimeRangeSelector';
 import './AnalyticsDashboard.css';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
+const INITIAL_HEATMAP_DAYS = 30;
+
+// Custom Tooltip for Pie Chart (declared outside the component so it isn't recreated on every render)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const CustomPieTooltip = ({ active, payload }: { active?: boolean; payload?: any[] }) => {
+    const { t } = useTranslation();
+    if (active && payload && payload.length) {
+        const data = payload[0].payload;
+        return (
+            <div className="custom-tooltip">
+                <p className="label">{`${data.name}`}</p>
+                <p className="intro">{`${t('analytics.points')}: ${data.value}`}</p>
+                <p className="intro">{`${data.role}`}</p>
+            </div>
+        );
+    }
+    return null;
+};
 
 const AnalyticsDashboard: React.FC = () => {
     const { t } = useTranslation();
@@ -24,37 +42,40 @@ const AnalyticsDashboard: React.FC = () => {
     const [distributionData, setDistributionData] = useState<DistributionStat[]>([]);
     const [heatmapData, setHeatmapData] = useState<HeatmapResponse | null>(null);
     const [summaryData, setSummaryData] = useState<AnalyticsSummary | null>(null);
-    const [heatmapDays, setHeatmapDays] = useState(30);
+    const [heatmapDays, setHeatmapDays] = useState(INITIAL_HEATMAP_DAYS);
     const [loading, setLoading] = useState(true);
     const [heatmapLoading, setHeatmapLoading] = useState(false);
     const { showToast } = useToast();
 
-    useEffect(() => {
-        if (currentUser.role.name === 'Admin') {
-            fetchAnalytics();
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentUser]);
+    const isAdmin = currentUser.role.name === 'Admin';
 
-    const fetchAnalytics = async () => {
-        try {
-            const [weeklyRes, distRes, heatmapRes, summaryRes] = await Promise.all([
-                getWeeklyStats(),
-                getPointsDistribution(),
-                getHeatmapData(heatmapDays),
-                getAnalyticsSummary(),
-            ]);
-            setWeeklyData(weeklyRes.data);
-            setDistributionData(distRes.data);
-            setHeatmapData(heatmapRes.data);
-            setSummaryData(summaryRes.data);
-        } catch (err) {
-            console.error("Failed to load analytics", err);
-            showToast(t('common.error_loading'), 'error');
-        } finally {
-            setLoading(false);
-        }
-    };
+    useEffect(() => {
+        if (!isAdmin) return;
+        let ignore = false;
+        Promise.all([
+            getWeeklyStats(),
+            getPointsDistribution(),
+            getHeatmapData(INITIAL_HEATMAP_DAYS),
+            getAnalyticsSummary(),
+        ])
+            .then(([weeklyRes, distRes, heatmapRes, summaryRes]) => {
+                if (ignore) return;
+                setWeeklyData(weeklyRes.data);
+                setDistributionData(distRes.data);
+                setHeatmapData(heatmapRes.data);
+                setSummaryData(summaryRes.data);
+            })
+            .catch((err) => {
+                console.error("Failed to load analytics", err);
+                if (!ignore) showToast(t('common.error_loading'), 'error');
+            })
+            .finally(() => {
+                if (!ignore) setLoading(false);
+            });
+        return () => {
+            ignore = true;
+        };
+    }, [isAdmin, showToast, t]);
 
     const handleTimeRangeChange = useCallback(async (days: number) => {
         setHeatmapDays(days);
@@ -70,7 +91,7 @@ const AnalyticsDashboard: React.FC = () => {
         }
     }, [showToast, t]);
 
-    if (currentUser.role.name !== 'Admin') {
+    if (!isAdmin) {
         return <Navigate to="/dashboard" replace />;
     }
 
@@ -106,22 +127,6 @@ const AnalyticsDashboard: React.FC = () => {
         });
         return keys;
     }, [] as string[]);
-
-    // Custom Tooltip for Pie Chart
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const CustomPieTooltip = ({ active, payload }: { active?: boolean; payload?: any[] }) => {
-        if (active && payload && payload.length) {
-            const data = payload[0].payload;
-            return (
-                <div className="custom-tooltip">
-                    <p className="label">{`${data.name}`}</p>
-                    <p className="intro">{`${t('analytics.points')}: ${data.value}`}</p>
-                    <p className="intro">{`${data.role}`}</p>
-                </div>
-            );
-        }
-        return null;
-    };
 
     return (
         <div className="page-container analytics-dashboard fade-in">
