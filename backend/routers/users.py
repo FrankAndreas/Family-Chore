@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Request
 from sqlalchemy.orm import Session
 from typing import List
 import logging
@@ -9,6 +9,7 @@ from ..database import get_db
 from ..dependencies import get_current_user, get_current_admin_user, is_admin, require_self_or_admin
 from ..events import broadcaster
 from ..notifications_service import send_push_to_user_background
+from ..rate_limiter import limiter
 
 logger = logging.getLogger(__name__)
 
@@ -24,10 +25,15 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     return crud.create_user(db=db, user=user)
 
 
-@router.get("/users/", response_model=List[schemas.User], dependencies=[Depends(get_current_user)])
+@router.get("/users/", response_model=List[schemas.UserPublic], dependencies=[Depends(get_current_user)])
 def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    users = crud.get_users(db, skip=skip, limit=limit)
-    return users
+    return crud.get_users(db, skip=skip, limit=limit)
+
+
+@router.get("/users/admin", response_model=List[schemas.User], dependencies=[Depends(get_current_admin_user)])
+def read_users_admin(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    """Admin-only: returns full user list including email addresses."""
+    return crud.get_users(db, skip=skip, limit=limit)
 
 
 @router.put("/users/{user_id}", response_model=schemas.User)
@@ -48,7 +54,8 @@ def update_user(user_id: int, user_update: schemas.UserUpdate,
 
 
 @router.put("/users/{user_id}/password")
-def reset_user_password(user_id: int, payload: schemas.UserPasswordReset,
+@limiter.limit("5/minute")
+def reset_user_password(request: Request, user_id: int, payload: schemas.UserPasswordReset,
                         current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Admin or self password reset."""
     require_self_or_admin(current_user, user_id)

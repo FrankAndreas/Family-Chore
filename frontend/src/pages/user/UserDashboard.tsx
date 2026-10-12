@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useUser } from '../../context/UserContext';
 import { useTranslation } from 'react-i18next';
 import { getUserDailyTasks, completeTask, getTasks, getUserTransactions, uploadTaskPhoto } from '../../api';
@@ -18,12 +18,13 @@ interface TaskInstanceWithDetails extends TaskInstance {
 
 // PhotoPreview component moved to PhotoDropzone.tsx
 
+const HISTORY_PAGE_SIZE = 50;
+
 const UserDashboard: React.FC = () => {
     const { t } = useTranslation();
     const { currentUser, refreshUser } = useUser();
     const [tasks, setTasks] = useState<TaskInstanceWithDetails[]>([]);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
-    const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'tasks' | 'history'>('tasks');
     const TABS = ['tasks', 'history'] as const;
     const swipeHandlers = useSwipeTabs(TABS, activeTab, setActiveTab as (tab: string) => void);
@@ -36,24 +37,39 @@ const UserDashboard: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const debouncedSearch = useDebounce(searchTerm, 300);
     const [filters, setFilters] = useState<TransactionFilters>({});
+    const txFilters = useMemo<TransactionFilters>(
+        () => ({ ...filters, search: debouncedSearch || undefined }),
+        [filters, debouncedSearch]
+    );
 
-    useEffect(() => {
-        setFilters(prev => ({ ...prev, search: debouncedSearch || undefined }));
-    }, [debouncedSearch]);
+    // Bumped to reload the task list after completing a task
+    const [tasksVersion, setTasksVersion] = useState(0);
+
+    // Restart history paging whenever the tab or the history filters change
+    const historyQuery = `${activeTab}|${JSON.stringify(txFilters)}`;
+    const [pagedQuery, setPagedQuery] = useState(historyQuery);
+    if (historyQuery !== pagedQuery) {
+        setPagedQuery(historyQuery);
+        setHistoryPage(1);
+    }
+
+    // Identifies the data the current view needs; loading until that request has finished
+    const requestKey = activeTab === 'tasks'
+        ? `tasks|${tasksVersion}`
+        : `${historyQuery}|${historyPage}`;
+    const [loadedKey, setLoadedKey] = useState<string | null>(null);
+    const loading = loadedKey !== requestKey;
 
     // Removed redundant effect for resolving photoUrls memory leaks because PhotoPreview handles it.
 
-    const fetchData = useCallback(async (resetHistory = false) => {
-        setLoading(true);
+    useEffect(() => {
+        let ignore = false;
+        const userId = currentUser.id;
 
-        try {
-            if (activeTab === 'tasks') {
-                // Fetch both task instances and task templates
-                const [instancesRes, templatesRes] = await Promise.all([
-                    getUserDailyTasks(currentUser.id),
-                    getTasks()
-                ]);
-
+        const request = activeTab === 'tasks'
+            // Fetch both task instances and task templates
+            ? Promise.all([getUserDailyTasks(userId), getTasks()]).then(([instancesRes, templatesRes]) => {
+                if (ignore) return;
                 const instances: TaskInstance[] = instancesRes.data;
                 const templates: Task[] = templatesRes.data;
 
@@ -64,49 +80,31 @@ const UserDashboard: React.FC = () => {
                 }));
                 // Only show PENDING or IN_REVIEW tasks on the dashboard actively
                 setTasks(instancesWithDetails.filter(t => t.status === 'PENDING' || t.status === 'IN_REVIEW'));
-            } else if (activeTab === 'history') {
-                const currentPage = resetHistory ? 1 : historyPage;
-                if (resetHistory) setHistoryPage(1);
-                const limit = 50;
+            })
+            : getUserTransactions(userId, {
+                skip: (historyPage - 1) * HISTORY_PAGE_SIZE,
+                limit: HISTORY_PAGE_SIZE,
+                ...txFilters
+            }).then((transactionsRes) => {
+                if (ignore) return;
+                // Page 1 replaces the list; later pages append to it
+                setTransactions(prev => historyPage === 1 ? transactionsRes.data : [...prev, ...transactionsRes.data]);
+                setHasMoreHistory(transactionsRes.data.length === HISTORY_PAGE_SIZE);
+            });
 
-                const transactionsRes = await getUserTransactions(currentUser.id, {
-                    skip: (currentPage - 1) * limit,
-                    limit,
-                    ...filters
-                });
+        request
+            .catch((err) => {
+                console.error('Failed to fetch data', err);
+                if (!ignore) showToast('Failed to load dashboard data. Please try again.', 'error');
+            })
+            .finally(() => {
+                if (!ignore) setLoadedKey(requestKey);
+            });
 
-                if (resetHistory) {
-                    setTransactions(transactionsRes.data);
-                } else {
-                    setTransactions(prev => [...prev, ...transactionsRes.data]);
-                }
-
-                setHasMoreHistory(transactionsRes.data.length === limit);
-            }
-        } catch (err) {
-            console.error('Failed to fetch data', err);
-            showToast('Failed to load dashboard data. Please try again.', 'error');
-        } finally {
-            setLoading(false);
-        }
-    }, [currentUser.id, activeTab, filters, historyPage, showToast]);
-
-    useEffect(() => {
-        if (currentUser) {
-            // Only reset history on activeTab change to 'history' or filter changes
-            // Initial load for 'tasks' also runs here
-            fetchData(activeTab === 'history' && historyPage === 1);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [activeTab, filters, currentUser]);
-
-    // Handle history pagination changes specifically
-    useEffect(() => {
-        if (historyPage > 1 && activeTab === 'history') {
-            fetchData(false);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [historyPage]);
+        return () => {
+            ignore = true;
+        };
+    }, [currentUser.id, activeTab, historyPage, txFilters, tasksVersion, requestKey, showToast]);
 
     const loadMoreHistory = () => {
         setHistoryPage(prev => prev + 1);
@@ -135,7 +133,7 @@ const UserDashboard: React.FC = () => {
                 showToast(t('dashboard.taskCompletedSuccess', 'Task completed! Points awarded. 🎉'), 'success');
                 await refreshUser();
             }
-            fetchData(); // Refresh list to show updated status
+            setTasksVersion(v => v + 1); // Refresh list to show updated status
         } catch (err) {
             console.error('Failed to complete task', err);
             showToast(t('dashboard.errorCompletingTaskContext', { defaultValue: `Error completing "${instance.taskDetails?.name || 'Task'}". Please try again.`, task: instance.taskDetails?.name || 'Task' }), 'error');

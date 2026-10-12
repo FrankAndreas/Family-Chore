@@ -10,7 +10,7 @@ import FamilyDashboardView from './components/FamilyDashboard';
 import NotFoundPage from './pages/NotFoundPage';
 import { SkeletonLoader } from './components/SkeletonLoader';
 import type { User } from './types';
-import { getUsers, registerForceLogout, setAuthToken } from './api';
+import { getUsers, registerForceLogout, setAuthToken, setSseToken } from './api';
 import { ADMIN_ROLE_NAME } from './constants';
 import './App.css';
 import './index.css';
@@ -48,6 +48,7 @@ function App() {
     setCurrentUser(null);
     localStorage.removeItem('user');
     setAuthToken(null);
+    setSseToken(null);
   };
 
   // Register the force-logout callback so the axios 401 interceptor

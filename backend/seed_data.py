@@ -1,4 +1,5 @@
 
+import secrets
 import logging
 from backend.database import SessionLocal
 from backend.models import Role, User
@@ -36,10 +37,16 @@ def seed_data():
             existing_user = db.query(User).filter(
                 User.nickname == "Admin").first()
             if not existing_user:
-                logger.info("Creating default Admin user...")
+                initial_pin = secrets.choice(
+                    [str(i).zfill(4) for i in range(1000, 10000)
+                     if len(set(str(i).zfill(4))) > 1 and str(i).zfill(4) != "1234"]
+                )
+                logger.warning(
+                    f"Creating default Admin user. INITIAL PIN: {initial_pin} — change this immediately."
+                )
                 admin_user = User(
                     nickname="Admin",
-                    login_pin=security.get_password_hash("1234"),
+                    login_pin=security.get_password_hash(initial_pin),
                     role_id=admin_role.id,
                     current_points=0,
                     lifetime_points=0

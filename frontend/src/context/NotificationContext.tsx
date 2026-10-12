@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import {
     getUserNotifications, markNotificationRead, markAllNotificationsRead,
-    getVapidPublicKey, subscribePush, unsubscribePush, getAuthToken
+    getVapidPublicKey, subscribePush, unsubscribePush, getSseToken
 } from '../api';
 import type { Notification } from '../types';
 import { useToast } from './ToastContext';
@@ -40,10 +40,13 @@ interface NotificationProviderProps {
     children: ReactNode;
 }
 
+// Browser capability; fixed for the lifetime of the page
+const isPushSupported = typeof navigator !== 'undefined' && 'serviceWorker' in navigator
+    && typeof window !== 'undefined' && 'PushManager' in window;
+
 export const NotificationProvider: React.FC<NotificationProviderProps> = ({ children }) => {
     const { currentUser } = useUser();
     const [notifications, setNotifications] = useState<Notification[]>([]);
-    const [isPushSupported, setIsPushSupported] = useState(false);
     const [pushSubscribed, setPushSubscribed] = useState(false);
     const [sseConnected, setSseConnected] = useState(false);
     const { showToast } = useToast();
@@ -60,8 +63,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
 
     // Check Push support & existing subscription
     useEffect(() => {
-        if ('serviceWorker' in navigator && 'PushManager' in window) {
-            setIsPushSupported(true);
+        if (isPushSupported) {
             navigator.serviceWorker.register('/sw.js').then((registration) => {
                 registration.pushManager.getSubscription().then((sub) => {
                     setPushSubscribed(!!sub);
@@ -70,17 +72,26 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         }
     }, []);
 
-    // Initial load
+    // Initial load (and reload when the logged-in user changes)
+    const currentUserId = currentUser?.id;
     useEffect(() => {
-        refreshNotifications();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+        if (currentUserId === undefined) return;
+        let ignore = false;
+        getUserNotifications(currentUserId, false)
+            .then((res) => {
+                if (!ignore) setNotifications(res.data);
+            })
+            .catch((error) => console.error("Failed to fetch notifications", error));
+        return () => {
+            ignore = true;
+        };
+    }, [currentUserId]);
 
     // SSE Connection
     useEffect(() => {
         if (!currentUser) return;
 
-        const token = getAuthToken() || '';
+        const token = getSseToken() || '';
         const eventSource = new EventSource(`${API_BASE}/events?token=${encodeURIComponent(token)}`);
 
         eventSource.onopen = () => {

@@ -34,13 +34,11 @@ def user_with_role(seeded_db, client, nickname, role_name, context):
     context[f'user_{nickname}'] = response.json()
 
 
-@given(parsers.parse('a task exists:\n{task_table}'))
-def task_exists(seeded_db, client, task_table, context):
+@given('a task exists:')
+def task_exists(seeded_db, client, datatable, context):
     """Create a task from table data."""
-    lines = [line.strip()
-             for line in task_table.strip().split('\n') if line.strip()]
-    data_line = lines[1] if len(lines) > 1 else lines[0]
-    parts = [p.strip() for p in data_line.split('|') if p.strip()]
+    data_row = datatable[1] if len(datatable) > 1 else datatable[0]
+    parts = [p.strip() for p in data_row if p.strip()]
 
     name = parts[0]
     description = parts[1]
@@ -78,13 +76,11 @@ def role_has_multiplier(seeded_db, role_name, multiplier):
 
 # When steps
 
-@when(parsers.parse('I create a task with:\n{task_table}'))
-def create_task(seeded_db, client, task_table, context):
+@when('I create a task with:')
+def create_task(seeded_db, client, datatable, context):
     """Create a task from table data."""
-    lines = [line.strip()
-             for line in task_table.strip().split('\n') if line.strip()]
-    data_line = lines[1] if len(lines) > 1 else lines[0]
-    parts = [p.strip() for p in data_line.split('|') if p.strip()]
+    data_row = datatable[1] if len(datatable) > 1 else datatable[0]
+    parts = [p.strip() for p in data_row if p.strip()]
 
     name = parts[0] if parts[0] else ""
     description = parts[1] if len(parts) > 1 else "Test"
@@ -200,13 +196,11 @@ def task_creation_fails_with_validation(context):
     assert response.status_code == 422
 
 
-@given(parsers.parse('a task exists without role assignment:\n{task_table}'))
-def task_exists_without_role(client, task_table, context):
+@given('a task exists without role assignment:')
+def task_exists_without_role(client, datatable, context):
     """Create an unassigned task (no role) from table data."""
-    lines = [line.strip()
-             for line in task_table.strip().split('\n') if line.strip()]
-    data_line = lines[1] if len(lines) > 1 else lines[0]
-    parts = [p.strip() for p in data_line.split('|') if p.strip()]
+    data_row = datatable[1] if len(datatable) > 1 else datatable[0]
+    parts = [p.strip() for p in data_row if p.strip()]
 
     name = parts[0]
     description = parts[1]

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { useUser } from '../context/UserContext';
@@ -19,12 +19,15 @@ const SettingsPage: React.FC = () => {
     const [notificationsEnabled, setNotificationsEnabled] = useState(currentUser?.notifications_enabled ?? true);
     const [isSavingSettings, setIsSavingSettings] = useState(false);
 
-    useEffect(() => {
+    // Re-sync the form when the user record changes (adjust state during render, not in an effect)
+    const [syncedUser, setSyncedUser] = useState(currentUser);
+    if (currentUser !== syncedUser) {
+        setSyncedUser(currentUser);
         if (currentUser) {
             setEmail(currentUser.email || '');
             setNotificationsEnabled(currentUser.notifications_enabled ?? true);
         }
-    }, [currentUser]);
+    }
 
     const handleSaveSettings = async () => {
         if (!currentUser) return;
@@ -121,12 +124,7 @@ const SettingsPage: React.FC = () => {
                     </button>
                 </div>
 
-                <div className="section glass-panel mt-5">
-                    <h3>{t('settings.moreSettings')}</h3>
-                    <p className="text-secondary mt-2">
-                        {t('settings.moreSettingsDesc')}
-                    </p>
-                </div>
+
             </div>
         </div>
     );

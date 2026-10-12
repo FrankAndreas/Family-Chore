@@ -8,7 +8,7 @@ import logging
 
 from PIL import Image, UnidentifiedImageError
 
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, File, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, File, Request, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from sqlalchemy.orm import Session
 
@@ -18,6 +18,7 @@ from ..database import get_db
 from ..dependencies import get_current_user, get_current_admin_user, is_admin, require_self_or_admin
 from ..events import broadcaster
 from ..notifications_service import send_email_background, send_push_to_user_background
+from ..rate_limiter import limiter
 
 logger = logging.getLogger(__name__)
 
@@ -194,7 +195,9 @@ async def complete_task(
 
 @router.post("/tasks/{instance_id}/upload-photo",
              response_model=schemas.TaskInstance)
+@limiter.limit("20/minute")
 async def upload_task_photo(
+    request: Request,
     instance_id: int,
     file: UploadFile = File(...),
     current_user: models.User = Depends(get_current_user),

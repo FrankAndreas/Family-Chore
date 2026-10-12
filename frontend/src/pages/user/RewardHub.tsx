@@ -41,11 +41,6 @@ const RewardHub: React.FC = () => {
     const [redeemConfirm, setRedeemConfirm] = useState<{ reward: Reward; show: boolean } | null>(null);
     const [redeeming, setRedeeming] = useState(false);
 
-    useEffect(() => {
-        fetchRewards();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
     const fetchRewards = async () => {
         try {
             const response = await getRewards();
@@ -57,6 +52,24 @@ const RewardHub: React.FC = () => {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        let ignore = false;
+        getRewards()
+            .then((response) => {
+                if (!ignore) setRewards(response.data);
+            })
+            .catch((err) => {
+                console.error('Failed to fetch rewards', err);
+                if (!ignore) showToast(t('rewards.toasts.load_error'), 'error');
+            })
+            .finally(() => {
+                if (!ignore) setLoading(false);
+            });
+        return () => {
+            ignore = true;
+        };
+    }, [showToast, t]);
 
     const handleCreateReward = async (e: React.FormEvent) => {
         e.preventDefault();

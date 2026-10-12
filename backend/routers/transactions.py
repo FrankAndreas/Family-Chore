@@ -1,5 +1,6 @@
 import datetime
 from typing import List, Optional
+from typing import Literal
 import logging
 
 from fastapi import APIRouter, Depends, Query
@@ -20,7 +21,7 @@ def read_user_transactions(
     user_id: int,
     skip: int = 0,
     limit: int = 100,
-    txn_type: Optional[str] = None,
+    txn_type: Optional[Literal["EARN", "REDEEM", "PENALTY"]] = None,
     search: Optional[str] = Query(default=None, max_length=200),
     start_date: Optional[datetime.datetime] = None,
     end_date: Optional[datetime.datetime] = None,
@@ -40,7 +41,7 @@ def read_all_transactions(
     skip: int = 0,
     limit: int = 100,
     user_id: Optional[int] = None,
-    txn_type: Optional[str] = None,
+    txn_type: Optional[Literal["EARN", "REDEEM", "PENALTY"]] = None,
     search: Optional[str] = Query(default=None, max_length=200),
     start_date: Optional[datetime.datetime] = None,
     end_date: Optional[datetime.datetime] = None,

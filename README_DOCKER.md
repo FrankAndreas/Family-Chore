@@ -37,12 +37,19 @@ Open your browser and navigate to:
 ---
 
 ## Initial Setup
-The system automatically seeds a default Admin user on first startup.
+The system automatically seeds a default Admin user on first startup with a
+**randomly generated PIN**, which is printed once in the backend log:
+
+```bash
+sudo docker logs chorespec-backend 2>&1 | grep "INITIAL PIN"
+```
 
 - **Username (Nickname)**: `Admin`
-- **PIN**: `1234`
+- **PIN**: the value from that log line. Change it after your first login.
 
-**Note:** The app data (database) persists in the `chores_data` Docker volume.
+If you lose the PIN on a fresh install, run `sudo docker-compose down -v` and start again to generate a new one. **This deletes all app data**, so only do it before the family starts using the app.
+
+**Note:** The database persists in the `postgres_data` Docker volume; uploads and backups live in `chores_uploads` and `chores_backups`.
 
 ## Updates
 To update the app when a new version is pushed to GitHub:

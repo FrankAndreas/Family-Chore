@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import api from '../api';
+import api, { getSseToken } from '../api';
 import type { TaskInstance, User, Reward } from '../types';
 
 const getPendingTasksPublic = () => api.get('/tasks/pending', { skipAuthRedirect: true });
@@ -16,24 +16,6 @@ export function useFamilyDashboardData(onTasksUpdated?: () => void, onRewardsUpd
     const [connected, setConnected] = useState(false);
     const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
     const eventSourceRef = useRef<EventSource | null>(null);
-
-    const loadData = useCallback(async () => {
-        try {
-            const [tasksRes, usersRes, rewardsRes] = await Promise.all([
-                getPendingTasksPublic(),
-                getUsersPublic(),
-                getRewardsPublic()
-            ]);
-            setTasks(tasksRes.data);
-            setUsers(usersRes.data);
-            setRewards(rewardsRes.data);
-            setLastUpdate(new Date());
-        } catch (error) {
-            console.error("Failed to load family dashboard data", error);
-        } finally {
-            setLoading(false);
-        }
-    }, []);
 
     const refreshTasks = useCallback(async () => {
         try {
@@ -66,9 +48,21 @@ export function useFamilyDashboardData(onTasksUpdated?: () => void, onRewardsUpd
     }, [onTasksUpdated, onRewardsUpdated]);
 
     useEffect(() => {
-        loadData();
+        let ignore = false;
+        Promise.all([getPendingTasksPublic(), getUsersPublic(), getRewardsPublic()])
+            .then(([tasksRes, usersRes, rewardsRes]) => {
+                if (ignore) return;
+                setTasks(tasksRes.data);
+                setUsers(usersRes.data);
+                setRewards(rewardsRes.data);
+                setLastUpdate(new Date());
+            })
+            .catch((error) => console.error("Failed to load family dashboard data", error))
+            .finally(() => {
+                if (!ignore) setLoading(false);
+            });
 
-        const token = localStorage.getItem('auth_token') || '';
+        const token = getSseToken() || '';
         const eventSource = new EventSource(`${API_BASE}/events?token=${encodeURIComponent(token)}`);
         eventSourceRef.current = eventSource;
 
@@ -103,11 +97,12 @@ export function useFamilyDashboardData(onTasksUpdated?: () => void, onRewardsUpd
         };
 
         return () => {
+            ignore = true;
             if (eventSourceRef.current) {
                 eventSourceRef.current.close();
             }
         };
-    }, [loadData, refreshTasks, refreshData]);
+    }, [refreshTasks, refreshData]);
 
     return {
         tasks,

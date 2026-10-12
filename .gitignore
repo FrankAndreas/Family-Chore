@@ -25,6 +25,7 @@ build/
 # Environment Variables
 .env
 .env.*
+!.env.example
 
 # Private keys and secrets
 *.pem

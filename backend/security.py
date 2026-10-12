@@ -1,15 +1,13 @@
 import os
 import secrets
 from pathlib import Path
-from passlib.context import CryptContext
+import bcrypt
 from typing import cast, Optional, Dict, Any
 import jwt
 import logging
 from datetime import datetime, timedelta, timezone
 
 logger = logging.getLogger(__name__)
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 _BACKEND_DIR = Path(__file__).resolve().parent
 _ENV_PATH = _BACKEND_DIR / ".env"
@@ -45,16 +43,21 @@ def _load_jwt_secret() -> str:
 SECRET_KEY = _load_jwt_secret()
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_DAYS = 7
+SSE_TOKEN_EXPIRE_MINUTES = 60  # short-lived token for SSE query-string use
 
 
 def get_password_hash(password: str) -> str:
     """Hash a password/PIN using bcrypt."""
-    return cast(str, pwd_context.hash(password))
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a plaintext password/PIN against its hashed version."""
-    return cast(bool, pwd_context.verify(plain_password, hashed_password))
+    try:
+        return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
+    except ValueError:
+        # Malformed hash, or input longer than bcrypt's 72-byte limit
+        return False
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
@@ -68,6 +71,14 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
+
+def create_sse_token(user_id: int) -> str:
+    """Create a short-lived (1-hour) token for the SSE query-string."""
+    return create_access_token(
+        data={"sub": str(user_id), "sse": True},
+        expires_delta=timedelta(minutes=SSE_TOKEN_EXPIRE_MINUTES),
+    )
 
 
 def verify_token(token: str) -> Optional[Dict[str, Any]]:

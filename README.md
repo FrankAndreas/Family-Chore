@@ -34,11 +34,20 @@ npm run dev
 
 ---
 
-## 🔑 Test Credentials
+## 🔑 Initial Admin Login
 
-**Default Admin User:**
+On first startup (empty database) the backend creates an `Admin` user with a
+**randomly generated 4-digit PIN** and prints it once in the backend log:
+
+```
+Creating default Admin user. INITIAL PIN: 4821 — change this immediately.
+```
+
 - Nickname: `Admin`
-- PIN: `1234`
+- PIN: the value from that log line (change it after your first login)
+
+The PIN is not shown again. If you lose it before changing it, delete the
+database and restart to generate a new one.
 
 ---
 
@@ -264,11 +273,11 @@ curl -X POST http://localhost:8000/tasks/1/complete
 
 ## 📝 Notes
 
-- **Node.js Version**: v18.19.1 (system package)
+- **Node.js Version**: 22 (required by Vite 8 / Vitest 5)
 - **Python Version**: 3.12
 - **Database**: SQLite (file-based, zero-config)
 - **CORS**: May need to enable for production
-- **Security**: PINs are stored in plaintext (hash in production)
+- **Security**: PINs are stored as bcrypt hashes; legacy plaintext PINs are upgraded on next login
 
 ---
 
