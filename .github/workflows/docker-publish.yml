@@ -101,6 +101,10 @@ jobs:
 
       - name: Build and Smoke Test
         run: |
+          # docker-compose.yml has no default DB credentials; use throwaway ones for this run
+          export POSTGRES_USER=ci_smoke
+          export POSTGRES_PASSWORD="$(openssl rand -hex 16)"
+
           # 1. Start services using docker compose
           docker compose up -d --build
           
