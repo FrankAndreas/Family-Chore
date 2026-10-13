@@ -132,9 +132,11 @@ so the backend reconnects with it.
 A simpler setup without a database container: the data lives in one file, `data/chorespec.db`.
 
 1. **Create a user for the app** (recommended). In DSM, **Control Panel → User & Group → Create** a user
-   such as `chorespec`, with a random password, no application permissions and no shared-folder
-   access. The backend container runs as this user, so the app's files belong to a real, unprivileged
-   account. Look up its IDs over SSH:
+   such as `chorespec`, with a random password and no application permissions. On the shared folder
+   that holds the app folder (e.g. `docker`), give it **Read only** (or no access): the nightly update
+   runs as root, so the app's user must not be able to change `compose.yaml` or `nas-update.sh`. It
+   still writes its own folders, because it owns them. The backend container runs as this user, so
+   the app's files belong to a real, unprivileged account. Look up its IDs over SSH:
    ```bash
    id chorespec    # e.g. uid=1031(chorespec) gid=100(users)
    ```
@@ -145,7 +147,7 @@ A simpler setup without a database container: the data lives in one file, `data/
    ```bash
    cd /volume1/docker/chorespec
    sudo mkdir -p data uploads backups
-   sudo chown 1031:100 data uploads backups    # the IDs from step 1, or 999:999
+   sudo chown -R 1031:100 data uploads backups    # the IDs from step 1, or 999:999
    ```
 3. **Create `.env`** with the user's IDs and the keys, so logins and push notifications survive updates:
    ```bash
