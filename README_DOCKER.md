@@ -131,22 +131,30 @@ so the backend reconnects with it.
 
 A simpler setup without a database container: the data lives in one file, `data/chorespec.db`.
 
-1. **Prepare the folder.** Create the app folder (e.g. `/volume1/docker/chorespec`), upload
+1. **Create a user for the app** (recommended). In DSM, **Control Panel → User & Group → Create** a user
+   such as `chorespec`, with a random password, no application permissions and no shared-folder
+   access. The backend container runs as this user, so the app's files belong to a real, unprivileged
+   account. Look up its IDs over SSH:
+   ```bash
+   id chorespec    # e.g. uid=1031(chorespec) gid=100(users)
+   ```
+   Skip this step to run as the image's built-in user instead (999:999).
+2. **Prepare the folder.** Create the app folder (e.g. `/volume1/docker/chorespec`), upload
    `docker-compose.sqlite.yml` into it **renamed to `compose.yaml`**, and change the port in it if 8080
-   is taken. Then create the data folders, owned by the backend's user (uid 999):
+   is taken. Then create the data folders, owned by the app's user:
    ```bash
    cd /volume1/docker/chorespec
    sudo mkdir -p data uploads backups
-   sudo chown 999:999 data uploads backups
+   sudo chown 1031:100 data uploads backups    # the IDs from step 1, or 999:999
    ```
-2. **Create `.env`** with the keys, so logins and push notifications survive updates:
+3. **Create `.env`** with the user's IDs and the keys, so logins and push notifications survive updates:
    ```bash
-   sudo docker run --rm ghcr.io/frankandreas/family-chore-backend:latest python -m backend.generate_keys | sudo tee .env
-   echo "COOKIE_SECURE=false" | sudo tee -a .env
+   printf 'APP_UID=1031\nAPP_GID=100\nCOOKIE_SECURE=false\n' | sudo tee .env    # IDs from step 1
+   sudo docker run --rm ghcr.io/frankandreas/family-chore-backend:latest python -m backend.generate_keys | sudo tee -a .env
    sudo chmod 600 .env
    ```
    Optionally add `VAPID_CLAIMS_EMAIL=mailto:you@example.com` and the SMTP settings (see `.env.example`).
-3. **Start** with `sudo docker-compose up -d` (or as a Container Manager project on this folder) and
+4. **Start** with `sudo docker-compose up -d` (or as a Container Manager project on this folder) and
    get the admin PIN as described in [First Login](#5-first-login).
 
 The folders hold everything worth keeping: `data/` (database), `uploads/` (task photos) and
@@ -155,7 +163,7 @@ The folders hold everything worth keeping: `data/` (database), `uploads/` (task 
 > **Coming from an older SQLite compose file** with only a `./data` volume? Task photos and the
 > app's own backups were stored inside the container and are lost on every update, and so were the
 > login keys. Switch to the template above (keeping your `./data` folder and port), add the folders
-> and `.env` from steps 1–2, and run `sudo docker-compose up -d`. Everyone logs in once more.
+> and `.env` from steps 1–3, and run `sudo docker-compose up -d`. Everyone logs in once more.
 
 ---
 
