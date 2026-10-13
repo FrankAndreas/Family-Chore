@@ -29,17 +29,19 @@ services:
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-chorespec}
       # Legacy SQLite fallback: - DATABASE_URL=sqlite:///./data/chorespec.db
-      # --- Production Secrets (set all of these in .env before deploying) ---
-      # - COOKIE_SECURE=true   # Enable only when serving over HTTPS
-      # - JWT_SECRET_KEY=<generate-a-64-char-hex-string>
-      # - VAPID_PRIVATE_KEY=<path-or-pem-content>
-      # - VAPID_PUBLIC_KEY=<application-server-key>
-      # - VAPID_CLAIMS_EMAIL=mailto:your@email.com
-      # - SMTP_SERVER=smtp.example.com
-      # - SMTP_PORT=587
-      # - SMTP_USERNAME=your-username
-      # - SMTP_PASSWORD=your-password
-      # - CORS_ORIGINS=https://your-domain.com
+      # --- Settings from .env (see .env.example and README_DOCKER.md) ---
+      # Keys left empty are auto-generated inside the container and are lost
+      # whenever it is recreated (e.g. on every update), so set them in .env.
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-}
+      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY:-}
+      - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY:-}
+      - VAPID_CLAIMS_EMAIL=${VAPID_CLAIMS_EMAIL:-mailto:admin@example.com}
+      - COOKIE_SECURE=${COOKIE_SECURE:-false}   # true only when served over HTTPS
+      - CORS_ORIGINS=${CORS_ORIGINS:-}
+      - SMTP_SERVER=${SMTP_SERVER:-}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USERNAME=${SMTP_USERNAME:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
     restart: unless-stopped
     healthcheck:
       test: [ "CMD-SHELL", "python3 -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000\")' || exit 1" ]
