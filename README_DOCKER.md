@@ -149,7 +149,7 @@ A simpler setup without a database container: the data lives in one file, `data/
    ```
 3. **Create `.env`** with the user's IDs and the keys, so logins and push notifications survive updates:
    ```bash
-   printf 'APP_UID=1031\nAPP_GID=100\nCOOKIE_SECURE=false\n' | sudo tee .env    # IDs from step 1
+   printf 'PUID=1031\nPGID=100\nCOOKIE_SECURE=false\n' | sudo tee .env    # IDs from step 1
    sudo docker run --rm ghcr.io/frankandreas/family-chore-backend:latest python -m backend.generate_keys | sudo tee -a .env
    sudo chmod 600 .env
    ```

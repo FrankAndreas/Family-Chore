@@ -1,8 +1,9 @@
 # Single-database-file variant: SQLite instead of Postgres (good for a home NAS).
 # Copy it to the app folder on the NAS as compose.yaml; see README_DOCKER.md.
 #
-# The backend runs as APP_UID:APP_GID from .env (default 999:999, the image's own
-# user). On a Synology, use a dedicated DSM user's IDs (see README_DOCKER.md).
+# The backend runs as PUID:PGID from .env (default 999:999, the image's own
+# user). On a Synology, use a DSM user's IDs (see README_DOCKER.md). Unlike images
+# that switch users at startup, it never runs as root: compose starts it as this user.
 # The ./data, ./uploads and ./backups folders must exist and belong to that user
 # before the first start.
 
@@ -10,7 +11,7 @@ services:
   backend:
     image: ghcr.io/frankandreas/family-chore-backend:latest
     container_name: chorespec-backend
-    user: "${APP_UID:-999}:${APP_GID:-999}"
+    user: "${PUID:-999}:${PGID:-999}"
     volumes:
       - ./data:/app/data          # SQLite database
       - ./uploads:/app/uploads    # task photos
