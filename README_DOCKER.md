@@ -130,7 +130,7 @@ sudo docker-compose up -d
 `scripts/nas-update.sh` checks for new app images and installs them. Run nightly by DSM's Task Scheduler, it:
 
 1. pulls the backend and frontend images and stops if nothing is new,
-2. backs up the database to `db-backups/` (keeps the last 14; the backend runs migrations on start),
+2. backs up the database to `db-backups/` (keeps at least the newest 5 and everything from the last 7 days; the backend runs migrations on start),
 3. keeps the running images tagged as `:previous` for [rolling back](#rolling-back-an-update),
 4. restarts the app and waits until the backend is healthy, logging to `logs/update.log`.
 

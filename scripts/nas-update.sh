@@ -21,7 +21,8 @@ set -uo pipefail
 export PATH="$PATH:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
 APP_SERVICES="backend frontend"
-BACKUP_KEEP=14
+BACKUP_KEEP=5        # always keep at least the newest 5 backups
+BACKUP_MIN_DAYS=7    # and every backup younger than 7 days
 HEALTH_TIMEOUT=300
 
 FORCE=0
@@ -117,9 +118,11 @@ if [ -n "$(container_of db)" ]; then
         rm -f "$backup"
         fail "database backup failed, not updating"
     fi
-    # Keep the newest $BACKUP_KEEP backups
+    # Delete a backup only if it is beyond the newest $BACKUP_KEEP and older than $BACKUP_MIN_DAYS days
     ls -1t "$BACKUP_DIR"/chorespec-*.sql.gz 2>/dev/null | tail -n +$((BACKUP_KEEP + 1)) | while read -r old; do
-        rm -f "$old"
+        if [ -n "$(find "$old" -mmin +$((BACKUP_MIN_DAYS * 24 * 60)))" ]; then
+            rm -f "$old" && log "Removed old backup $(basename "$old")"
+        fi
     done
 else
     log "Database container not running, skipping backup"
