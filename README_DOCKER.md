@@ -7,11 +7,22 @@ This guide explains how to deploy the Family Chore App using Docker images hoste
 - SSH access to your NAS (needed to generate keys and read the initial PIN).
 - If the GitHub repository is **Private**, you need a GitHub Personal Access Token (PAT) with `read:packages` scope.
 
-> **Upgrading an existing installation?** The app now needs a `.env` file next to
+## Choose a Setup
+
+| | Postgres (`docker-compose.yml`) | SQLite (`docker-compose.sqlite.yml`) |
+|---|---|---|
+| Containers | database, backend, frontend | backend, frontend |
+| Database | Postgres in a Docker volume | a single file in `./data` |
+| Good for | larger installs, existing Postgres users | a home NAS; simplest to run and back up |
+
+The sections below describe the Postgres setup; for SQLite, follow
+[SQLite Setup](#sqlite-setup) instead. [Automatic Updates](#automatic-updates) work with both.
+
+> **Upgrading an existing Postgres installation?** The app now needs a `.env` file next to
 > `docker-compose.yml`. Follow [Upgrading an existing installation](#upgrading-an-existing-installation)
 > before pulling new images, or Postgres will not start.
 
-## Fresh Installation
+## Fresh Installation (Postgres)
 
 ### 1. Prepare Folder
 Create a folder on your NAS (e.g., `/volume1/docker/chorespec`) and upload two files into it:
@@ -116,6 +127,38 @@ so the backend reconnects with it.
 
 ---
 
+## SQLite Setup
+
+A simpler setup without a database container: the data lives in one file, `data/chorespec.db`.
+
+1. **Prepare the folder.** Create the app folder (e.g. `/volume1/docker/chorespec`), upload
+   `docker-compose.sqlite.yml` into it **renamed to `compose.yaml`**, and change the port in it if 8080
+   is taken. Then create the data folders, owned by the backend's user (uid 999):
+   ```bash
+   cd /volume1/docker/chorespec
+   sudo mkdir -p data uploads backups
+   sudo chown 999:999 data uploads backups
+   ```
+2. **Create `.env`** with the keys, so logins and push notifications survive updates:
+   ```bash
+   sudo docker run --rm ghcr.io/frankandreas/family-chore-backend:latest python -m backend.generate_keys | sudo tee .env
+   echo "COOKIE_SECURE=false" | sudo tee -a .env
+   sudo chmod 600 .env
+   ```
+   Optionally add `VAPID_CLAIMS_EMAIL=mailto:you@example.com` and the SMTP settings (see `.env.example`).
+3. **Start** with `sudo docker-compose up -d` (or as a Container Manager project on this folder) and
+   get the admin PIN as described in [First Login](#5-first-login).
+
+The folders hold everything worth keeping: `data/` (database), `uploads/` (task photos) and
+`backups/` (the app's own nightly database copies).
+
+> **Coming from an older SQLite compose file** with only a `./data` volume? Task photos and the
+> app's own backups were stored inside the container and are lost on every update, and so were the
+> login keys. Switch to the template above (keeping your `./data` folder and port), add the folders
+> and `.env` from steps 1–2, and run `sudo docker-compose up -d`. Everyone logs in once more.
+
+---
+
 ## Updates
 New versions are published as `latest` whenever a change is merged to `main` and CI passes.
 Set up [Automatic Updates](#automatic-updates) to install them nightly, or update by hand:
@@ -130,16 +173,17 @@ sudo docker-compose up -d
 `scripts/nas-update.sh` checks for new app images and installs them. Run nightly by DSM's Task Scheduler, it:
 
 1. pulls the backend and frontend images and stops if nothing is new,
-2. backs up the database to `db-backups/` (keeps at least the newest 5 and everything from the last 7 days; the backend runs migrations on start),
+2. backs up the database to `db-backups/`: Postgres with `pg_dump`, SQLite with its online-backup API
+   (keeps at least the newest 5 and everything from the last 7 days; the backend runs migrations on start),
 3. keeps the running images tagged as `:previous` for [rolling back](#rolling-back-an-update),
 4. restarts the app and waits until the backend is healthy, logging to `logs/update.log`.
 
-It never changes `docker-compose.yml`, `.env` or the Postgres container; deploy those deliberately
-(see [Deploying from your computer](#deploying-from-your-computer)). It also removes dangling
+It finds the compose file by its usual names (`compose.yaml`, `docker-compose.yml`, ...) and never changes
+it, `.env` or the database container. It also removes dangling
 (untagged) Docker images to save space, including those of other projects on the NAS.
 
 ### Setup
-1. Copy `scripts/nas-update.sh` into the app folder (next to `docker-compose.yml`) and make it executable:
+1. Copy `scripts/nas-update.sh` into the app folder (next to the compose file) and make it executable:
    ```bash
    sudo chmod +x /volume1/docker/chorespec/nas-update.sh
    ```
@@ -172,8 +216,11 @@ sudo docker tag ghcr.io/frankandreas/family-chore-frontend:previous ghcr.io/fran
 # 2. Restore the database from the backup taken right before the update
 #    (the new version may have migrated it). Changes made since the update are lost.
 sudo docker stop chorespec-backend
+#    Postgres:
 gunzip -c db-backups/chorespec-YYYYMMDD-HHMMSS.sql.gz | sudo docker exec -i chorespec-postgres sh -c \
   'psql -q -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;" && psql -q -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1'
+#    SQLite:
+sudo sh -c 'gunzip -c db-backups/chorespec-YYYYMMDD-HHMMSS.sqlite.gz > data/chorespec.db'
 
 # 3. Start the previous version
 sudo docker-compose up -d backend frontend
@@ -182,16 +229,17 @@ sudo docker-compose up -d backend frontend
 Re-enable the task once a fixed version is published.
 
 ### Deploying from your computer
-For changes to `docker-compose.yml`, or to update right away, run from a checkout of this repository:
+To install the latest version right away, or to roll out a new version of `nas-update.sh`, run from a
+checkout of this repository:
 
 ```bash
-NAS_HOST=admin@<YOUR_NAS_IP> scripts/deploy-nas.sh
+NAS_HOST=admin@<YOUR_NAS_IP> NAS_DIR=/volume1/docker/chorespec scripts/deploy-nas.sh
 ```
 
-It shows what differs from the NAS's `docker-compose.yml` and `nas-update.sh`, uploads them after you
-confirm, and runs the update (restarting the app if the compose file changed). It needs SSH access to
-the NAS (**Control Panel → Terminal & SNMP → Enable SSH**); set `NAS_DIR` if the app folder isn't
-`/volume1/docker/chorespec`. `.env` is never copied; edit it on the NAS.
+It shows how the NAS's `nas-update.sh` differs from the repository's, uploads it after you confirm, and
+runs the update. Add `--force` to restart the app even without a new version, e.g. after editing the
+compose file on the NAS. The compose file and `.env` belong to your deployment and are never copied.
+It needs SSH access to the NAS (**Control Panel → Terminal & SNMP → Enable SSH**).
 
 ## Troubleshooting
 

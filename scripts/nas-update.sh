@@ -2,15 +2,15 @@
 # Nightly auto-update for a ChoreSpec Docker deployment (e.g. on a Synology NAS).
 #
 # Pulls the app images (backend, frontend) and, only if a newer image was
-# published, backs up the database, recreates the app containers and waits
-# until the backend is healthy. Postgres and the compose/.env configuration
-# are never changed by this script; deploy those deliberately.
+# published, backs up the database (Postgres or SQLite), recreates the app
+# containers and waits until the backend is healthy. The database container
+# and the compose/.env configuration are never changed by this script.
 #
 # Usage:   nas-update.sh [--force] [APP_DIR]
-#   APP_DIR  folder containing docker-compose.yml and .env
+#   APP_DIR  folder containing the compose file (compose.yaml, docker-compose.yml, ...)
 #            (default: the folder this script is in)
 #   --force  recreate the app containers even if no new image was pulled
-#            (used after copying a changed docker-compose.yml)
+#            (e.g. after editing the compose file)
 #
 # Exit codes: 0 = up to date or updated successfully, 1 = failure.
 # See README_DOCKER.md ("Automatic Updates") for the Task Scheduler setup.
@@ -53,8 +53,11 @@ if ! mkdir "$LOCK_DIR" 2>/dev/null; then
 fi
 trap 'rmdir "$LOCK_DIR"' EXIT
 
-[ -f docker-compose.yml ] || fail "no docker-compose.yml in $APP_DIR"
-[ -f .env ] || fail "no .env in $APP_DIR (see README_DOCKER.md)"
+compose_file=""
+for f in compose.yaml compose.yml docker-compose.yaml docker-compose.yml; do
+    [ -f "$f" ] && { compose_file=$f; break; }
+done
+[ -n "$compose_file" ] || fail "no compose file (compose.yaml or docker-compose.yml) in $APP_DIR"
 
 if docker compose version >/dev/null 2>&1; then
     COMPOSE=(docker compose)
@@ -108,24 +111,61 @@ if [ -z "$changed" ] && [ "$FORCE" -eq 0 ]; then
 fi
 log "Updating:${changed:- (forced)}"
 
-# Back up the database first: the backend runs migrations when it starts
-if [ -n "$(container_of db)" ]; then
-    backup="$BACKUP_DIR/chorespec-$(date '+%Y%m%d-%H%M%S').sql.gz"
-    if compose exec -T db sh -c 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"' | gzip > "$backup" \
-        && [ "$(gzip -dc "$backup" | head -c 1 | wc -c)" -eq 1 ]; then
-        log "Database backup: $backup"
-    else
-        rm -f "$backup"
-        fail "database backup failed, not updating"
-    fi
+# Back up the database first: the backend runs migrations when it starts.
+# Writes the backup to stdout; Postgres via pg_dump, SQLite via its online-backup API
+# (a consistent copy even while the backend is writing).
+backup_postgres() {
+    compose exec -T db sh -c 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"'
+}
+backup_sqlite() {
+    compose exec -T backend python -c '
+import os, sqlite3, sys, tempfile
+path = os.environ["DATABASE_URL"].split("sqlite:///", 1)[1]
+tmp = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
+tmp.close()
+src = sqlite3.connect("file:%s?mode=ro" % path, uri=True)
+dst = sqlite3.connect(tmp.name)
+src.backup(dst)
+dst.close()
+src.close()
+with open(tmp.name, "rb") as f:
+    sys.stdout.buffer.write(f.read())
+os.unlink(tmp.name)
+'
+}
+
+backend_cid=$(container_of backend)
+database_url=""
+[ -n "$backend_cid" ] && database_url=$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$backend_cid" \
+    | sed -n 's/^DATABASE_URL=//p' | head -n1)
+stamp=$(date '+%Y%m%d-%H%M%S')
+case "$database_url" in
+    sqlite:///*)
+        backup="$BACKUP_DIR/chorespec-$stamp.sqlite.gz"
+        backup_sqlite | gzip > "$backup" && [ "$(gzip -dc "$backup" | head -c 15)" = "SQLite format 3" ] ;;
+    postgres*)
+        if [ -n "$(container_of db)" ]; then
+            backup="$BACKUP_DIR/chorespec-$stamp.sql.gz"
+            backup_postgres | gzip > "$backup" && [ "$(gzip -dc "$backup" | head -c 1 | wc -c)" -eq 1 ]
+        else
+            backup=""
+        fi ;;
+    *) backup="" ;;
+esac
+backup_ok=$?
+if [ -z "$backup" ]; then
+    log "Database not reachable (backend or db container not running), skipping backup"
+elif [ "$backup_ok" -eq 0 ]; then
+    log "Database backup: $backup"
     # Delete a backup only if it is beyond the newest $BACKUP_KEEP and older than $BACKUP_MIN_DAYS days
-    ls -1t "$BACKUP_DIR"/chorespec-*.sql.gz 2>/dev/null | tail -n +$((BACKUP_KEEP + 1)) | while read -r old; do
+    ls -1t "$BACKUP_DIR"/chorespec-*.gz 2>/dev/null | tail -n +$((BACKUP_KEEP + 1)) | while read -r old; do
         if [ -n "$(find "$old" -mmin +$((BACKUP_MIN_DAYS * 24 * 60)))" ]; then
             rm -f "$old" && log "Removed old backup $(basename "$old")"
         fi
     done
 else
-    log "Database container not running, skipping backup"
+    rm -f "$backup"
+    fail "database backup failed, not updating"
 fi
 
 # Keep the running images as :previous, so pruning can't remove them and a

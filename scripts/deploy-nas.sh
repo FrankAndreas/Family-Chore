@@ -1,25 +1,30 @@
 #!/bin/bash
 # Deploy ChoreSpec to the NAS from this machine, over SSH.
 #
-# Copies docker-compose.yml and nas-update.sh to the NAS (showing a diff and
-# asking first), then runs the update there and shows the result. Use it for
-# docker-compose.yml changes; image updates also arrive via the nightly task.
+# Updates nas-update.sh on the NAS (showing a diff and asking first), then runs
+# it there to install the latest images right away instead of waiting for the
+# nightly task, and shows the result.
 #
-# Usage:   NAS_HOST=admin@nas.local scripts/deploy-nas.sh [--yes]
+# Usage:   NAS_HOST=admin@nas.local scripts/deploy-nas.sh [--yes] [--force]
 # Env:     NAS_HOST  SSH target (user@host or an alias from ~/.ssh/config), required
 #          NAS_DIR   app folder on the NAS (default: /volume1/docker/chorespec)
 # Options: --yes     don't ask for confirmation
+#          --force   restart the app even if no new image was published
+#                    (e.g. after editing the compose file on the NAS)
 #
-# .env is never copied; edit it on the NAS (it holds the secrets).
+# The compose file and .env belong to the deployment and are never copied;
+# edit them on the NAS.
 
 set -euo pipefail
 
 NAS_DIR="${NAS_DIR:-/volume1/docker/chorespec}"
 ASSUME_YES=0
+FORCE=""
 for arg in "$@"; do
     case "$arg" in
         --yes|-y) ASSUME_YES=1 ;;
-        -h|--help) sed -n '2,14p' "$0"; exit 0 ;;
+        --force) FORCE="--force" ;;
+        -h|--help) sed -n '2,16p' "$0"; exit 0 ;;
         *) echo "Unknown option: $arg" >&2; exit 2 ;;
     esac
 done
@@ -34,7 +39,7 @@ confirm() {
     [[ "$answer" =~ ^[Yy]$ ]]
 }
 
-if ! git diff --quiet HEAD -- docker-compose.yml scripts/nas-update.sh \
+if ! git diff --quiet HEAD -- scripts/nas-update.sh \
     || [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main 2>/dev/null)" ]; then
     echo "Note: deploying files that differ from origin/main (uncommitted changes or another branch)."
     confirm "Continue anyway?" || exit 1
@@ -42,8 +47,6 @@ fi
 
 echo "Connecting to $NAS_HOST ..."
 ssh "$NAS_HOST" "test -d '$NAS_DIR'" || { echo "Folder $NAS_DIR not found on $NAS_HOST" >&2; exit 1; }
-ssh "$NAS_HOST" "test -f '$NAS_DIR/.env'" || {
-    echo "No .env in $NAS_DIR on the NAS. Create it first (see README_DOCKER.md)." >&2; exit 1; }
 
 # Upload a file if it changed; returns 0 if it was uploaded
 upload_if_changed() {
@@ -57,11 +60,7 @@ upload_if_changed() {
     echo "$2: uploaded"
 }
 
-compose_changed=0
-upload_if_changed docker-compose.yml docker-compose.yml 644 && compose_changed=1
 upload_if_changed scripts/nas-update.sh nas-update.sh 755 || true
 
-force=""
-[ "$compose_changed" -eq 1 ] && force="--force"
 echo "Running the update on the NAS (sudo may ask for your NAS password) ..."
-ssh -t "$NAS_HOST" "sudo '$NAS_DIR/nas-update.sh' $force '$NAS_DIR'"
+ssh -t "$NAS_HOST" "sudo '$NAS_DIR/nas-update.sh' $FORCE '$NAS_DIR'"
