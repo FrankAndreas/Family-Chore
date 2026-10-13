@@ -301,9 +301,11 @@ const UserManagement: React.FC = () => {
                             </button>
                             <button
                                 className="btn btn-secondary btn-sm"
-                                onClick={() => setSelectedUserForDelete(user)}
-                                disabled={user.id === currentUser.id}
-                                title={user.id === currentUser.id ? "Cannot delete yourself" : ""}
+                                onClick={() => user.id === currentUser.id
+                                    ? showToast(t('users.messages.cannotDeleteSelf'), 'warning')
+                                    : setSelectedUserForDelete(user)}
+                                aria-disabled={user.id === currentUser.id}
+                                title={user.id === currentUser.id ? t('users.messages.cannotDeleteSelf') : undefined}
                             >
                                 Delete
                             </button>

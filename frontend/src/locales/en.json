@@ -287,7 +287,8 @@
             "created": "User created successfully! 🎉",
             "createFailed": "Failed to create user",
             "loadFailed": "Failed to load users",
-            "familyAdminDesc": "Gives full access to the family dashboard. Needed to see the Chores section as an adult."
+            "familyAdminDesc": "Gives full access to the family dashboard. Needed to see the Chores section as an adult.",
+            "cannotDeleteSelf": "You can't delete the account you're logged in as. To delete it, log in as another admin."
         }
     },
     "roles": {
