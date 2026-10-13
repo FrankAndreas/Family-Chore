@@ -233,13 +233,21 @@ To install the latest version right away, or to roll out a new version of `nas-u
 checkout of this repository:
 
 ```bash
-NAS_HOST=admin@<YOUR_NAS_IP> NAS_DIR=/volume1/docker/chorespec scripts/deploy-nas.sh
+cp .deploy.env.example .deploy.env   # once; then set NAS_HOST and NAS_DIR in it
+scripts/deploy-nas.sh
 ```
 
 It shows how the NAS's `nas-update.sh` differs from the repository's, uploads it after you confirm, and
 runs the update. Add `--force` to restart the app even without a new version, e.g. after editing the
 compose file on the NAS. The compose file and `.env` belong to your deployment and are never copied.
-It needs SSH access to the NAS (**Control Panel → Terminal & SNMP → Enable SSH**).
+
+- **SSH** must be enabled on the NAS (**Control Panel → Terminal & SNMP → Enable SSH**). Connect once by
+  hand (`ssh user@<NAS_IP>`) to verify and accept the NAS's host key; the script never accepts unknown keys.
+- **Password:** without further setup, ssh and sudo ask for it. To avoid typing it, set `NAS_PASS_CMD` in
+  `.deploy.env` to a command that prints it, e.g. `NAS_PASS_CMD=pass show nas` for the
+  [pass](https://www.passwordstore.org/) password manager. The password is piped straight to ssh and
+  `sudo` and never stored, shown or logged.
+- `.deploy.env` is gitignored, so your NAS address stays out of the repository.
 
 ## Troubleshooting
 
