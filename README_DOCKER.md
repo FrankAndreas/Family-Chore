@@ -117,12 +117,81 @@ so the backend reconnects with it.
 ---
 
 ## Updates
-To update the app when a new version is pushed to GitHub:
+New versions are published as `latest` whenever a change is merged to `main` and CI passes.
+Set up [Automatic Updates](#automatic-updates) to install them nightly, or update by hand:
 
 ```bash
 sudo docker-compose pull
 sudo docker-compose up -d
 ```
+
+## Automatic Updates
+
+`scripts/nas-update.sh` checks for new app images and installs them. Run nightly by DSM's Task Scheduler, it:
+
+1. pulls the backend and frontend images and stops if nothing is new,
+2. backs up the database to `db-backups/` (keeps the last 14; the backend runs migrations on start),
+3. keeps the running images tagged as `:previous` for [rolling back](#rolling-back-an-update),
+4. restarts the app and waits until the backend is healthy, logging to `logs/update.log`.
+
+It never changes `docker-compose.yml`, `.env` or the Postgres container; deploy those deliberately
+(see [Deploying from your computer](#deploying-from-your-computer)). It also removes dangling
+(untagged) Docker images to save space, including those of other projects on the NAS.
+
+### Setup
+1. Copy `scripts/nas-update.sh` into the app folder (next to `docker-compose.yml`) and make it executable:
+   ```bash
+   sudo chmod +x /volume1/docker/chorespec/nas-update.sh
+   ```
+2. Run it once by hand and check that it ends with "Up to date" or "Update complete":
+   ```bash
+   sudo /volume1/docker/chorespec/nas-update.sh
+   ```
+3. In DSM, open **Control Panel → Task Scheduler → Create → Scheduled Task → User-defined script**:
+   - **General**: any name (e.g. `ChoreSpec update`), user **root**
+   - **Schedule**: daily, at a quiet time (e.g. 03:30)
+   - **Task Settings**: tick **Send run details by email** and **only when the script terminates abnormally**,
+     and enter the command:
+     ```bash
+     bash /volume1/docker/chorespec/nas-update.sh
+     ```
+
+If the GitHub repository is private, log in to the registry once **as root**, since the task runs as root:
+`sudo docker login ghcr.io -u <github-user>` with a token that has `read:packages`.
+
+### Rolling back an update
+If a new version misbehaves, go back to the previous one. First **disable the scheduled task**,
+otherwise the next night installs the same version again. Then, in the app folder:
+
+```bash
+cd /volume1/docker/chorespec
+# 1. Point latest at the previous images (frontend only if it was updated; see logs/update.log)
+sudo docker tag ghcr.io/frankandreas/family-chore-backend:previous ghcr.io/frankandreas/family-chore-backend:latest
+sudo docker tag ghcr.io/frankandreas/family-chore-frontend:previous ghcr.io/frankandreas/family-chore-frontend:latest
+
+# 2. Restore the database from the backup taken right before the update
+#    (the new version may have migrated it). Changes made since the update are lost.
+sudo docker stop chorespec-backend
+gunzip -c db-backups/chorespec-YYYYMMDD-HHMMSS.sql.gz | sudo docker exec -i chorespec-postgres sh -c \
+  'psql -q -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;" && psql -q -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1'
+
+# 3. Start the previous version
+sudo docker-compose up -d backend frontend
+```
+
+Re-enable the task once a fixed version is published.
+
+### Deploying from your computer
+For changes to `docker-compose.yml`, or to update right away, run from a checkout of this repository:
+
+```bash
+NAS_HOST=admin@<YOUR_NAS_IP> scripts/deploy-nas.sh
+```
+
+It shows what differs from the NAS's `docker-compose.yml` and `nas-update.sh`, uploads them after you
+confirm, and runs the update (restarting the app if the compose file changed). It needs SSH access to
+the NAS (**Control Panel → Terminal & SNMP → Enable SSH**); set `NAS_DIR` if the app folder isn't
+`/volume1/docker/chorespec`. `.env` is never copied; edit it on the NAS.
 
 ## Troubleshooting
 
@@ -132,3 +201,4 @@ sudo docker-compose up -d
 | `chorespec-backend`: *password authentication failed* | `.env` credentials don't match the existing database | Use the credentials the database was created with (see [Upgrading](#upgrading-an-existing-installation)) |
 | Logging in doesn't work when using plain `http://` | `COOKIE_SECURE=true`: the browser drops the HTTPS-only login cookie | Set `COOKIE_SECURE=false`, then `sudo docker-compose up -d` |
 | Everyone is logged out after each update | `JWT_SECRET_KEY` not set in `.env` | Generate keys and add them to `.env` |
+| Email from Task Scheduler: *backend not healthy* | A new version fails to start | Check `logs/update.log` (it ends with the backend's log), then [roll back](#rolling-back-an-update) |
