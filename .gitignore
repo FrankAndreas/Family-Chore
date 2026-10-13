@@ -49,3 +49,6 @@ PLAN.md
 STATE.md
 pytest_output.txt
 _review_notes.txt
+
+# Local NAS deploy settings (scripts/deploy-nas.sh)
+.deploy.env
