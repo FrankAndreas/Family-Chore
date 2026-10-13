@@ -287,7 +287,8 @@
             "created": "Benutzer erfolgreich erstellt! 🎉",
             "createFailed": "Benutzer konnte nicht erstellt werden",
             "loadFailed": "Benutzer konnten nicht geladen werden",
-            "familyAdminDesc": "Gewährt vollen Zugriff auf das Familien-Dashboard. Wird benötigt, um den Bereich Aufgaben als Erwachsener zu sehen."
+            "familyAdminDesc": "Gewährt vollen Zugriff auf das Familien-Dashboard. Wird benötigt, um den Bereich Aufgaben als Erwachsener zu sehen.",
+            "cannotDeleteSelf": "Du kannst das Konto, mit dem du angemeldet bist, nicht löschen. Melde dich dafür mit einem anderen Admin-Konto an."
         }
     },
     "roles": {

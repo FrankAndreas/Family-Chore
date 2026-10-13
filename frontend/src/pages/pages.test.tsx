@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { UserContext } from '../context/UserContext';
@@ -87,6 +87,19 @@ describe('pages load their data on mount', () => {
         renderPage(<UserManagement />);
         expect(await screen.findByText('Kiddo')).toBeInTheDocument();
         expect(api.getUsersAdmin).toHaveBeenCalledTimes(1);
+    });
+
+    it('UserManagement explains why you cannot delete yourself', async () => {
+        renderPage(<UserManagement />);
+        await screen.findByText('Kiddo');
+        const [ownDelete, childDelete] = screen.getAllByRole('button', { name: 'Delete' });
+
+        fireEvent.click(ownDelete);
+        expect(showToast).toHaveBeenCalledWith('users.messages.cannotDeleteSelf', 'warning');
+        expect(screen.queryByText('Delete User')).toBeNull();
+
+        fireEvent.click(childDelete);
+        expect(await screen.findByText('Delete User')).toBeInTheDocument();
     });
 
     it('TaskManagement', async () => {
