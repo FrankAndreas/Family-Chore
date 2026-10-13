@@ -49,3 +49,24 @@ frontend/.npm/
 # Agent
 .agent/
 .antigravity/
+
+# Anywhere in the tree (patterns above only match at the context root):
+# local secrets, dev databases and caches must never end up in an image
+**/.env
+**/*.pem
+**/*.db
+**/.coverage
+**/__pycache__/
+**/*.py[cod]
+**/*.log
+backend/uploads/
+backend/Dockerfile
+
+# Not needed by the backend image (the frontend builds from ./frontend)
+frontend/
+tests/
+docs/
+node_modules/
+htmlcov/
+backups/
+uploads/
