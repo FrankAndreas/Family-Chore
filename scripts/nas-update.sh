@@ -84,7 +84,9 @@ if [ -z "${COMPOSE_PROJECT_NAME:-}" ]; then
 fi
 compose() { "${COMPOSE[@]}" "$@"; }
 
-container_of() { compose ps -q "$1" 2>/dev/null | head -n1; }
+# Container of a service, running or stopped (running_container_of: running only)
+container_of() { compose ps -a -q "$1" 2>/dev/null | head -n1; }
+running_container_of() { compose ps -q "$1" 2>/dev/null | head -n1; }
 
 # True if the service's container is missing or runs an older image than the local tag
 needs_update() {
@@ -117,8 +119,11 @@ log "Updating:${changed:- (forced)}"
 backup_postgres() {
     compose exec -T db sh -c 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"'
 }
+# Through the running backend, or a one-off backend container if it is stopped
 backup_sqlite() {
-    compose exec -T backend python -c '
+    local runner=(exec -T backend)
+    [ -z "$(running_container_of backend)" ] && runner=(run --rm --no-deps -T backend)
+    compose "${runner[@]}" python -c '
 import os, sqlite3, sys, tempfile
 path = os.environ["DATABASE_URL"].split("sqlite:///", 1)[1]
 tmp = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
@@ -144,7 +149,7 @@ case "$database_url" in
         backup="$BACKUP_DIR/chorespec-$stamp.sqlite.gz"
         backup_sqlite | gzip > "$backup" && [ "$(gzip -dc "$backup" | head -c 15)" = "SQLite format 3" ] ;;
     postgres*)
-        if [ -n "$(container_of db)" ]; then
+        if [ -n "$(running_container_of db)" ]; then
             backup="$BACKUP_DIR/chorespec-$stamp.sql.gz"
             backup_postgres | gzip > "$backup" && [ "$(gzip -dc "$backup" | head -c 1 | wc -c)" -eq 1 ]
         else
@@ -154,7 +159,7 @@ case "$database_url" in
 esac
 backup_ok=$?
 if [ -z "$backup" ]; then
-    log "Database not reachable (backend or db container not running), skipping backup"
+    log "No database to back up yet (no backend container, or the db container is not running)"
 elif [ "$backup_ok" -eq 0 ]; then
     log "Database backup: $backup"
     # Delete a backup only if it is beyond the newest $BACKUP_KEEP and older than $BACKUP_MIN_DAYS days
