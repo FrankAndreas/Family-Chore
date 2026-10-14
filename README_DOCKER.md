@@ -182,7 +182,8 @@ sudo docker-compose up -d
 
 `scripts/nas-update.sh` checks for new app images and installs them. Run nightly by DSM's Task Scheduler, it:
 
-1. pulls the backend and frontend images and stops if nothing is new,
+1. pulls the backend and frontend images; if nothing is new, it only checks that the backend is healthy
+   and stops,
 2. backs up the database to `db-backups/`: Postgres with `pg_dump`, SQLite with its online-backup API
    (keeps at least the newest 5 and everything from the last 7 days; the backend runs migrations on start),
 3. keeps the running images tagged as `:previous` for [rolling back](#rolling-back-an-update),
@@ -267,4 +268,5 @@ compose file on the NAS. The compose file and `.env` belong to your deployment a
 | `chorespec-backend`: *password authentication failed* | `.env` credentials don't match the existing database | Use the credentials the database was created with (see [Upgrading](#upgrading-an-existing-installation)) |
 | Logging in doesn't work when using plain `http://` | `COOKIE_SECURE=true`: the browser drops the HTTPS-only login cookie | Set `COOKIE_SECURE=false`, then `sudo docker-compose up -d` |
 | Everyone is logged out after each update | `JWT_SECRET_KEY` not set in `.env` | Generate keys and add them to `.env` |
+| Email from Task Scheduler: *up to date, but the backend is not healthy* | The backend keeps crashing without an update, e.g. after a change to `.env` (wrong `PUID`/`PGID`) | Check `logs/update.log`, fix the cause, then `sudo docker-compose up -d` and `sudo docker restart chorespec-frontend` |
 | Email from Task Scheduler: *backend not healthy* | A new version fails to start | Check `logs/update.log` (it ends with the backend's log), then [roll back](#rolling-back-an-update) |
