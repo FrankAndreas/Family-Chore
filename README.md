@@ -283,3 +283,9 @@ curl -X POST http://localhost:8000/tasks/1/complete
 
 **Last Updated**: 2025-11-27 07:02 CET
 **Status**: Backend complete, Frontend foundation ready
+
+---
+
+## License
+
+Released under the [MIT License](LICENSE).
