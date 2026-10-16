@@ -1,6 +1,7 @@
 {
   "name": "family-chore",
   "private": true,
+  "license": "MIT",
   "scripts": {
     "lint:backend": "cd backend && flake8 . --max-line-length=120",
     "lint:frontend": "cd frontend && npm run lint",
