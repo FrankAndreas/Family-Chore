@@ -91,12 +91,18 @@ container_of() { compose ps -a -q "$1" 2>/dev/null | head -n1; }
 running_container_of() { compose ps -q "$1" 2>/dev/null | head -n1; }
 
 # Wait up to $HEALTH_TIMEOUT seconds for the backend's Docker healthcheck;
-# leaves the last status in $status
+# leaves the last status in $status. A stopped container can't become healthy,
+# so that fails right away.
 wait_healthy() {
-    local deadline=$(( $(date +%s) + HEALTH_TIMEOUT ))
+    local deadline=$(( $(date +%s) + HEALTH_TIMEOUT )) cid state
     status=""
     while [ "$(date +%s)" -lt "$deadline" ]; do
-        status=$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$(container_of backend)" 2>/dev/null)
+        cid=$(container_of backend)
+        state=$(docker inspect -f '{{.State.Status}}' "$cid" 2>/dev/null)
+        case "$state" in
+            exited|dead|created|"") status="stopped (${state:-no container})"; return 1 ;;
+        esac
+        status=$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$cid" 2>/dev/null)
         [ "$status" = "healthy" ] && return 0
         sleep 10
     done
@@ -127,7 +133,10 @@ if [ -z "$changed" ] && [ "$FORCE" -eq 0 ]; then
     # after a change to .env) instead of calling it up to date
     if ! wait_healthy; then
         compose logs --tail 50 backend >>"$LOG_FILE" 2>&1
-        fail "up to date, but the backend is not healthy (status: ${status:-unknown}); last logs in $LOG_FILE"
+        case "$status" in
+            stopped*) fail "up to date, but the backend is $status; start it with 'sudo docker-compose up -d' in $APP_DIR" ;;
+            *) fail "up to date, but the backend is not healthy (status: ${status:-unknown}); last logs in $LOG_FILE" ;;
+        esac
     fi
     log "Up to date"
     exit 0
