@@ -43,8 +43,8 @@ Open `.env` in a text editor and set:
    Paste the three printed lines into `.env`, replacing the empty entries.
 3. **`VAPID_CLAIMS_EMAIL`**: your email address, as `mailto:you@example.com`.
 
-Leave `COOKIE_SECURE=false` unless you serve the app over HTTPS (e.g. through a reverse proxy
-with a certificate). With `true` on plain `http://`, nobody can log in.
+Leave `COOKIE_SECURE=false` unless you serve the app over HTTPS (see
+[HTTPS at Home](#https-at-home-recommended)). With `true` on plain `http://`, nobody can log in.
 
 > **Why the keys matter:** if they are left empty, the backend generates them inside the container.
 > They are then replaced every time the container is recreated, which happens on every update.
@@ -166,6 +166,34 @@ The folders hold everything worth keeping: `data/` (database), `uploads/` (task 
 > app's own backups were stored inside the container and are lost on every update, and so were the
 > login keys. Switch to the template above (keeping your `./data` folder and port), add the folders
 > and `.env` from steps 1–3, and run `sudo docker-compose up -d`. Everyone logs in once more.
+
+---
+
+## HTTPS at Home (recommended)
+
+On plain `http://<NAS_IP>:<port>` the PINs and the login cookie cross the Wi-Fi unencrypted, and
+**push notifications don't work on phones**: browsers allow them only on HTTPS pages. Taking task
+photos works either way.
+
+The NAS's own reverse proxy fixes this; nothing is opened to the internet. You need a certificate for
+a name that points to the NAS's home address, e.g. a wildcard `*.local.<domain>` from Let's Encrypt
+(issued with [acme.sh](https://github.com/acmesh-official/acme.sh) and a DNS record `*.local` →
+`<NAS_IP>`, "DNS only", at your DNS provider). If another app on the NAS already uses such a
+certificate, reuse it and start at step 1.
+
+1. **Reverse proxy.** DSM: **Control Panel → Login Portal → Advanced → Reverse Proxy → Create**:
+
+   | Source | Destination |
+   |---|---|
+   | HTTPS, `chores.local.<domain>`, port 443, **Enable HSTS** | HTTP, `localhost`, the app's port (8080, or e.g. 8888 if you changed it) |
+
+2. **Certificate.** **Control Panel → Security → Certificate → Settings**: pick the wildcard
+   certificate for the new entry.
+3. **Secure cookie.** Set `COOKIE_SECURE=true` in `.env`, then run `sudo docker-compose up -d`.
+   From now on logging in only works over `https://`; the old `http://` address shows the login page,
+   but login fails.
+4. **Open** `https://chores.local.<domain>` on each phone, save it to the home screen again (replacing
+   the old shortcut), and allow notifications when asked.
 
 ---
 

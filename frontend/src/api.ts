@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 import type { LoginResponse, User } from './types';
+import { shrinkPhoto } from './utils/shrinkPhoto';
 
 // ── In-memory token store ───────────────────────────────────────
 // Kept in module scope (not localStorage) so XSS cannot read it.
@@ -148,9 +149,10 @@ export const updateTask = (task_id: number, taskData: Partial<{
     requires_photo_verification?: boolean;
 }>) => api.put(`/tasks/${task_id}`, taskData);
 
-export const uploadTaskPhoto = (instance_id: number, photo_file: File) => {
+export const uploadTaskPhoto = async (instance_id: number, photo_file: File) => {
     const formData = new FormData();
-    formData.append('file', photo_file);
+    const photo = await shrinkPhoto(photo_file);
+    formData.append('file', photo, photo === photo_file ? photo_file.name : 'photo.jpg');
     return api.post(`/tasks/${instance_id}/upload-photo`, formData, {
         headers: {
             'Content-Type': 'multipart/form-data'
