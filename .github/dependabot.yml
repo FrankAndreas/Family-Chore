@@ -33,6 +33,12 @@ updates:
       include: "scope"
     assignees:
       - "FrankAndreas"
+    groups:
+      # react and react-dom must have the exact same version
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
     ignore:
       # Ignore major version updates for stability
       - dependency-name: "*"
