@@ -274,7 +274,7 @@ curl -X POST http://localhost:8000/tasks/1/complete
 ## 📝 Notes
 
 - **Node.js Version**: 22 (required by Vite 8 / Vitest 5)
-- **Python Version**: 3.12
+- **Python Version**: 3.14
 - **Database**: SQLite (file-based, zero-config)
 - **CORS**: May need to enable for production
 - **Security**: PINs are stored as bcrypt hashes; legacy plaintext PINs are upgraded on next login
