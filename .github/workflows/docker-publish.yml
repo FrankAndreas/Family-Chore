@@ -145,7 +145,7 @@ jobs:
           docker compose down
 
       - name: Build and push Backend
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: backend/Dockerfile
@@ -156,7 +156,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Build and push Frontend
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: ./frontend
           file: ./frontend/Dockerfile
