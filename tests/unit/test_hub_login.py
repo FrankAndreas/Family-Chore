@@ -107,7 +107,10 @@ def test_events_need_a_login(hub_client):
 
 def test_hub_login_url(hub_client, monkeypatch):
     monkeypatch.setenv("HUB_PUBLIC_URL", "https://home.local.example.ch")
-    assert hub_client.get("/hub").json() == {"login_url": "https://home.local.example.ch"}
+    assert hub_client.get("/hub").json() == {
+        "login_url": "https://home.local.example.ch",
+        "logout_url": "https://home.local.example.ch/logout",
+    }
 
 
 def test_removed_endpoints(hub_client):
@@ -229,3 +232,38 @@ def test_removed_person_gets_no_daily_tasks(hub_client, db_session, family_hub):
     assert db_session.query(models.TaskInstance).filter(models.TaskInstance.user_id == lena.id).count() == 0
     admin = row(db_session, ADMIN)
     assert db_session.query(models.TaskInstance).filter(models.TaskInstance.user_id == admin.id).count() == 1
+
+
+# From outside (through the Cloudflare tunnel) the Cloudflare Access login counts, passed on to the hub (2026-10-30)
+OUTSIDE = {"Cf-Connecting-Ip": "203.0.113.7"}
+
+
+def outside(name=ADMIN, **extra):
+    return {**OUTSIDE, "Cf-Access-Jwt-Assertion": fake_hub.cloudflare_token(name), **extra}
+
+
+def test_cloudflare_login_from_outside(hub_client):
+    found = hub_client.get("/users/me", headers=outside())
+    assert found.status_code == 200 and found.json()["nickname"] == ADMIN
+
+
+def test_a_hub_login_counts_for_nothing_outside(hub_client):
+    assert hub_client.get("/users/me", headers={**OUTSIDE, **bearer(ADMIN)}).status_code == 401
+
+
+def test_changes_from_outside_need_the_header(hub_client):
+    body = {"name": "Helper", "multiplier_value": 1.1}
+    refused = hub_client.post("/roles/", json=body, headers=outside())
+    assert refused.status_code == 403 and refused.json()["detail"] == "csrf"
+    assert hub_client.post("/roles/", json=body, headers=outside(**{"X-Requested-With": "chores"})).status_code == 200
+
+
+def test_unknown_to_the_hub_from_outside(hub_client):
+    response = hub_client.get("/users/me", headers=outside("Nobody"))
+    assert response.status_code == 403 and response.json()["detail"] == "no_access"
+
+
+def test_logout_from_outside_is_cloudflares(hub_client, monkeypatch):
+    monkeypatch.setenv("HUB_PUBLIC_URL", "https://home.local.example.ch")
+    assert hub_client.get("/hub", headers=OUTSIDE).json()["logout_url"] == "/cdn-cgi/access/logout"
+    assert hub_client.get("/hub").json()["logout_url"] == "https://home.local.example.ch/logout"
