@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import api, { getSseToken } from '../api';
+import api from '../api';
 import type { TaskInstance, User, Reward } from '../types';
 
 const getPendingTasksPublic = () => api.get('/tasks/pending', { skipAuthRedirect: true });
@@ -62,8 +62,9 @@ export function useFamilyDashboardData(onTasksUpdated?: () => void, onRewardsUpd
                 if (!ignore) setLoading(false);
             });
 
-        const token = getSseToken() || '';
-        const eventSource = new EventSource(`${API_BASE}/events?token=${encodeURIComponent(token)}`);
+        // The login is the family hub's cookie, which EventSource sends by itself (same address); without a login the
+        // dashboard still shows, only without live updates
+        const eventSource = new EventSource(`${API_BASE}/events`, { withCredentials: true });
         eventSourceRef.current = eventSource;
 
         eventSource.onopen = () => {

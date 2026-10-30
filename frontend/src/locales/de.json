@@ -20,26 +20,8 @@
         "error_loading": "Daten konnten nicht geladen werden. Bitte versuche es erneut."
     },
     "login": {
-        "title": "Willkommen bei ChoreSpec",
-        "subtitle": "Verwandle Aufgaben in Erfolge",
-        "nickname": "Spitzname",
-        "nicknamePlaceholder": "Spitznamen eingeben",
-        "pin": "PIN",
-        "pinPlaceholder": "4-stellige PIN",
-        "loginButton": "Anmelden",
-        "loggingIn": "Anmeldung läuft...",
-        "showPin": "PIN anzeigen",
-        "hidePin": "PIN verbergen",
         "familyDashboard": "🏡 Familien-Dashboard",
-        "familyDashboardHint": "Gemeinsames Familien-Aufgabenbrett ohne Anmeldung ansehen",
-        "error": {
-            "nicknameRequired": "Spitzname ist erforderlich",
-            "pinRequired": "PIN ist erforderlich",
-            "pinFormat": "PIN muss genau 4 Ziffern haben",
-            "userNotFound": "Benutzer nicht gefunden",
-            "incorrectPin": "Falsche PIN",
-            "loginFailed": "Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut."
-        }
+        "familyDashboardHint": "Gemeinsames Familien-Aufgabenbrett ohne Anmeldung ansehen"
     },
     "navigation": {
         "dashboard": "Dashboard",
@@ -275,21 +257,20 @@
     "users": {
         "title": "Benutzerverwaltung",
         "subtitle": "Familienmitglieder und deren Rollen verwalten",
-        "addNew": "+ Neuer Benutzer",
         "fields": {
             "nickname": "Spitzname",
-            "pin": "PIN (4 Ziffern)",
             "role": "Rolle"
         },
         "currentPoints": "Aktuell",
         "lifetimePoints": "Lebenszeit",
         "messages": {
-            "created": "Benutzer erfolgreich erstellt! 🎉",
-            "createFailed": "Benutzer konnte nicht erstellt werden",
             "loadFailed": "Benutzer konnten nicht geladen werden",
-            "familyAdminDesc": "Gewährt vollen Zugriff auf das Familien-Dashboard. Wird benötigt, um den Bereich Aufgaben als Erwachsener zu sehen.",
-            "cannotDeleteSelf": "Du kannst das Konto, mit dem du angemeldet bist, nicht löschen. Melde dich dafür mit einem anderen Admin-Konto an."
-        }
+            "familyAdminDesc": "Gewährt vollen Zugriff auf das Familien-Dashboard. Wird benötigt, um den Bereich Aufgaben als Erwachsener zu sehen."
+        },
+        "fromHub": "Die Familie kommt aus dem Familien-Hub: Personen dort hinzufügen, umbenennen, PINs ändern und freischalten. Eltern sind hier Admin; die Rolle jedes Kindes wählst du hier.",
+        "removedTitle": "Im Familien-Hub entfernt",
+        "removedHint": "Ausgeblendet, mit Punkten und Verlauf, bis du sie hier löschst. Sie bekommen solange keine Aufgaben.",
+        "deleteData": "Daten von {{name}} löschen"
     },
     "roles": {
         "title": "Rollenverwaltung",
@@ -308,15 +289,12 @@
         "subtitle": "Konfiguriere deine Einstellungen",
         "language": {
             "title": "Sprache",
-            "description": "Wähle deine bevorzugte Sprache",
             "familyDefault": "Familien-Standard",
-            "userPreference": "Deine Einstellung",
-            "useDefault": "Familien-Standard verwenden",
-            "override": "Für mich überschreiben",
             "languages": {
                 "en": "English (Englisch)",
                 "de": "Deutsch"
-            }
+            },
+            "inHub": "Deine Sprache stellst du im Familien-Hub ein."
         },
         "messages": {
             "saved": "Einstellungen erfolgreich gespeichert! ✅",
@@ -382,5 +360,13 @@
         "tryAgain": "Erneut versuchen",
         "goBack": "Zurück",
         "reloadPage": "Seite neu laden"
+    },
+    "access": {
+        "noAccessTitle": "Kein Zugang",
+        "noAccess": "Bitte einen Elternteil, dir im Familien-Hub Zugang zur Ämtli-App zu geben.",
+        "otherPerson": "Als jemand anderes anmelden",
+        "hubDownTitle": "Anmelden geht gerade nicht",
+        "hubDown": "Der Familien-Hub oder die Ämtli-App antwortet gerade nicht (vielleicht startet das NAS neu).",
+        "retry": "Nochmals versuchen"
     }
 }

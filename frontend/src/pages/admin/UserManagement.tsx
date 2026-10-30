@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useUser } from '../../context/UserContext';
-import { getUsersAdmin, createUser, getRoles, penalizeUser, updateUser, resetUserPassword, deleteUser } from '../../api';
+import { ADMIN_ROLE_NAME } from '../../constants';
+import { getUsersAdmin, getRemovedUsers, getRoles, penalizeUser, updateUser, deleteUser } from '../../api';
 import type { User, Role } from '../../types';
 import { SkeletonLoader } from '../../components/SkeletonLoader';
 import { useTranslation } from 'react-i18next';
@@ -10,18 +10,14 @@ import './Dashboard.css';
 
 const UserManagement: React.FC = () => {
     const { t } = useTranslation();
-    const { currentUser } = useUser();
     const { showToast } = useToast();
     const [users, setUsers] = useState<User[]>([]);
+    // Removed in the family hub: hidden with points and history until deleted here
+    const [removed, setRemoved] = useState<User[]>([]);
     const [roles, setRoles] = useState<Role[]>([]);
     const [loading, setLoading] = useState(true);
-    const [showAddForm, setShowAddForm] = useState(false);
 
     // Form state
-    const [nickname, setNickname] = useState('');
-    const [pin, setPin] = useState('');
-    const [roleId, setRoleId] = useState<number>(0);
-    const [error, setError] = useState('');
 
     // Penalty state
     const [selectedUserForPenalty, setSelectedUserForPenalty] = useState<User | null>(null);
@@ -29,27 +25,21 @@ const UserManagement: React.FC = () => {
     const [penaltyReason, setPenaltyReason] = useState<string>('');
     const [penaltyError, setPenaltyError] = useState<string>('');
 
-    const [showPin, setShowPin] = useState(false);
-    const [showEditPin, setShowEditPin] = useState(false);
 
     // Edit/Delete state
     const [selectedUserForEdit, setSelectedUserForEdit] = useState<User | null>(null);
-    const [editNickname, setEditNickname] = useState('');
     const [editRoleId, setEditRoleId] = useState<number>(0);
-    const [editNewPin, setEditNewPin] = useState('');
     const [editError, setEditError] = useState('');
 
     const [selectedUserForDelete, setSelectedUserForDelete] = useState<User | null>(null);
     const [deleteError, setDeleteError] = useState('');
 
-    const loadData = () => Promise.all([getUsersAdmin(), getRoles()]);
+    const loadData = () => Promise.all([getUsersAdmin(), getRoles(), getRemovedUsers()]);
 
-    const applyData = useCallback(([usersRes, rolesRes]: Awaited<ReturnType<typeof loadData>>) => {
+    const applyData = useCallback(([usersRes, rolesRes, removedRes]: Awaited<ReturnType<typeof loadData>>) => {
         setUsers(usersRes.data);
         setRoles(rolesRes.data);
-        if (rolesRes.data.length > 0) {
-            setRoleId(rolesRes.data[0].id);
-        }
+        setRemoved(removedRes.data);
     }, []);
 
     const fetchData = async () => {
@@ -76,28 +66,6 @@ const UserManagement: React.FC = () => {
             ignore = true;
         };
     }, [applyData]);
-
-    const handleCreateUser = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError('');
-
-        if (pin.length !== 4 || !/^\d+$/.test(pin)) {
-            setError('PIN must be exactly 4 digits');
-            return;
-        }
-
-        try {
-            await createUser(nickname, pin, roleId);
-            showToast(t('users.messages.created'), 'success');
-            setShowAddForm(false);
-            setNickname('');
-            setPin('');
-            fetchData();
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (err: any) {
-            setError(err.response?.data?.detail || t('users.messages.createFailed'));
-        }
-    };
 
     const handlePenalize = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -127,11 +95,12 @@ const UserManagement: React.FC = () => {
         }
     };
 
+    // The Admin role belongs to the family hub's parents: a child gets one of the others
+    const gameRoles = roles.filter(role => role.name !== ADMIN_ROLE_NAME);
+
     const handleEditClick = (user: User) => {
         setSelectedUserForEdit(user);
-        setEditNickname(user.nickname);
-        setEditRoleId(user.role?.id || roles[0]?.id || 0);
-        setEditNewPin('');
+        setEditRoleId(user.role?.id || gameRoles[0]?.id || 0);
         setEditError('');
     };
 
@@ -142,22 +111,10 @@ const UserManagement: React.FC = () => {
         if (!selectedUserForEdit) return;
 
         try {
-            // Update profile
-            await updateUser(selectedUserForEdit.id, {
-                nickname: editNickname,
-                role_id: editRoleId
-            });
+            // A child's game role; the name, the PIN and who is Admin (a parent) come from the family hub
+            await updateUser(selectedUserForEdit.id, { role_id: editRoleId });
 
-            // Update PIN if provided
-            if (editNewPin) {
-                if (editNewPin.length !== 4 || !/^\d+$/.test(editNewPin)) {
-                    setEditError('New PIN must be exactly 4 digits');
-                    return;
-                }
-                await resetUserPassword(selectedUserForEdit.id, editNewPin);
-            }
-
-            showToast(`${editNickname} updated successfully`, 'success');
+            showToast(`${selectedUserForEdit.nickname} updated successfully`, 'success');
             setSelectedUserForEdit(null);
             fetchData();
         } catch (err: unknown) {
@@ -203,74 +160,10 @@ const UserManagement: React.FC = () => {
                         <h1 className="page-title">User Management</h1>
                         <p className="page-subtitle">{t('users.subtitle', 'Manage family members and their roles')}</p>
                     </div>
-                    <button
-                        className="btn btn-primary"
-                        onClick={() => setShowAddForm(!showAddForm)}
-                    >
-                        {showAddForm ? 'Cancel' : 'Add New User'}
-                    </button>
                 </div>
             </header>
 
-            {showAddForm && (
-                <div className="section glass-panel mb-xl fade-in">
-                    <h2>Add New User</h2>
-                    <form onSubmit={handleCreateUser} className="form-grid">
-                        <div className="form-group">
-                            <label htmlFor="newUserNickname">Nickname</label>
-                            <input
-                                id="newUserNickname"
-                                type="text"
-                                value={nickname}
-                                onChange={(e) => setNickname(e.target.value)}
-                                required
-                                placeholder="e.g. Alice"
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label htmlFor="newUserPin">4-Digit PIN</label>
-                            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                                <input
-                                    id="newUserPin"
-                                    type={showPin ? 'text' : 'password'}
-                                    value={pin}
-                                    onChange={(e) => setPin(e.target.value)}
-                                    maxLength={4}
-                                    required
-                                    placeholder="****"
-                                    style={{ paddingRight: '2.5rem', flex: 1 }}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPin(v => !v)}
-                                    aria-label={showPin ? t('login.hidePin') : t('login.showPin')}
-                                    style={{ position: 'absolute', right: '0.5rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: '1rem' }}
-                                >
-                                    {showPin ? '🙈' : '👁️'}
-                                </button>
-                            </div>
-                        </div>
-                        <div className="form-group">
-                            <label htmlFor="newUserRole">Role</label>
-                            <select
-                                id="newUserRole"
-                                value={roleId}
-                                onChange={(e) => setRoleId(Number(e.target.value))}
-                            >
-                                {roles.map(role => (
-                                    <option key={role.id} value={role.id}>
-                                        {role.name} (x{role.multiplier_value})
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="form-actions">
-                            <button type="submit" className="btn btn-primary">Create User</button>
-                        </div>
-                        {error && <div className="error-message">{error}</div>}
-                    </form>
-                </div>
-            )}
+            <p className="text-secondary mb-3">{t('users.fromHub')}</p>
 
             <div className="users-grid">
                 {users.map(user => (
@@ -293,22 +186,14 @@ const UserManagement: React.FC = () => {
                             </div>
                         </div>
                         <div className="user-card-actions" style={{ marginTop: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                            <button
-                                className="btn btn-secondary btn-sm"
-                                onClick={() => handleEditClick(user)}
-                            >
-                                Edit
-                            </button>
-                            <button
-                                className="btn btn-secondary btn-sm"
-                                onClick={() => user.id === currentUser.id
-                                    ? showToast(t('users.messages.cannotDeleteSelf'), 'warning')
-                                    : setSelectedUserForDelete(user)}
-                                aria-disabled={user.id === currentUser.id}
-                                title={user.id === currentUser.id ? t('users.messages.cannotDeleteSelf') : undefined}
-                            >
-                                Delete
-                            </button>
+                            {user.role?.name !== ADMIN_ROLE_NAME && (
+                                <button
+                                    className="btn btn-secondary btn-sm"
+                                    onClick={() => handleEditClick(user)}
+                                >
+                                    Edit
+                                </button>
+                            )}
                             <button
                                 className="btn btn-secondary btn-sm"
                                 onClick={() => setSelectedUserForPenalty(user)}
@@ -319,6 +204,23 @@ const UserManagement: React.FC = () => {
                     </div>
                 ))}
             </div>
+
+            {removed.length > 0 && (
+                <section className="section glass-panel mt-3">
+                    <h2>{t('users.removedTitle')}</h2>
+                    <p className="text-secondary mb-3">{t('users.removedHint')}</p>
+                    <ul>
+                        {removed.map(user => (
+                            <li key={user.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0' }}>
+                                <span>{user.nickname} ({user.current_points} pts)</span>
+                                <button className="btn btn-secondary btn-sm" onClick={() => setSelectedUserForDelete(user)}>
+                                    {t('users.deleteData', { name: user.nickname })}
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                </section>
+            )}
 
             {/* Penalty Modal */}
             {selectedUserForPenalty && (
@@ -387,52 +289,19 @@ const UserManagement: React.FC = () => {
                         <div className="modal-body">
                             <form onSubmit={handleUpdateUser} className="form-grid">
                                 <div className="form-group">
-                                    <label htmlFor="editUserNickname">Nickname</label>
-                                    <input
-                                        id="editUserNickname"
-                                        type="text"
-                                        value={editNickname}
-                                        onChange={(e) => setEditNickname(e.target.value)}
-                                        required
-                                    />
-                                </div>
-                                <div className="form-group">
                                     <label htmlFor="editUserRole">Role</label>
                                     <select
                                         id="editUserRole"
                                         value={editRoleId}
                                         onChange={(e) => setEditRoleId(Number(e.target.value))}
                                     >
-                                        {roles.map(role => (
+                                        {gameRoles.map(role => (
                                             <option key={role.id} value={role.id}>
                                                 {role.name} (x{role.multiplier_value})
                                             </option>
                                         ))}
                                     </select>
                                 </div>
-                                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                                    <label htmlFor="editUserPin">Reset PIN (Leave blank to keep current)</label>
-                                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                                    <input
-                                        id="editUserPin"
-                                        type={showEditPin ? 'text' : 'password'}
-                                        value={editNewPin}
-                                        onChange={(e) => setEditNewPin(e.target.value)}
-                                        maxLength={4}
-                                        placeholder="****"
-                                        style={{ paddingRight: '2.5rem', flex: 1 }}
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowEditPin(v => !v)}
-                                        aria-label={showEditPin ? t('login.hidePin') : t('login.showPin')}
-                                        style={{ position: 'absolute', right: '0.5rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: '1rem' }}
-                                    >
-                                        {showEditPin ? '🙈' : '👁️'}
-                                    </button>
-                                    </div>
-                                </div>
-
                                 {editError && <div className="error-message" style={{ gridColumn: '1 / -1' }}>{editError}</div>}
 
                                 <div className="form-actions" style={{ gridColumn: '1 / -1', marginTop: '1rem' }}>

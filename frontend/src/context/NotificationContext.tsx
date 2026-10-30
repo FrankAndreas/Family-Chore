@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import {
     getUserNotifications, markNotificationRead, markAllNotificationsRead,
-    getVapidPublicKey, subscribePush, unsubscribePush, getSseToken
+    getVapidPublicKey, subscribePush, unsubscribePush
 } from '../api';
 import type { Notification } from '../types';
 import { useToast } from './ToastContext';
@@ -91,8 +91,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     useEffect(() => {
         if (!currentUser) return;
 
-        const token = getSseToken() || '';
-        const eventSource = new EventSource(`${API_BASE}/events?token=${encodeURIComponent(token)}`);
+        // The login is the family hub's cookie, which EventSource sends by itself (same address)
+        const eventSource = new EventSource(`${API_BASE}/events`, { withCredentials: true });
 
         eventSource.onopen = () => {
             setSseConnected(true);

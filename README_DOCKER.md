@@ -4,7 +4,8 @@ This guide explains how to deploy the Family Chore App using Docker images hoste
 
 ## Prerequisites
 - A Synology NAS with "Container Manager" (Docker) installed.
-- SSH access to your NAS (needed to generate keys and read the initial PIN).
+- SSH access to your NAS (needed to generate keys).
+- The family hub (FrankAndreas/family-hub) running on the NAS: logging in goes through it.
 - If the GitHub repository is **Private**, you need a GitHub Personal Access Token (PAT) with `read:packages` scope.
 
 ## Choose a Setup
@@ -36,21 +37,19 @@ Open `.env` in a text editor and set:
    ```bash
    openssl rand -hex 24
    ```
-2. **`JWT_SECRET_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_PUBLIC_KEY`**: generate all three at once:
+2. **`VAPID_PRIVATE_KEY`, `VAPID_PUBLIC_KEY`**: generate both at once:
    ```bash
    sudo docker run --rm ghcr.io/frankandreas/family-chore-backend:latest python -m backend.generate_keys
    ```
-   Paste the three printed lines into `.env`, replacing the empty entries.
+   Paste the printed lines into `.env`, replacing the empty entries.
 3. **`VAPID_CLAIMS_EMAIL`**: your email address, as `mailto:you@example.com`.
-
-Leave `COOKIE_SECURE=false` unless you serve the app over HTTPS (see
-[HTTPS at Home](#https-at-home-recommended)). With `true` on plain `http://`, nobody can log in.
+4. **`HUB_URL`, `HUB_PUBLIC_URL`**: the family hub, see [Logging in](#5-logging-in-the-family-hub).
 
 > **Why the keys matter:** if they are left empty, the backend generates them inside the container.
-> They are then replaced every time the container is recreated, which happens on every update.
-> Everyone gets logged out and push notifications stop working.
+> They are then replaced every time the container is recreated, which happens on every update, and
+> push notifications stop working.
 
-Keep `.env` private: it contains your database password and signing keys.
+Keep `.env` private: it contains your database password and keys.
 
 ### 3. Run the Application
 Navigate to the folder and start the services:
@@ -71,18 +70,25 @@ sudo docker-compose up -d     # Starts the containers in background
 Open your browser and navigate to:
 `http://<YOUR_NAS_IP>:8080`
 
-### 5. First Login
-The system automatically seeds a default Admin user on first startup with a
-**randomly generated PIN**, which is printed once in the backend log:
+### 5. Logging in: the family hub
+The app has no PINs of its own: the family logs in at the family hub (FrankAndreas/family-hub), which
+runs on the same NAS, and opens the app at `https://chores.local.<domain>` (see
+[HTTPS at Home](#https-at-home-recommended); the hub's login cookie only reaches addresses under
+`local.<domain>`). In the hub's **Einstellungen → Apps**, give the chores tile the app key `chores` and
+tick everyone who uses it. Names and languages come from the hub; a parent in the hub is **Admin** here,
+and a child gets their game role (Contributor, Teenager, Child, ...) from a parent in **User
+Management**. "Logout" logs out in the hub, and so in every family app. The **Family Dashboard** at
+`/family-dashboard` still works without a login.
 
-```bash
-sudo docker logs chorespec-backend 2>&1 | grep "INITIAL PIN"
-```
+Someone the hub no longer gives the app is hidden with their points and history and gets no tasks,
+until a parent deletes their data under **Removed in the family hub**.
 
-- **Username (Nickname)**: `Admin`
-- **PIN**: the value from that log line. Change it after your first login.
-
-If you lose the PIN on a fresh install, run `sudo docker-compose down -v` and start again to generate a new one. **This deletes all app data**, so only do it before the family starts using the app.
+**Switching an existing installation** to the hub: add `HUB_URL`, `HUB_PUBLIC_URL` and `HUB_APP_KEY` to
+the backend's `environment:` in the NAS's compose file (as in the templates; a value only in `.env`
+doesn't reach the container), remove `JWT_SECRET_KEY` and `COOKIE_SECURE`, set the values in `.env`,
+then update. Before the first login, make sure every person exists in the hub with the same name, as a
+parent if they're Admin here and as a child otherwise, and is ticked: each is linked to that hub
+person at the first login, and only then, so their points stay theirs.
 
 **Note:** The database persists in the `postgres_data` Docker volume; uploads and backups live in `chores_uploads` and `chores_backups`.
 
@@ -107,7 +113,6 @@ so changing them in `.env` does **not** change the password of an existing one.
    POSTGRES_DB=chorespec
    ```
 4. Generate and paste the keys as in [Configure `.env`](#2-configure-env), step 2.
-   Everyone has to log in once more after this update. From then on, logins survive updates.
 5. Pull and restart:
    ```bash
    sudo docker-compose pull
@@ -149,30 +154,30 @@ A simpler setup without a database container: the data lives in one file, `data/
    sudo mkdir -p data uploads backups
    sudo chown -R 1031:100 data uploads backups    # the IDs from step 1, or 999:999
    ```
-3. **Create `.env`** with the user's IDs and the keys, so logins and push notifications survive updates:
+3. **Create `.env`** with the user's IDs, the family hub and the keys, so push notifications survive updates:
    ```bash
-   printf 'PUID=1031\nPGID=100\nCOOKIE_SECURE=false\n' | sudo tee .env    # IDs from step 1
+   printf 'PUID=1031\nPGID=100\nHUB_URL=http://<NAS_IP>:8086\nHUB_PUBLIC_URL=https://home.local.<domain>\n' | sudo tee .env    # IDs from step 1
    sudo docker run --rm ghcr.io/frankandreas/family-chore-backend:latest python -m backend.generate_keys | sudo tee -a .env
    sudo chmod 600 .env
    ```
    Optionally add `VAPID_CLAIMS_EMAIL=mailto:you@example.com` and the SMTP settings (see `.env.example`).
 4. **Start** with `sudo docker-compose up -d` (or as a Container Manager project on this folder) and
-   get the admin PIN as described in [First Login](#5-first-login).
+   log in as described in [Logging in](#5-logging-in-the-family-hub).
 
 The folders hold everything worth keeping: `data/` (database), `uploads/` (task photos) and
 `backups/` (the app's own nightly database copies).
 
 > **Coming from an older SQLite compose file** with only a `./data` volume? Task photos and the
-> app's own backups were stored inside the container and are lost on every update, and so were the
-> login keys. Switch to the template above (keeping your `./data` folder and port), add the folders
-> and `.env` from steps 1–3, and run `sudo docker-compose up -d`. Everyone logs in once more.
+> app's own backups were stored inside the container and are lost on every update. Switch to the
+> template above (keeping your `./data` folder and port), add the folders and `.env` from steps 1–3,
+> and run `sudo docker-compose up -d`.
 
 ---
 
 ## HTTPS at Home (recommended)
 
-On plain `http://<NAS_IP>:<port>` the PINs and the login cookie cross the Wi-Fi unencrypted, and
-**push notifications don't work on phones**: browsers allow them only on HTTPS pages. Taking task
+HTTPS is needed for the family hub's login (its cookie only reaches `*.local.<domain>`), and on plain
+`http://<NAS_IP>:<port>` **push notifications don't work on phones**: browsers allow them only on HTTPS pages. Taking task
 photos works either way.
 
 The NAS's own reverse proxy fixes this; nothing is opened to the internet. You need a certificate for
@@ -189,10 +194,7 @@ certificate, reuse it and start at step 1.
 
 2. **Certificate.** **Control Panel → Security → Certificate → Settings**: pick the wildcard
    certificate for the new entry.
-3. **Secure cookie.** Set `COOKIE_SECURE=true` in `.env`, then run `sudo docker-compose up -d`.
-   From now on logging in only works over `https://`; the old `http://` address shows the login page,
-   but login fails.
-4. **Open** `https://chores.local.<domain>` on each phone, save it to the home screen again (replacing
+3. **Open** `https://chores.local.<domain>` on each phone, save it to the home screen again (replacing
    the old shortcut), and allow notifications when asked.
 
 ---
@@ -294,8 +296,8 @@ compose file on the NAS. The compose file and `.env` belong to your deployment a
 |---|---|---|
 | `chorespec-postgres`: *superuser password is not specified* | No `.env`, or `POSTGRES_PASSWORD` is empty | Create `.env` next to `docker-compose.yml` (see above) |
 | `chorespec-backend`: *password authentication failed* | `.env` credentials don't match the existing database | Use the credentials the database was created with (see [Upgrading](#upgrading-an-existing-installation)) |
-| Logging in doesn't work when using plain `http://` | `COOKIE_SECURE=true`: the browser drops the HTTPS-only login cookie | Set `COOKIE_SECURE=false`, then `sudo docker-compose up -d` |
-| Everyone is logged out after each update | `JWT_SECRET_KEY` not set in `.env` | Generate keys and add them to `.env` |
+| The app keeps sending you to the family hub | The app isn't opened at `https://chores.local.<domain>`, or the hub's `COOKIE_DOMAIN` is missing | Open the app at its `local.<domain>` address; check the hub's `COOKIE_DOMAIN=local.<domain>` |
+| "No access" after logging in at the hub | The chores tile in the hub has no app key `chores`, or the person isn't ticked | Fix it in the hub's **Einstellungen → Apps** |
 | Email from Task Scheduler: *up to date, but the backend is stopped* | The app was stopped (by hand, or in Container Manager) | Start it with `sudo docker-compose up -d` in the app folder, or disable the task while it should stay off |
 | Email from Task Scheduler: *up to date, but the backend is not healthy* | The backend keeps crashing without an update, e.g. after a change to `.env` (wrong `PUID`/`PGID`) | Check `logs/update.log`, fix the cause, then `sudo docker-compose up -d` and `sudo docker restart chorespec-frontend` |
 | Email from Task Scheduler: *backend not healthy* | A new version fails to start | Check `logs/update.log` (it ends with the backend's log), then [roll back](#rolling-back-an-update) |
