@@ -51,6 +51,7 @@ def reset_expired_streaks(db: Session, reference_date: Optional[datetime] = None
     yesterday = now_date - timedelta(days=1)
 
     users = db.query(models.User).filter(
+        models.User.is_active.is_(True),
         (models.User.last_task_date < yesterday) | (models.User.last_task_date.is_(None)),
         models.User.current_streak > 0
     ).all()

@@ -1,48 +1,12 @@
 
-from backend import crud, models, schemas
-
-
-def test_create_user(db_session, seeded_db):
-    role = db_session.query(models.Role).filter(
-        models.Role.name == "Child").first()
-
-    user_data = schemas.UserCreate(
-        nickname="NewKid",
-        login_pin="1234",
-        role_id=role.id
-    )
-
-    user = crud.create_user(db_session, user_data)
-
-    assert user.id is not None
-    assert user.nickname == "NewKid"
-    assert user.role.name == "Child"
-    assert user.current_points == 0
-
-
-def test_create_user_persists_email_and_notifications(db_session, seeded_db):
-    """email and notifications_enabled must be saved, not silently dropped."""
-    role = db_session.query(models.Role).filter(models.Role.name == "Child").first()
-
-    user = crud.create_user(db_session, schemas.UserCreate(
-        nickname="EmailKid",
-        login_pin="1234",
-        role_id=role.id,
-        email="kid@example.com",
-        notifications_enabled=False,
-    ))
-
-    db_session.refresh(user)
-    assert user.email == "kid@example.com"
-    assert user.notifications_enabled is False
+from backend import crud, models
+from tests.people import add_person
 
 
 def test_update_user_language_none_clears_preference(db_session, seeded_db):
     """Passing None should store NULL, not an empty string."""
     role = db_session.query(models.Role).filter(models.Role.name == "Child").first()
-    user = crud.create_user(db_session, schemas.UserCreate(
-        nickname="LangKid", login_pin="1234", role_id=role.id
-    ))
+    user = add_person(db_session, "LangKid", role.id)
 
     # Set a language first
     crud.update_user_language(db_session, user.id, "de")
@@ -59,8 +23,7 @@ def test_get_user_by_nickname(db_session, seeded_db):
     # Create user
     role = db_session.query(models.Role).filter(
         models.Role.name == "Admin").first()
-    crud.create_user(db_session, schemas.UserCreate(
-        nickname="Admin", login_pin="0000", role_id=role.id))
+    add_person(db_session, "Admin", role.id)
 
     # Get by nickname
     user = crud.get_user_by_nickname(db_session, "Admin")
@@ -74,8 +37,7 @@ def test_get_user_by_nickname(db_session, seeded_db):
 def test_get_users_pagination(db_session, seeded_db):
     role = db_session.query(models.Role).first()
     for i in range(5):
-        crud.create_user(db_session, schemas.UserCreate(
-            nickname=f"U{i}", login_pin="0000", role_id=role.id))
+        add_person(db_session, f"U{i}", role.id)
 
     users = crud.get_users(db_session, limit=2)
     assert len(users) == 2

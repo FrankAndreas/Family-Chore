@@ -20,26 +20,8 @@
         "error_loading": "Failed to load data. Please try again."
     },
     "login": {
-        "title": "Welcome to ChoreSpec",
-        "subtitle": "Transform chores into achievements",
-        "nickname": "Nickname",
-        "nicknamePlaceholder": "Enter your nickname",
-        "pin": "PIN",
-        "pinPlaceholder": "4-digit PIN",
-        "loginButton": "Login",
-        "loggingIn": "Logging in...",
-        "showPin": "Show PIN",
-        "hidePin": "Hide PIN",
         "familyDashboard": "🏡 Family Dashboard",
-        "familyDashboardHint": "View the shared family task board without logging in",
-        "error": {
-            "nicknameRequired": "Nickname is required",
-            "pinRequired": "PIN is required",
-            "pinFormat": "PIN must be exactly 4 digits",
-            "userNotFound": "User not found",
-            "incorrectPin": "Incorrect PIN",
-            "loginFailed": "Login failed. Please try again."
-        }
+        "familyDashboardHint": "View the shared family task board without logging in"
     },
     "navigation": {
         "dashboard": "Dashboard",
@@ -275,21 +257,20 @@
     "users": {
         "title": "User Management",
         "subtitle": "Manage family members",
-        "addNew": "+ Add New User",
         "fields": {
             "nickname": "Nickname",
-            "pin": "PIN (4 digits)",
             "role": "Role"
         },
         "currentPoints": "Current",
         "lifetimePoints": "Lifetime",
         "messages": {
-            "created": "User created successfully! 🎉",
-            "createFailed": "Failed to create user",
             "loadFailed": "Failed to load users",
-            "familyAdminDesc": "Gives full access to the family dashboard. Needed to see the Chores section as an adult.",
-            "cannotDeleteSelf": "You can't delete the account you're logged in as. To delete it, log in as another admin."
-        }
+            "familyAdminDesc": "Gives full access to the family dashboard. Needed to see the Chores section as an adult."
+        },
+        "fromHub": "The family comes from the family hub: add people, rename them, change PINs and give access there. Parents are Admin here; you pick each child's role here.",
+        "removedTitle": "Removed in the family hub",
+        "removedHint": "Hidden, with their points and history, until you delete them here. They get no tasks meanwhile.",
+        "deleteData": "Delete data of {{name}}"
     },
     "roles": {
         "title": "Role Management",
@@ -308,15 +289,12 @@
         "subtitle": "Configure your preferences",
         "language": {
             "title": "Language",
-            "description": "Choose your preferred language",
             "familyDefault": "Family Default",
-            "userPreference": "Your Preference",
-            "useDefault": "Use Family Default",
-            "override": "Override for me",
             "languages": {
                 "en": "English",
                 "de": "Deutsch (German)"
-            }
+            },
+            "inHub": "Your language is set in the family hub."
         },
         "messages": {
             "saved": "Settings saved successfully! ✅",
@@ -382,5 +360,13 @@
         "tryAgain": "Try Again",
         "goBack": "Go Back",
         "reloadPage": "Reload Page"
+    },
+    "access": {
+        "noAccessTitle": "No access",
+        "noAccess": "Ask a parent to give you access to the chores app in the family hub.",
+        "otherPerson": "Log in as someone else",
+        "hubDownTitle": "Can't log in right now",
+        "hubDown": "The family hub or the chores app doesn't answer right now (perhaps the NAS is restarting).",
+        "retry": "Try again"
     }
 }

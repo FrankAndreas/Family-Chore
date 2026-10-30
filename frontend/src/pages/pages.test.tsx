@@ -31,6 +31,7 @@ vi.mock('../context/ToastContext', () => ({
 vi.mock('../api', () => ({
     getRoles: vi.fn(),
     getUsersAdmin: vi.fn(),
+    getRemovedUsers: vi.fn(),
     getTasks: vi.fn(),
     getRewards: vi.fn(),
     getAllTransactions: vi.fn(),
@@ -48,6 +49,9 @@ const admin = {
 };
 const child = { ...admin, id: 2, nickname: 'Kiddo', role: { id: 2, name: 'Child', multiplier_value: 1 }, role_id: 2 };
 
+// Removed in the family hub: hidden, with their points, until a parent deletes them
+const gone = { ...child, id: 3, nickname: 'Gone' };
+
 const ok = (data: unknown) => Promise.resolve({ data } as never);
 
 const renderPage = (page: ReactNode) =>
@@ -64,6 +68,7 @@ describe('pages load their data on mount', () => {
         vi.clearAllMocks();
         vi.mocked(api.getRoles).mockImplementation(() => ok([role, child.role]));
         vi.mocked(api.getUsersAdmin).mockImplementation(() => ok([admin, child]));
+        vi.mocked(api.getRemovedUsers).mockImplementation(() => ok([gone]));
         vi.mocked(api.getTasks).mockImplementation(() => ok([{
             id: 1, name: 'Make Bed', description: 'Tidy up', base_points: 10, assigned_role_id: 2,
             schedule_type: 'daily', default_due_time: '08:00', requires_photo_verification: false,
@@ -89,16 +94,14 @@ describe('pages load their data on mount', () => {
         expect(api.getUsersAdmin).toHaveBeenCalledTimes(1);
     });
 
-    it('UserManagement explains why you cannot delete yourself', async () => {
+    it('UserManagement: the family comes from the hub; only removed people are deleted', async () => {
         renderPage(<UserManagement />);
         await screen.findByText('Kiddo');
-        const [ownDelete, childDelete] = screen.getAllByRole('button', { name: 'Delete' });
+        // Active people have no Delete; a parent (Admin) has no Edit: name, PIN and Admin come from the hub
+        expect(screen.queryByRole('button', { name: 'Delete' })).toBeNull();
+        expect(screen.getAllByRole('button', { name: 'Edit' })).toHaveLength(1);
 
-        fireEvent.click(ownDelete);
-        expect(showToast).toHaveBeenCalledWith('users.messages.cannotDeleteSelf', 'warning');
-        expect(screen.queryByText('Delete User')).toBeNull();
-
-        fireEvent.click(childDelete);
+        fireEvent.click(screen.getByRole('button', { name: 'users.deleteData' }));
         expect(await screen.findByText('Delete User')).toBeInTheDocument();
     });
 

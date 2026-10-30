@@ -3,6 +3,7 @@ Step definitions for Role Multiplier BDD scenarios.
 """
 from pytest_bdd import scenarios, given, when, then, parsers
 from backend import models
+from tests.people import add_person_json
 
 # Load scenarios from feature file
 scenarios('../features/role_multipliers.feature')
@@ -28,13 +29,7 @@ def user_with_role_and_multiplier(seeded_db, client, nickname, role_name, multip
     seeded_db.commit()
 
     # Create user
-    response = client.post("/users/", json={
-        "nickname": nickname,
-        "login_pin": "1234",
-        "role_id": role.id
-    })
-    assert response.status_code == 200
-    context[f'user_{nickname}'] = response.json()
+    context[f'user_{nickname}'] = add_person_json(seeded_db, nickname, role.id)
 
 
 @given(parsers.parse('a task "{task_name}" with {points:d} base points assigned to "{role_name}"'))

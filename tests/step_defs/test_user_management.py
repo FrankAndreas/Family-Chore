@@ -1,12 +1,17 @@
 """
-Step definitions for User Management BDD scenarios.
+Step definitions for the game roles of the family (the family itself comes from the family hub, spec 2026-10-30).
 """
 
 from pytest_bdd import scenarios, given, when, then, parsers
 from backend import models
+from tests.people import add_person_json
 
 # Load scenarios from feature file
 scenarios('../features/user_management.feature')
+
+
+def _role(db, name):
+    return db.query(models.Role).filter(models.Role.name == name).first()
 
 
 # Given steps
@@ -24,127 +29,37 @@ def roles_exist(seeded_db, datatable):
     pass
 
 
-@given('a user exists with:')
-def user_exists(seeded_db, client, datatable, context):
-    """Create a user from table data."""
-    # Skip header line
-    data_row = datatable[1] if len(datatable) > 1 else datatable[0]
-    parts = [p.strip() for p in data_row if p.strip()]
-
-    nickname = parts[0]
-    login_pin = parts[1]
-    role_name = parts[2]
-
-    # Get role ID
-    role = seeded_db.query(models.Role).filter(
-        models.Role.name == role_name).first()
-
-    # Create user via API
-    response = client.post("/users/", json={
-        "nickname": nickname,
-        "login_pin": login_pin,
-        "role_id": role.id
-    })
-
-    assert response.status_code == 200
-    context['created_user'] = response.json()
+@given(parsers.parse('a family member "{nickname}" with role "{role_name}"'))
+def family_member(seeded_db, nickname, role_name, context):
+    """Someone the family hub lists for the app, with a game role picked here."""
+    context['user'] = add_person_json(seeded_db, nickname, _role(seeded_db, role_name).id)
 
 
 # When steps
 
-@when('I create a new user with:')
-def create_user(seeded_db, client, datatable, context):
-    """Create a new user from table data."""
-    data_row = datatable[1] if len(datatable) > 1 else datatable[0]
-    parts = [p.strip() for p in data_row if p.strip()]
-
-    nickname = parts[0]
-    login_pin = parts[1]
-    role_name = parts[2]
-
-    # Get role ID
-    role = seeded_db.query(models.Role).filter(
-        models.Role.name == role_name).first()
-
-    # Create user via API
-    response = client.post("/users/", json={
-        "nickname": nickname,
-        "login_pin": login_pin,
-        "role_id": role.id
-    })
-
+@when(parsers.parse('a parent gives "{nickname}" the role "{role_name}"'))
+def give_role(seeded_db, client, nickname, role_name, context):
+    response = client.put(f"/users/{context['user']['id']}", json={"role_id": _role(seeded_db, role_name).id})
     context['response'] = response
     if response.status_code == 200:
-        context['created_user'] = response.json()
-
-
-@when(parsers.parse('I login with nickname "{nickname}" and PIN "{pin}"'))
-def login_user(client, nickname, pin, context):
-    """Attempt to login with credentials."""
-    response = client.post("/login/", json={
-        "nickname": nickname,
-        "login_pin": pin
-    })
-    context['login_response'] = response
+        context['user'] = response.json()
 
 
 # Then steps
 
-@then("the user should be created successfully")
-def user_created_successfully(context):
-    """Verify user was created."""
-    assert context['response'].status_code == 200
-    assert 'id' in context['created_user']
-
-
 @then(parsers.parse('the user should have role "{role_name}"'))
 def user_has_role(seeded_db, context, role_name):
-    """Verify user has the specified role."""
-    user = context.get('created_user') or context.get('login_response').json().get('user')
-    role = seeded_db.query(models.Role).filter(
-        models.Role.id == user['role_id']).first()
-    assert role.name == role_name
-
-
-@then(parsers.parse('the user should be assigned to role "{role_name}"'))
-def user_assigned_to_role(seeded_db, context, role_name):
-    """Verify user is assigned to role."""
-    user = context['created_user']
-    role = seeded_db.query(models.Role).filter(
-        models.Role.id == user['role_id']).first()
+    role = seeded_db.query(models.Role).filter(models.Role.id == context['user']['role_id']).first()
     assert role.name == role_name
 
 
 @then(parsers.parse('the user should have multiplier value {multiplier:f}'))
 def user_has_multiplier(seeded_db, context, multiplier):
-    """Verify user's role has correct multiplier."""
-    user = context.get('created_user') or context.get('login_response').json().get('user')
-    role = seeded_db.query(models.Role).filter(
-        models.Role.id == user['role_id']).first()
+    role = seeded_db.query(models.Role).filter(models.Role.id == context['user']['role_id']).first()
     assert role.multiplier_value == multiplier
 
 
-@then("the login should be successful")
-def login_successful(context):
-    """Verify login succeeded."""
-    assert context['login_response'].status_code == 200
-
-
-@then("I should receive user details")
-def receive_user_details(context):
-    """Verify user details are returned."""
-    response_data = context['login_response'].json()
-    assert 'access_token' in response_data
-    user = response_data.get('user')
-    assert user is not None
-    assert 'id' in user
-    assert 'nickname' in user
-    assert 'current_points' in user
-
-
-@then(parsers.parse('the login should fail with error "{error_message}"'))
-def login_fails_with_error(context, error_message):
-    """Verify login failed with specific error."""
-    response = context['login_response']
-    assert response.status_code in [401, 404]
-    assert error_message in response.json()['detail']
+@then(parsers.parse('the change should be refused with "{code}"'))
+def change_refused(context, code):
+    assert context['response'].status_code == 400
+    assert context['response'].json()['detail'] == code

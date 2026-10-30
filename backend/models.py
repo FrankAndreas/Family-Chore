@@ -1,6 +1,6 @@
 import datetime
 from datetime import timezone
-from sqlalchemy import Boolean, Integer, String, Float, ForeignKey, DateTime, Date, Text
+from sqlalchemy import Boolean, Integer, String, Float, ForeignKey, DateTime, Date, Text, true
 from sqlalchemy.orm import mapped_column, relationship
 from .database import Base
 
@@ -38,7 +38,11 @@ class User(Base):
     id = mapped_column(Integer, primary_key=True, index=True)
     role_id = mapped_column(Integer, ForeignKey("roles.id"), nullable=False)
     nickname = mapped_column(String, unique=True, nullable=False)
-    login_pin = mapped_column(String, nullable=False)
+    # The person in the family hub (spec 2026-10-30): login, name, language and parent/child come from there. None: a
+    # row from before the hub, linked by name at the first sync
+    hub_id = mapped_column(Integer, unique=True, nullable=True)
+    # False: the hub no longer lists the person here; hidden with points and history until a parent deletes them
+    is_active = mapped_column(Boolean, nullable=False, default=True, server_default=true())
 
     current_points = mapped_column(Integer, nullable=False, default=0)
     lifetime_points = mapped_column(Integer, nullable=False, default=0)

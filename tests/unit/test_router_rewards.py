@@ -1,5 +1,6 @@
 
 from backend import models
+from tests.people import add_person_json
 
 
 def test_create_reward_api(client, db_session, seeded_db):
@@ -23,8 +24,7 @@ def test_get_rewards_api(client, db_session, seeded_db):
 def test_set_user_goal_api(client, db_session, seeded_db):
     # Setup
     role = db_session.query(models.Role).first()
-    user = client.post(
-        "/users/", json={"nickname": "GoalUser", "login_pin": "1234", "role_id": role.id}).json()
+    user = add_person_json(db_session, "GoalUser", role.id)
     reward = client.post(
         "/rewards/", json={"name": "GoalReward", "cost_points": 100}).json()
 
@@ -66,10 +66,8 @@ def test_redeem_reward_api_success(client, db_session, seeded_db, admin_user):
 def test_redeem_split_api(client, db_session, seeded_db):
     # Setup generic users
     role = db_session.query(models.Role).first()
-    u1 = models.User(nickname="U1", login_pin="1",
-                     role_id=role.id, current_points=50)
-    u2 = models.User(nickname="U2", login_pin="1",
-                     role_id=role.id, current_points=50)
+    u1 = models.User(nickname="U1", role_id=role.id, current_points=50)
+    u2 = models.User(nickname="U2", role_id=role.id, current_points=50)
     db_session.add_all([u1, u2])
     db_session.commit()
 

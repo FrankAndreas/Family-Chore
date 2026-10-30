@@ -20,7 +20,7 @@ from backend import models
 def test_user(db_session, seeded_db):
     """A user for transaction tests."""
     user = models.User(
-        nickname="TxTestUser", login_pin="1234", role_id=1,
+        nickname="TxTestUser", role_id=1,
         current_points=100, lifetime_points=500,
     )
     db_session.add(user)
@@ -220,8 +220,8 @@ class TestDeleteUserTransactions:
         assert count == 2
 
     def test_does_not_affect_other_users(self, db_session, seeded_db):
-        user_a = models.User(nickname="UserA", login_pin="1111", role_id=1)
-        user_b = models.User(nickname="UserB", login_pin="2222", role_id=1)
+        user_a = models.User(nickname="UserA", role_id=1)
+        user_b = models.User(nickname="UserB", role_id=1)
         db_session.add_all([user_a, user_b])
         db_session.commit()
 

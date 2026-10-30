@@ -9,9 +9,8 @@ from backend.generate_keys import generate_env_lines
 def test_generate_keys_outputs_usable_env_lines():
     env = dict(line.split("=", 1) for line in generate_env_lines())
 
-    assert set(env) == {"JWT_SECRET_KEY", "VAPID_PRIVATE_KEY", "VAPID_PUBLIC_KEY"}
-    assert len(env["JWT_SECRET_KEY"]) == 64
-    int(env["JWT_SECRET_KEY"], 16)  # hex
+    # No JWT secret any more: the login is the family hub's (spec 2026-10-30)
+    assert set(env) == {"VAPID_PRIVATE_KEY", "VAPID_PUBLIC_KEY"}
 
     # pywebpush loads a non-file private key via Vapid.from_string
     vapid = Vapid.from_string(env["VAPID_PRIVATE_KEY"])

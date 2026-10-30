@@ -4,11 +4,10 @@ import api from '../api';
 
 interface LanguageSwitcherProps {
     userId?: number | null;
-    onLanguageChange?: (lang: string) => void;
     isAdmin?: boolean;
 }
 
-const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ userId, onLanguageChange, isAdmin = false }) => {
+const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ userId, isAdmin = false }) => {
     const { t, i18n } = useTranslation();
     const [mode] = useState<'default' | 'override'>('default');
     const [loading, setLoading] = useState(false);
@@ -36,25 +35,6 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ userId, onLanguageC
         loadSettings();
     }, [userId]);
 
-    const handleLanguageChange = async (lang: string) => {
-        setLoading(true);
-        try {
-            await i18n.changeLanguage(lang);
-            localStorage.setItem('chorespec_language', lang);
-
-            if (userId) {
-                // Save user preference
-                await api.put(`/users/${userId}/language`, { preferred_language: lang });
-            }
-
-            if (onLanguageChange) onLanguageChange(lang);
-        } catch (err) {
-            console.error('Failed to change language', err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const handleFamilyDefaultChange = async (lang: string) => {
         if (!isAdmin) return;
         setLoading(true);
@@ -75,26 +55,8 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ userId, onLanguageC
     return (
         <div className="language-switcher glass-panel" style={{ padding: '1.5rem' }}>
             <h3>{t('settings.language.title')}</h3>
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-                {t('settings.language.description')}
-            </p>
 
-            <div className="language-options" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                <button
-                    className={`btn ${i18n.language === 'en' ? 'btn-primary' : 'btn-secondary'}`}
-                    onClick={() => handleLanguageChange('en')}
-                    disabled={loading}
-                >
-                    🇺🇸 English
-                </button>
-                <button
-                    className={`btn ${i18n.language === 'de' ? 'btn-primary' : 'btn-secondary'}`}
-                    onClick={() => handleLanguageChange('de')}
-                    disabled={loading}
-                >
-                    🇩🇪 Deutsch
-                </button>
-            </div>
+            <p>{t('settings.language.inHub')}</p>
 
             {isAdmin && (
                 <div style={{ marginTop: '2rem', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1rem' }}>
@@ -103,12 +65,14 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ userId, onLanguageC
                         <button
                             className={`btn btn-sm ${familyDefault === 'en' ? 'btn-primary' : 'btn-outline'}`}
                             onClick={() => handleFamilyDefaultChange('en')}
+                            disabled={loading}
                         >
                             English
                         </button>
                         <button
                             className={`btn btn-sm ${familyDefault === 'de' ? 'btn-primary' : 'btn-outline'}`}
                             onClick={() => handleFamilyDefaultChange('de')}
+                            disabled={loading}
                         >
                             Deutsch
                         </button>

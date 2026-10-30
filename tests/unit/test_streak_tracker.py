@@ -19,7 +19,7 @@ class TestUpdateUserStreak:
     def user(self, db_session, seeded_db):
         """A fresh Child user with no streak history."""
         user = models.User(
-            nickname="StreakKid", login_pin="1234", role_id=4,
+            nickname="StreakKid", role_id=4,
             current_points=0, lifetime_points=0,
             current_streak=0, last_task_date=None,
         )
@@ -96,11 +96,11 @@ class TestResetExpiredStreaks:
     def users(self, db_session, seeded_db):
         """Two users with active streaks."""
         child = models.User(
-            nickname="ActiveChild", login_pin="1111", role_id=4,
+            nickname="ActiveChild", role_id=4,
             current_streak=5, last_task_date=date(2025, 1, 1),
         )
         teen = models.User(
-            nickname="StaleTeen", login_pin="2222", role_id=3,
+            nickname="StaleTeen", role_id=3,
             current_streak=3, last_task_date=date(2024, 12, 31),
         )
         db_session.add_all([child, teen])
@@ -137,7 +137,7 @@ class TestResetExpiredStreaks:
     def test_resets_null_last_task_date(self, db_session, seeded_db):
         """User with no last_task_date but current_streak > 0 gets reset."""
         orphan = models.User(
-            nickname="Orphan", login_pin="9999", role_id=1,
+            nickname="Orphan", role_id=1,
             current_streak=2, last_task_date=None,
         )
         db_session.add(orphan)

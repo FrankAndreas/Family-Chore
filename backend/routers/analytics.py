@@ -88,7 +88,7 @@ def get_points_distribution(db: Session = Depends(get_db)):
     Returns the distribution of lifetime points among all users.
     Useful for 'Fairness' pie charts.
     """
-    users = db.query(User).options(joinedload(User.role)).all()
+    users = db.query(User).options(joinedload(User.role)).filter(User.is_active.is_(True)).all()
 
     distribution = []
     for user in users:
@@ -137,8 +137,8 @@ def get_heatmap_data(
         d = str(r.date)
         counts.setdefault(uid, {})[d] = r.count
 
-    # Build response for every active user
-    users = db.query(User).all()
+    # Build response for every active user (the family hub lists them)
+    users = db.query(User).filter(User.is_active.is_(True)).all()
     user_heatmaps: List[UserHeatmap] = []
     for user in users:
         uid = int(user.id)
@@ -191,7 +191,7 @@ def get_analytics_summary(db: Session = Depends(get_db)) -> AnalyticsSummary:
         top = TopPerformer(nickname=per_user[0].nickname, count=per_user[0].cnt)
 
     # Streak leaderboard (all users, sorted desc)
-    users = db.query(User).order_by(User.current_streak.desc()).all()
+    users = db.query(User).filter(User.is_active.is_(True)).order_by(User.current_streak.desc()).all()
     streaks = [
         StreakInfo(nickname=str(u.nickname), current_streak=int(u.current_streak))
         for u in users

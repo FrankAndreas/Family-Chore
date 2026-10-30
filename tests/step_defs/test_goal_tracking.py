@@ -27,7 +27,6 @@ def user_with_points(seeded_db, client, nickname, role_name, points, context):
     # Create user directly in DB to set initial points
     user = models.User(
         nickname=nickname,
-        login_pin="1234",
         role_id=role.id,
         current_points=points,
         lifetime_points=points

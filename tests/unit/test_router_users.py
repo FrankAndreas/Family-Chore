@@ -1,69 +1,6 @@
 
 from backend import models
-
-
-def test_create_user_api(client, db_session, seeded_db):
-    # Role is needed
-    role = db_session.query(models.Role).filter(
-        models.Role.name == "Contributor").first()
-
-    response = client.post("/users/", json={
-        "nickname": "APIUser",
-        "login_pin": "5678",
-        "role_id": role.id
-    })
-    assert response.status_code == 200, response.text
-    data = response.json()
-    assert data["nickname"] == "APIUser"
-    assert "id" in data
-
-
-def test_create_user_duplicate_nickname(client, db_session, seeded_db):
-    # Admin exists
-    role = db_session.query(models.Role).filter(
-        models.Role.name == "Contributor").first()
-
-    # Create the user first to ensure it exists for duplicate check
-    client.post("/users/", json={
-        "nickname": "Admin",
-        "login_pin": "1234",
-        "role_id": role.id
-    })
-
-    response = client.post("/users/", json={
-        "nickname": "Admin",  # Already exists
-        "login_pin": "1234",
-        "role_id": role.id
-    })
-    assert response.status_code == 400, response.text
-    assert "Nickname already registered" in response.json()["detail"]
-
-
-def test_login_success(client, seeded_db):
-    # Login as Admin (pin 1234 from seeded_db generic flow, or we create one?)
-    pass
-
-
-def test_login_flow(client, db_session, seeded_db):
-    role = db_session.query(models.Role).first()
-    client.post("/users/", json={"nickname": "LoginUser",
-                "login_pin": "9999", "role_id": role.id})
-
-    # Correct login
-    resp = client.post(
-        "/login/", json={"nickname": "LoginUser", "login_pin": "9999"})
-    assert resp.status_code == 200, resp.text
-    assert resp.json()["user"]["nickname"] == "LoginUser"
-
-    # Wrong PIN
-    resp = client.post(
-        "/login/", json={"nickname": "LoginUser", "login_pin": "0000"})
-    assert resp.status_code == 401, resp.text
-
-    # Wrong User
-    resp = client.post(
-        "/login/", json={"nickname": "Ghost", "login_pin": "9999"})
-    assert resp.status_code == 401, resp.text
+from tests.people import add_person
 
 
 def test_get_roles(client, seeded_db):
@@ -126,8 +63,7 @@ def test_delete_role_with_users_reassign(client, db_session, seeded_db):
         "/roles/", json={"name": "Role2", "multiplier_value": 1.0}).json()
 
     # User in Role 1
-    client.post("/users/", json={"nickname": "R1User",
-                "login_pin": "1234", "role_id": r1["id"]})
+    add_person(db_session, "R1User", r1["id"])
 
     # Delete Role 1 without params -> Fail
     resp = client.delete(f"/roles/{r1['id']}")
@@ -138,7 +74,6 @@ def test_delete_role_with_users_reassign(client, db_session, seeded_db):
     assert resp.status_code == 200, resp.text
 
     # Verify User is now in Role 2
-    # Login again to check role_id
-    login_resp = client.post(
-        "/login/", json={"nickname": "R1User", "login_pin": "1234"})
-    assert login_resp.json()["user"]["role_id"] == r2["id"]
+    db_session.expire_all()
+    user = db_session.query(models.User).filter(models.User.nickname == "R1User").one()
+    assert user.role_id == r2["id"]

@@ -4,19 +4,20 @@ import { NotificationProvider } from './context/NotificationContext';
 import { UserContext } from './context/UserContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import Login from './components/Login';
+import NoAccess from './components/NoAccess';
 import DashboardLayout from './layouts/DashboardLayout';
 import FamilyDashboardView from './components/FamilyDashboard';
 import NotFoundPage from './pages/NotFoundPage';
 import { SkeletonLoader } from './components/SkeletonLoader';
 import type { User } from './types';
-import { getUsers, registerForceLogout, setAuthToken, setSseToken } from './api';
+import i18n from './i18n';
+import { getMe, goToHubLogout } from './api';
 import { ADMIN_ROLE_NAME } from './constants';
 import './App.css';
 import './index.css';
 
 // Route-level code-splitting: each page loads as a separate JS chunk on first navigation.
-// Login, DashboardLayout, FamilyDashboardView, and ErrorBoundary are kept eager
+// DashboardLayout, FamilyDashboardView, and ErrorBoundary are kept eager
 // because they render immediately and are tiny.
 const AdminDashboard   = lazy(() => import('./pages/admin/AdminDashboard'));
 const UserManagement   = lazy(() => import('./pages/admin/UserManagement'));
@@ -32,43 +33,49 @@ function FamilyDashboardRoute() {
   return <FamilyDashboardView onExit={() => navigate('/')} />;
 }
 
-function LoginRoute({ onLogin }: { onLogin: (user: User) => void }) {
-  const navigate = useNavigate();
-  return <Login onLogin={onLogin} onFamilyDashboard={() => navigate('/family-dashboard')} />;
-}
+// in: logged in; no_access: logged in at the family hub, but not given this app; hub_unavailable: the hub (or the NAS)
+// doesn't answer; away: on the way to the hub's login (the API's 401 sends the browser there)
+type AuthState = 'loading' | 'in' | 'no_access' | 'hub_unavailable' | 'away';
 
 function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [state, setState] = useState<AuthState>('loading');
+  const [attempt, setAttempt] = useState(0);
 
-  const handleLogin = (user: User) => {
-    setCurrentUser(user);
-  };
-
-  const handleLogout = () => {
-    setCurrentUser(null);
-    localStorage.removeItem('user');
-    setAuthToken(null);
-    setSseToken(null);
-  };
-
-  // Register the force-logout callback so the axios 401 interceptor
-  // can clear React state without window.location.reload()
+  // Who is logged in: the family hub's login (spec 2026-10-30); the backend asks the hub. The family dashboard
+  // works without a login, so this asks without being sent to the hub
   useEffect(() => {
-    registerForceLogout(handleLogout);
-  }, []);
+    if (window.location.pathname.startsWith('/family-dashboard')) return;
+    getMe()
+      .then((res) => {
+        setCurrentUser(res.data);
+        // The language follows the person (from the hub)
+        if (res.data.preferred_language) void i18n.changeLanguage(res.data.preferred_language);
+        setState('in');
+      })
+      .catch((err) => {
+        const status = err.response?.status;
+        const code = err.response?.data?.detail;
+        setState(code === 'no_access' ? 'no_access' : status === 401 ? 'away' : 'hub_unavailable');
+      });
+  }, [attempt]);
+
+  // "Log out" ends the login in the family hub, for every family app
+  const handleLogout = () => {
+    void goToHubLogout();
+  };
 
   const refreshUser = async () => {
-    if (!currentUser) return;
     try {
-      const res = await getUsers();
-      const user = res.data.find((u: User) => u.id === currentUser.id);
-      if (user) {
-        setCurrentUser(user);
-        localStorage.setItem('user', JSON.stringify(user)); // ensure local storage is sync
-      }
+      setCurrentUser((await getMe()).data);
     } catch (err) {
       console.error('Failed to refresh user', err);
     }
+  };
+
+  const retry = () => {
+    setState('loading');
+    setAttempt((n) => n + 1);
   };
 
   return (
@@ -78,7 +85,14 @@ function App() {
           {!currentUser ? (
             <Routes>
               <Route path="/family-dashboard" element={<FamilyDashboardRoute />} />
-              <Route path="*" element={<LoginRoute onLogin={handleLogin} />} />
+              <Route
+                path="*"
+                element={
+                  state === 'no_access' || state === 'hub_unavailable'
+                    ? <NoAccess hubDown={state === 'hub_unavailable'} onRetry={retry} onLogout={handleLogout} />
+                    : <SkeletonLoader type="card" count={1} />
+                }
+              />
             </Routes>
           ) : (
             <UserContext.Provider value={{ currentUser, refreshUser, logout: handleLogout }}>

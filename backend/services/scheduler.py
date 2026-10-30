@@ -32,12 +32,12 @@ def _generate_instances_for_task(
             if days_since_completion < task.recurrence_min_days:
                 return 0
 
-    # Find target users
+    # Find target users: only people the family hub lists (someone removed there gets no new tasks)
+    active = db.query(models.User).filter(models.User.is_active.is_(True))
     if task.assigned_role_id:
-        target_users = db.query(models.User).filter(
-            models.User.role_id == task.assigned_role_id).all()
+        target_users = active.filter(models.User.role_id == task.assigned_role_id).all()
     else:
-        target_users = db.query(models.User).all()
+        target_users = active.all()
 
     start_of_day = today.replace(hour=0, minute=0, second=0, microsecond=0)
 

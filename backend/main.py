@@ -21,11 +21,10 @@ from alembic import command as alembic_command
 from . import models, crud
 from .database import engine, SessionLocal
 from .services import scheduler as scheduler_service, notifications
-from .routers import analytics, notifications as notif_router, auth, users, roles, tasks, rewards, transactions, system
+from .routers import analytics, notifications as notif_router, users, roles, tasks, rewards, transactions, system
 from .backup import BackupManager
 from .notifications_service import send_email_sync, send_push_to_user_sync
 from .dependencies import get_current_admin_user, get_current_user
-from .security import verify_token
 from .events import broadcaster
 from .exceptions import DomainError
 
@@ -273,7 +272,6 @@ def get_uploaded_file(filename: str, current_user: models.User = Depends(get_cur
 
 
 # Include Routers
-app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(roles.router)
 app.include_router(tasks.router)
@@ -293,21 +291,9 @@ def trigger_manual_backup(background_tasks: BackgroundTasks):
 
 # --- SSE Endpoint ---
 @app.get("/events", tags=["System"])
-async def sse_events(token: str = ""):
-    """Server-Sent Events endpoint for real-time updates.
-
-    Accepts JWT via ?token= query param because the native EventSource API
-    cannot send Authorization headers.
-
-    NOTE: Passing JWT in query strings means tokens may appear in server access
-    logs, browser history, and proxy logs. Sanitise production logs accordingly.
-    """
-    if not token:
-        return JSONResponse(status_code=401, content={"detail": "Not authenticated"})
-
-    payload = verify_token(token)
-    if payload is None:
-        return JSONResponse(status_code=401, content={"detail": "Invalid or expired token"})
+async def sse_events(_user: models.User = Depends(get_current_user)):
+    """Server-Sent Events endpoint for real-time updates. The login is the family hub's cookie, which the browser's
+    EventSource sends by itself (same address); no token in the URL any more (spec 2026-10-30)."""
 
     async def event_stream():
         queue = await broadcaster.subscribe()

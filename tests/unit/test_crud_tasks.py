@@ -10,7 +10,7 @@ def task_setup(db_session, seeded_db):
     # Create a user
     role = db_session.query(models.Role).filter(
         models.Role.name == "Contributor").first()
-    user = models.User(nickname="TaskUser", login_pin="1234", role_id=role.id)
+    user = models.User(nickname="TaskUser", role_id=role.id)
     db_session.add(user)
     db_session.commit()
 

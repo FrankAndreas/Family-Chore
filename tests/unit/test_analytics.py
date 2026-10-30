@@ -18,7 +18,6 @@ class TestAnalytics:
 
         user = models.User(
             nickname="AnalyticsUser",
-            login_pin="1234",
             role_id=child_role.id,
             current_points=0,
             lifetime_points=0
@@ -113,14 +112,12 @@ class TestAnalytics:
 
         user1 = models.User(
             nickname="UserHigh",
-            login_pin="1111",
             role_id=child_role.id,
             current_points=100,
             lifetime_points=1000
         )
         user2 = models.User(
             nickname="UserLow",
-            login_pin="2222",
             role_id=child_role.id,
             current_points=50,
             lifetime_points=200
@@ -157,7 +154,6 @@ class TestAnalytics:
 
         user = models.User(
             nickname="HeatmapUser",
-            login_pin="4321",
             role_id=child_role.id,
             current_points=0,
             lifetime_points=0,
@@ -245,7 +241,6 @@ class TestAnalytics:
 
         user_a = models.User(
             nickname="SummaryAlice",
-            login_pin="1111",
             role_id=child_role.id,
             current_points=0,
             lifetime_points=0,
@@ -253,7 +248,6 @@ class TestAnalytics:
         )
         user_b = models.User(
             nickname="SummaryBob",
-            login_pin="2222",
             role_id=child_role.id,
             current_points=0,
             lifetime_points=0,
@@ -321,7 +315,6 @@ class TestAnalytics:
 
         user = models.User(
             nickname="DetailUser",
-            login_pin="9999",
             role_id=child_role.id,
             current_points=0,
             lifetime_points=0,
@@ -389,7 +382,7 @@ class TestAnalytics:
 def test_heatmap_details_invalid_date_returns_400(client, seeded_db):
     """An invalid date string should return 400, not silently return empty results."""
     role = seeded_db.query(models.Role).filter(models.Role.name == "Child").first()
-    user = models.User(nickname="DateCheckUser", login_pin="0000", role_id=role.id)
+    user = models.User(nickname="DateCheckUser", role_id=role.id)
     seeded_db.add(user)
     seeded_db.commit()
 

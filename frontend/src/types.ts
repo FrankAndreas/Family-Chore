@@ -19,13 +19,6 @@ export interface User {
     notifications_enabled?: boolean;
 }
 
-export interface LoginResponse {
-    access_token: string;
-    token_type: string;
-    user: User;
-    sse_token: string;
-}
-
 export interface Task {
     id: number;
     name: string;

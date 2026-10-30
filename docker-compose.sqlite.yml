@@ -20,11 +20,15 @@ services:
       - DATABASE_URL=sqlite:///./data/chorespec.db
       # Keys left empty are auto-generated inside the container and are lost
       # whenever it is recreated (e.g. on every update), so set them in .env.
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-}
       - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY:-}
       - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY:-}
       - VAPID_CLAIMS_EMAIL=${VAPID_CLAIMS_EMAIL:-mailto:admin@example.com}
-      - COOKIE_SECURE=${COOKIE_SECURE:-false}   # true only when served over HTTPS
+      # The login is the family hub's (FrankAndreas/family-hub): how this backend
+      # reaches it (e.g. http://<NAS_IP>:8086), where browsers log in and out
+      # (https://home.local.<domain>), and this app's key in the hub
+      - HUB_URL=${HUB_URL:-}
+      - HUB_PUBLIC_URL=${HUB_PUBLIC_URL:-}
+      - HUB_APP_KEY=${HUB_APP_KEY:-chores}
       - SMTP_SERVER=${SMTP_SERVER:-}
       - SMTP_PORT=${SMTP_PORT:-587}
       - SMTP_USERNAME=${SMTP_USERNAME:-}

@@ -6,7 +6,7 @@ from backend import crud, models
 def test_get_user_transactions(db_session, seeded_db):
     role = db_session.query(models.Role).first()
     user = models.User(nickname="TxCRUDUser",
-                       login_pin="1111", role_id=role.id)
+                       role_id=role.id)
     db_session.add(user)
     db_session.commit()
 
@@ -41,8 +41,8 @@ def test_get_user_transactions(db_session, seeded_db):
 def test_get_all_transactions(db_session, seeded_db):
     # Setup multiple users
     role = db_session.query(models.Role).first()
-    u1 = models.User(nickname="U1", login_pin="1", role_id=role.id)
-    u2 = models.User(nickname="U2", login_pin="1", role_id=role.id)
+    u1 = models.User(nickname="U1", role_id=role.id)
+    u2 = models.User(nickname="U2", role_id=role.id)
     db_session.add_all([u1, u2])
     db_session.commit()
 

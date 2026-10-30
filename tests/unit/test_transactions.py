@@ -19,7 +19,6 @@ class TestTransactionHistory:
 
         user = models.User(
             nickname="HistoryUser",
-            login_pin="1234",
             role_id=child_role.id,
             current_points=0,
             lifetime_points=0
@@ -72,9 +71,9 @@ class TestTransactionHistory:
         ).first()
 
         user1 = models.User(
-            nickname="User1", login_pin="1111", role_id=child_role.id)
+            nickname="User1", role_id=child_role.id)
         user2 = models.User(
-            nickname="User2", login_pin="2222", role_id=child_role.id)
+            nickname="User2", role_id=child_role.id)
         seeded_db.add_all([user1, user2])
         seeded_db.commit()
 
@@ -117,7 +116,7 @@ class TestTransactionHistory:
             models.Role.name == "Child"
         ).first()
         user = models.User(nickname="PageUser",
-                           login_pin="1234", role_id=child_role.id)
+                           role_id=child_role.id)
         seeded_db.add(user)
         seeded_db.commit()
 
@@ -151,7 +150,7 @@ class TestTransactionHistory:
         child_role = seeded_db.query(models.Role).filter(
             models.Role.name == "Child").first()
         user = models.User(nickname="FilterUser",
-                           login_pin="1234", role_id=child_role.id)
+                           role_id=child_role.id)
         seeded_db.add(user)
         seeded_db.commit()
 
@@ -208,7 +207,6 @@ class TestPenalty:
 
         user = models.User(
             nickname="BadKid",
-            login_pin="1234",
             role_id=child_role.id,
             current_points=100,
             lifetime_points=500
@@ -250,7 +248,6 @@ class TestPenalty:
 
         user = models.User(
             nickname="BrokeKid",
-            login_pin="1234",
             role_id=child_role.id,
             current_points=10,
             lifetime_points=10

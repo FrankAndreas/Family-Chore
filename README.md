@@ -6,11 +6,11 @@
 
 #### Backend (FastAPI + SQLite)
 - **Database**: Fully initialized with all tables
-- **Seeded Data**: 4 roles (Admin, Contributor, Teenager, Child) + default Admin user
+- **Seeded Data**: 4 roles (Admin, Contributor, Teenager, Child); the people come from the family hub
 - **API Endpoints**: All MVP endpoints implemented and tested
 
 #### Frontend (React + Vite + TypeScript)
-- **Login System**: Working authentication with PIN
+- **Login**: through the family hub (FrankAndreas/family-hub); one family login for every app
 - **Premium Design**: Glassmorphism, gradients, animations
 - **API Integration**: Connected to backend
 
@@ -34,29 +34,22 @@ npm run dev
 
 ---
 
-## 🔑 Initial Admin Login
+## 🔑 Logging in
 
-On first startup (empty database) the backend creates an `Admin` user with a
-**randomly generated 4-digit PIN** and prints it once in the backend log:
-
-```
-Creating default Admin user. INITIAL PIN: 4821 — change this immediately.
-```
-
-- Nickname: `Admin`
-- PIN: the value from that log line (change it after your first login)
-
-The PIN is not shown again. If you lose it before changing it, delete the
-database and restart to generate a new one.
+The family logs in at the family hub (FrankAndreas/family-hub); this app has no PINs of its own. The
+backend asks the hub (`HUB_URL`, default `http://localhost:8086`) who is logged in and whether they may
+use the app (app key `chores`). Parents in the hub are Admin here; a parent picks each child's game role
+here. See README_DOCKER.md, "Logging in: the family hub".
 
 ---
 
 ## 📡 API Endpoints (All Functional)
 
 ### User Management
-- `POST /users/` - Create user
-- `GET /users/` - List users
-- `POST /login/` - Login with PIN
+- `GET /users/me` - Who is logged in (the family hub's login)
+- `GET /users/` - List users (the people the hub lists for the app)
+- `GET /users/removed` - People the hub no longer lists (Admin)
+- `GET /hub` - Where to log in and out
 
 ### Role Management
 - `GET /roles/` - List roles

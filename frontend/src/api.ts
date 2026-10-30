@@ -1,47 +1,19 @@
 import axios from 'axios';
 
-import type { LoginResponse, User } from './types';
+import type { User } from './types';
 import { shrinkPhoto } from './utils/shrinkPhoto';
 
-// ── In-memory token store ───────────────────────────────────────
-// Kept in module scope (not localStorage) so XSS cannot read it.
-// The httpOnly cookie handles all axios requests automatically via
-// withCredentials; this variable is only needed for the SSE URL.
-let _authToken: string | null = null;
-// Short-lived (1-hour) token issued alongside the session token,
-// used only for the SSE query-string to minimise log-exposure window.
-let _sseToken: string | null = null;
-
-export function setAuthToken(token: string | null): void {
-    _authToken = token;
-}
-
-export function getAuthToken(): string | null {
-    return _authToken;
-}
-
-export function setSseToken(token: string | null): void {
-    _sseToken = token;
-}
-
-export function getSseToken(): string | null {
-    return _sseToken;
-}
-
-// ── Force-logout callback (registered by App.tsx) ──────────────
-// Allows the axios interceptor to signal the React tree on 401,
-// replacing window.location.reload() with a clean state transition.
-let _forceLogoutCallback: (() => void) | null = null;
-
-export function registerForceLogout(callback: () => void): void {
-    _forceLogoutCallback = callback;
-}
+// ── Logged out: the API's 401 sends the browser to the family hub's login ──
+// The login is the family hub's cookie (spec 2026-10-30), which the browser sends by itself (withCredentials)
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 const api = axios.create({
     baseURL: API_BASE_URL,
     headers: {
         'Content-Type': 'application/json',
+        // The backend takes changes made with the hub cookie only with this header: another site can make a browser
+        // send the cookie, but not the header
+        'X-Requested-With': 'chores',
     },
     withCredentials: true,
 });
@@ -53,41 +25,47 @@ declare module 'axios' {
     }
 }
 
-// Add response interceptor to handle 401s
+// Add response interceptor to handle 401s: the login ended (logged out in the hub, a new PIN), so log in at the
+// family hub, which sends the browser back here afterwards
 api.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response && error.response.status === 401) {
-            // Skip redirect for login requests and requests that opt out (e.g. FamilyDashboard)
-            const skipRedirect = error.config?.skipAuthRedirect || error.config?.url?.includes('/login');
-            if (!skipRedirect) {
-                localStorage.removeItem('user');
-                setAuthToken(null);
-                // Signal the React tree to clear auth state and show Login
-                if (_forceLogoutCallback) {
-                    _forceLogoutCallback();
-                }
-            }
+            // Skip redirect for requests that opt out (e.g. FamilyDashboard, which works without a login)
+            const skipRedirect = error.config?.skipAuthRedirect || error.config?.url?.endsWith('/hub');
+            if (!skipRedirect) void goToHub();
         }
         return Promise.reject(error);
     }
 );
 
+// Where the family hub is (HUB_PUBLIC_URL), from the backend
+async function hubUrl(): Promise<string> {
+    return (await api.get<{ login_url: string }>('/hub')).data.login_url;
+}
+
+// To the hub's login; with next=, the hub sends the browser back here afterwards
+export async function goToHub(next: string | null = window.location.href): Promise<void> {
+    const login = await hubUrl();
+    window.location.href = next ? `${login}/?next=${encodeURIComponent(next)}` : login;
+}
+
+// "Log out": the hub ends the login, for this app and every other family app, then shows its login (back here after)
+export async function goToHubLogout(): Promise<void> {
+    window.location.href = `${await hubUrl()}/logout?next=${encodeURIComponent(window.location.origin)}`;
+}
+
 // User APIs
-export const login = (nickname: string, login_pin: string) =>
-    api.post<LoginResponse>('/login/', { nickname, login_pin });
+export const getMe = () => api.get<User>('/users/me');
 
 export const getUsers = () => api.get('/users/');
 export const getUsersAdmin = () => api.get('/users/admin');
 
-export const createUser = (nickname: string, login_pin: string, role_id: number) =>
-    api.post('/users/', { nickname, login_pin, role_id });
 
 export const updateUser = (id: number, data: Partial<User>) =>
     api.put(`/users/${id}`, data);
 
-export const resetUserPassword = (id: number, new_pin: string) =>
-    api.put(`/users/${id}/password`, { new_pin });
+export const getRemovedUsers = () => api.get<User[]>('/users/removed');
 
 export const deleteUser = (id: number) =>
     api.delete(`/users/${id}`);

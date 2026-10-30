@@ -18,6 +18,7 @@ def get_users_with_pending_daily_tasks(db: Session) -> List[models.User]:
     ).join(
         models.Task, models.TaskInstance.task_id == models.Task.id
     ).filter(
+        models.User.is_active.is_(True),
         models.User.notifications_enabled.is_(True),
         models.User.email.isnot(None),
         models.TaskInstance.status == "PENDING",
@@ -33,6 +34,7 @@ def get_notifiable_admins(db: Session) -> List[models.User]:
     # Find all users with "Admin" role, email, and notifications enabled
     users = db.query(models.User).join(models.Role).filter(
         models.Role.name == "Admin",
+        models.User.is_active.is_(True),
         models.User.notifications_enabled.is_(True),
         models.User.email.isnot(None)
     ).all()

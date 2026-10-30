@@ -7,7 +7,7 @@ from datetime import datetime
 def test_get_user_transactions_api(client, db_session, seeded_db):
     # Setup User and Transaction
     role = db_session.query(models.Role).first()
-    u = models.User(nickname="TxUserAPI", login_pin="1", role_id=role.id)
+    u = models.User(nickname="TxUserAPI", role_id=role.id)
     db_session.add(u)
     db_session.commit()
 
@@ -41,7 +41,7 @@ def test_get_all_transactions_api(client, db_session, seeded_db):
 
     # Filter by user
     role = db_session.query(models.Role).first()
-    u = models.User(nickname="GlobalTxUser", login_pin="1", role_id=role.id)
+    u = models.User(nickname="GlobalTxUser", role_id=role.id)
     db_session.add(u)
     db_session.commit()
     t = models.Transaction(
