@@ -41,10 +41,8 @@ def admin_user(seeded_db):
     """Create an admin user for testing."""
     admin_role = seeded_db.query(models.Role).filter(
         models.Role.name == "Admin").first()
-    # Mock hashed pin directly
     user = models.User(
         nickname="TestAdmin",
-        login_pin="hashed_1234",
         role_id=admin_role.id,
         current_points=0,
         lifetime_points=0

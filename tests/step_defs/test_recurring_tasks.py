@@ -4,6 +4,7 @@ Step definitions for Recurring Tasks BDD scenarios.
 from pytest_bdd import scenarios, given, when, then, parsers
 from backend import models
 from datetime import timedelta
+from tests.people import add_person_json
 
 # Load scenarios from feature file
 scenarios('../features/recurring_tasks.feature')
@@ -26,13 +27,7 @@ def user_exists(seeded_db, client, context, nickname, role_name):
     assert role is not None, f"Role {role_name} not found"
 
     # Create user
-    response = client.post("/users/", json={
-        "nickname": nickname,
-        "role_id": role.id,
-        "login_pin": "1234"
-    })
-    assert response.status_code == 200
-    user = response.json()
+    user = add_person_json(seeded_db, nickname, role.id)
     context[f'user_{nickname}'] = user
     return user
 

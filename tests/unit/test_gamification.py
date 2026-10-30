@@ -14,9 +14,9 @@ def _awarded_points(db, instance_id: int) -> int:
 
 @pytest.fixture
 def setup_test_users(db_session, seeded_db):
-    parent = models.User(nickname="Parent", login_pin="1111", role_id=1)
-    teen = models.User(nickname="Teen", login_pin="2222", role_id=3)
-    child = models.User(nickname="Child", login_pin="3333", role_id=4)
+    parent = models.User(nickname="Parent", role_id=1)
+    teen = models.User(nickname="Teen", role_id=3)
+    child = models.User(nickname="Child", role_id=4)
     db_session.add_all([parent, teen, child])
     db_session.commit()
     return {"parent": parent, "teen": teen, "child": child}

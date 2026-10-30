@@ -54,7 +54,7 @@ def test_daily_reset_logic(db_session, seeded_db):
     seeded_db.commit()
 
     # We need a user to assign to
-    user = models.User(nickname="U", login_pin="1", role_id=role.id)
+    user = models.User(nickname="U", role_id=role.id)
     seeded_db.add(user)
     seeded_db.commit()
 

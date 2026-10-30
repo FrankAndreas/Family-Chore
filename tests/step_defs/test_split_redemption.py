@@ -41,7 +41,6 @@ def user_has_points(seeded_db: Session, nickname, points, context):
 
         user = models.User(
             nickname=nickname,
-            login_pin="1234",
             role_id=role.id,
             current_points=points
         )

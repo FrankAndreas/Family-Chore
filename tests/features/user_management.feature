@@ -1,10 +1,11 @@
 # Story 1: System Initialization (User & Role Setup)
-# AC 1.1-1.5: User creation, role assignment, login, permissions
+# Since 2026-10-30 the family comes from the family hub: name, login and parent/child are managed there. Parents are
+# Admin here; a parent picks a child's game role (and with it the points multiplier) here.
 
-Feature: User Management and Authentication
+Feature: Game roles of the family
     As an Admin/Primary Planner
-    I want to set up user profiles and assign system roles
-    So that all family members can log in with correct permissions
+    I want to give each child a game role
+    So that their points follow the right multiplier
 
     Background:
         Given the system is initialized with default roles
@@ -15,43 +16,18 @@ Feature: User Management and Authentication
             | Teenager    | 1.2              |
             | Child       | 1.5              |
 
-    Scenario: AC 1.2 - Create new user with nickname and PIN
-        When I create a new user with:
-            | nickname | login_pin | role_name |
-            | TestUser | 5678      | Teenager  |
-        Then the user should be created successfully
-        And the user should have role "Teenager"
-
-    Scenario: AC 1.3 - User must have exactly one role
-        When I create a new user with:
-            | nickname | login_pin | role_name |
-            | Alice    | 1111      | Child     |
-        Then the user should be assigned to role "Child"
+    Scenario: A child starts with their role and its multiplier
+        Given a family member "Alice" with role "Child"
+        Then the user should have role "Child"
         And the user should have multiplier value 1.5
 
-    Scenario: AC 1.4 - User can login with nickname and PIN
-        Given a user exists with:
-            | nickname | login_pin | role_name |
-            | Bob      | 2222      | Contributor |
-        When I login with nickname "Bob" and PIN "2222"
-        Then the login should be successful
-        And I should receive user details
-
-    Scenario: Login fails with incorrect PIN
-        Given a user exists with:
-            | nickname | login_pin | role_name |
-            | Charlie  | 3333      | Admin     |
-        When I login with nickname "Charlie" and PIN "9999"
-        Then the login should fail with error "Invalid credentials"
-
-    Scenario: Login fails with non-existent user
-        When I login with nickname "NonExistent" and PIN "0000"
-        Then the login should fail with error "Invalid credentials"
-
-    Scenario: AC 1.5 - User permissions apply after login
-        Given a user exists with:
-            | nickname | login_pin | role_name |
-            | David    | 4444      | Teenager  |
-        When I login with nickname "David" and PIN "4444"
+    Scenario: A parent gives a child another game role
+        Given a family member "David" with role "Child"
+        When a parent gives "David" the role "Teenager"
         Then the user should have role "Teenager"
         And the user should have multiplier value 1.2
+
+    Scenario: The Admin role comes from the family hub
+        Given a family member "Bob" with role "Child"
+        When a parent gives "Bob" the role "Admin"
+        Then the change should be refused with "admin_from_hub"

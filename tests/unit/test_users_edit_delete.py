@@ -1,58 +1,38 @@
+"""What a parent changes about a person here, and deleting the data of someone the family hub removed. Name, login
+and parent/child come from the hub (spec 2026-10-30)."""
 
 from fastapi.testclient import TestClient
-from backend import models, security
+
+from backend import models
+from tests.people import add_person
 
 
-def setup_normal_user(db_session):
-    user_role = db_session.query(models.Role).filter(models.Role.name == "Contributor").first()
-    normal_user = models.User(
-        nickname="NormalUser",
-        login_pin=security.get_password_hash("1234"),
-        role_id=user_role.id
-    )
-    db_session.add(normal_user)
+def role_id(db_session, name):
+    return db_session.query(models.Role).filter(models.Role.name == name).one().id
+
+
+def test_update_email_and_game_role(client: TestClient, db_session):
+    kid = add_person(db_session, "NormalUser", role_id(db_session, "Contributor"))
+    res = client.put(f"/users/{kid.id}", json={"email": "kid@example.ch", "role_id": role_id(db_session, "Teenager")})
+    assert res.status_code == 200
+    assert (res.json()["email"], res.json()["role"]["name"]) == ("kid@example.ch", "Teenager")
+
+
+def test_name_comes_from_the_hub(client: TestClient, db_session):
+    kid = add_person(db_session, "NormalUser", role_id(db_session, "Contributor"))
+    res = client.put(f"/users/{kid.id}", json={"nickname": "UpdatedNick"})
+    assert res.status_code == 400 and res.json()["detail"] == "name_from_hub"
+
+
+def test_delete_only_people_removed_in_the_hub(client: TestClient, db_session):
+    kid = add_person(db_session, "NormalUser", role_id(db_session, "Contributor"))
+    refused = client.delete(f"/users/{kid.id}")
+    assert refused.status_code == 409 and refused.json()["detail"] == "still_in_hub"
+    kid.is_active = False
     db_session.commit()
-    db_session.refresh(normal_user)
-    return normal_user
+    assert client.delete(f"/users/{kid.id}").json()["success"] is True
+    assert db_session.get(models.User, kid.id) is None
 
 
-def test_update_user_profile(client: TestClient, db_session):
-    normal_user = setup_normal_user(db_session)
-    user_role = db_session.query(models.Role).filter(models.Role.name == "Contributor").first()
-
-    # Admin updates normal user
-    res = client.put(f"/users/{normal_user.id}", json={
-        "nickname": "UpdatedNick",
-        "role_id": user_role.id
-    })
-    assert res.status_code == 200
-    assert res.json()["nickname"] == "UpdatedNick"
-
-
-def test_reset_user_password(client: TestClient, db_session):
-    normal_user = setup_normal_user(db_session)
-    # Admin resets normal user password
-    res = client.put(f"/users/{normal_user.id}/password", json={
-        "new_pin": "5555"
-    })
-    assert res.status_code == 200
-    assert res.json()["success"] is True
-
-
-def test_delete_user(client: TestClient, db_session):
-    normal_user = setup_normal_user(db_session)
-
-    # Admin deletes normal user
-    res = client.delete(f"/users/{normal_user.id}")
-    assert res.status_code == 200
-    assert res.json()["success"] is True
-
-    # Verify user is gone
-    get_res = client.get("/users/")
-    assert normal_user.id not in [u["id"] for u in get_res.json()]
-
-
-def test_delete_self_fails(client: TestClient, db_session, admin_user):
-    res = client.delete(f"/users/{admin_user.id}")
-    assert res.status_code == 400
-    assert "Cannot delete yourself" in res.json()["detail"]
+def test_delete_unknown_person(client: TestClient):
+    assert client.delete("/users/99999").status_code == 404

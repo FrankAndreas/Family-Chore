@@ -4,6 +4,7 @@ import pytest
 from backend import crud, schemas, models
 from backend.services import tasks as tasks_service
 from backend.exceptions import AuthorizationError
+from tests.people import add_person
 
 
 def _make_role(db, name, multiplier):
@@ -15,10 +16,7 @@ def _make_role(db, name, multiplier):
 
 
 def _make_user(db, nickname, role_id):
-    return crud.create_user(
-        db,
-        schemas.UserCreate(nickname=nickname, login_pin="0000", role_id=role_id),
-    )
+    return add_person(db, nickname, role_id)
 
 
 def _make_instance(db, task_id, user_id):

@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session, joinedload
 from datetime import datetime, timezone
 from typing import Optional, List
-from . import models, schemas, security
+from . import models, schemas
 from .services.transaction_service import delete_user_transactions, detach_instance_references
 
 # --- User CRUD ---
@@ -18,22 +18,13 @@ def get_user_by_nickname(db: Session, nickname: str) -> Optional[models.User]:
 
 def get_users(db: Session, skip: int = 0,
               limit: int = 100) -> List[models.User]:
-    return db.query(models.User).offset(skip).limit(limit).all()
+    """The people the family hub lists for the app (hidden ones are left out)."""
+    return db.query(models.User).filter(models.User.is_active.is_(True)).offset(skip).limit(limit).all()
 
 
-def create_user(db: Session, user: schemas.UserCreate) -> models.User:
-    hashed_pin = security.get_password_hash(user.login_pin)
-    db_user = models.User(
-        nickname=user.nickname,
-        login_pin=hashed_pin,
-        role_id=user.role_id,
-        email=user.email,
-        notifications_enabled=user.notifications_enabled,
-    )
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
+def get_removed_users(db: Session) -> List[models.User]:
+    """People the family hub no longer lists: hidden with points and history until a parent deletes them."""
+    return db.query(models.User).filter(models.User.is_active.is_(False)).order_by(models.User.nickname).all()
 
 
 def update_user(db: Session, user_id: int,
@@ -50,18 +41,6 @@ def update_user(db: Session, user_id: int,
     db.commit()
     db.refresh(db_user)
     return db_user
-
-
-def update_user_password(db: Session, user_id: int, new_pin: str) -> bool:
-    """Update user's login PIN."""
-    db_user = db.query(models.User).filter(models.User.id == user_id).first()
-    if not db_user:
-        return False
-
-    hashed_pin = security.get_password_hash(new_pin)
-    db_user.login_pin = hashed_pin
-    db.commit()
-    return True
 
 
 def delete_user(db: Session, user_id: int) -> bool:
@@ -83,13 +62,6 @@ def delete_user(db: Session, user_id: int) -> bool:
     db.commit()
     return True
 
-
-def update_user_pin(db: Session, user_id: int, hashed_pin: str) -> None:
-    """Update a user's PIN to a new hash (used for auto-migration)."""
-    db_user = db.query(models.User).filter(models.User.id == user_id).first()
-    if db_user:
-        db_user.login_pin = hashed_pin
-        db.commit()
 
 # --- Role CRUD ---
 

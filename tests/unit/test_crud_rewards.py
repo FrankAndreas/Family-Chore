@@ -12,10 +12,8 @@ def reward_setup(db_session, seeded_db):
     child_role = db_session.query(models.Role).filter(
         models.Role.name == "Child").first()
 
-    teen = models.User(nickname="TeenUser", login_pin="1111",
-                       role_id=teen_role.id, current_points=1000)
-    child = models.User(nickname="ChildUser", login_pin="2222",
-                        role_id=child_role.id, current_points=50)
+    teen = models.User(nickname="TeenUser", role_id=teen_role.id, current_points=1000)
+    child = models.User(nickname="ChildUser", role_id=child_role.id, current_points=50)
 
     db_session.add(teen)
     db_session.add(child)

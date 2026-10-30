@@ -24,7 +24,6 @@ def photo_setup(db_session, seeded_db):
 
     user = models.User(
         nickname="PhotoKid",
-        login_pin="0000",
         role_id=role.id,
         current_points=0,
         lifetime_points=0,

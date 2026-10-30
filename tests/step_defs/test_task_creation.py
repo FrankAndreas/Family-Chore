@@ -3,6 +3,7 @@ Step definitions for Task Creation BDD scenarios.
 """
 from pytest_bdd import scenarios, given, when, then, parsers
 from backend import models
+from tests.people import add_person_json
 
 # Load scenarios from feature file
 scenarios('../features/task_creation.feature')
@@ -24,14 +25,7 @@ def user_with_role(seeded_db, client, nickname, role_name, context):
     role = seeded_db.query(models.Role).filter(
         models.Role.name == role_name).first()
 
-    response = client.post("/users/", json={
-        "nickname": nickname,
-        "login_pin": "1234",
-        "role_id": role.id
-    })
-
-    assert response.status_code == 200
-    context[f'user_{nickname}'] = response.json()
+    context[f'user_{nickname}'] = add_person_json(seeded_db, nickname, role.id)
 
 
 @given('a task exists:')

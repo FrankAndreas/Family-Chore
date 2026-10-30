@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from backend import models
+from tests.people import add_person_json
 
 
 def test_create_task_api(client, db_session, seeded_db):
@@ -115,7 +116,7 @@ def test_complete_task_instance_api(client, db_session, seeded_db):
     db_session.commit()
 
     # Create User
-    user = models.User(nickname="InstUser", login_pin="1111", role_id=role.id)
+    user = models.User(nickname="InstUser", role_id=role.id)
     db_session.add(user)
     db_session.commit()
 
@@ -146,8 +147,7 @@ def test_get_user_daily_tasks(client, db_session, seeded_db):
     if not users:
         # Create one
         role = db_session.query(models.Role).first()
-        u = client.post(
-            "/users/", json={"nickname": "DailyUser", "login_pin": "0000", "role_id": role.id}).json()
+        u = add_person_json(db_session, "DailyUser", role.id)
         uid = u["id"]
     else:
         uid = users[0]["id"]
@@ -172,7 +172,7 @@ def test_upload_photo_forbidden_for_other_user(client, db_session, seeded_db, ad
     child_role = db_session.query(models.Role).filter(models.Role.name == "Child").first()
     admin_role = db_session.query(models.Role).filter(models.Role.name == "Admin").first()
 
-    child_user = models.User(nickname="ChildUploader", login_pin="0000", role_id=child_role.id)
+    child_user = models.User(nickname="ChildUploader", role_id=child_role.id)
     db_session.add(child_user)
     db_session.commit()
 

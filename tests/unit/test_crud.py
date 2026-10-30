@@ -20,7 +20,6 @@ class TestPointCalculation:
 
         user = models.User(
             nickname="TestTeen",
-            login_pin="1234",
             role_id=teenager_role.id,
             current_points=0,
             lifetime_points=0
@@ -65,7 +64,6 @@ class TestPointCalculation:
 
         user = models.User(
             nickname="TestChild",
-            login_pin="1234",
             role_id=child_role.id,
             current_points=0,
             lifetime_points=0
@@ -115,7 +113,6 @@ class TestPointCalculation:
 
         user = models.User(
             nickname="Admin",
-            login_pin="1234",
             role_id=admin_role.id,
             current_points=0,
             lifetime_points=0
@@ -163,9 +160,9 @@ class TestDailyReset:
         ).first()
 
         user1 = models.User(nickname="Child1",
-                            login_pin="1111", role_id=child_role.id)
+                            role_id=child_role.id)
         user2 = models.User(nickname="Child2",
-                            login_pin="2222", role_id=child_role.id)
+                            role_id=child_role.id)
         seeded_db.add_all([user1, user2])
 
         task = models.Task(
@@ -194,8 +191,7 @@ class TestDailyReset:
             models.Role.name == "Teenager"
         ).first()
 
-        user = models.User(nickname="Teen", login_pin="1234",
-                           role_id=teenager_role.id)
+        user = models.User(nickname="Teen", role_id=teenager_role.id)
         seeded_db.add(user)
 
         task = models.Task(
@@ -222,26 +218,6 @@ class TestDailyReset:
 
 class TestInputValidation:
     """Test input validation at the schema level."""
-
-    def test_user_pin_must_be_4_digits(self):
-        """Test that PIN validation requires exactly 4 digits."""
-        # Valid PIN
-        valid_user = schemas.UserCreate(
-            nickname="Test",
-            login_pin="1234",
-            role_id=1
-        )
-        assert valid_user.login_pin == "1234"
-
-        # Invalid PINs should raise validation error
-        with pytest.raises(ValueError):
-            schemas.UserCreate(nickname="Test", login_pin="123", role_id=1)
-
-        with pytest.raises(ValueError):
-            schemas.UserCreate(nickname="Test", login_pin="12345", role_id=1)
-
-        with pytest.raises(ValueError):
-            schemas.UserCreate(nickname="Test", login_pin="abcd", role_id=1)
 
     def test_task_time_validation(self):
         """Test that task time must be in HH:MM format."""
