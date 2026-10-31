@@ -199,6 +199,29 @@ certificate, reuse it and start at step 1.
 
 ---
 
+## From outside: Cloudflare Tunnel and Access (optional)
+
+Away from home the family logs in with Cloudflare Access (an e-mail code); the app passes that login on to the
+family hub, which knows each person by their **confirmed** e-mail address there. A hub cookie arriving through the
+tunnel counts for nothing.
+
+1. **Tunnel route.** **Zero Trust → Networks → Connectors → Cloudflare Tunnels** → the NAS's tunnel → **Published
+   application routes → Add**: subdomain e.g. `aemtli`, your domain, path empty, service `HTTP`, URL
+   `<NAS_IP>:<the app's port>` (8080, or e.g. 8888 if you changed it).
+2. **Access application.** **Access controls → Applications → Create new application → Public DNS**: subdomain
+   `aemtli`, your domain, path empty, with a policy that allows the family's e-mail addresses. Note its **Application
+   Audience (AUD) Tag**.
+3. **The hub:** add that AUD tag to `CF_AUDIENCE` in the hub's `.env` (comma-separated, next to the hub's own) and
+   restart the hub; give the chores tile the outside address `https://aemtli.<domain>`, so its tile shows outside.
+4. Everyone who uses it from outside needs a **confirmed** e-mail address in the hub (the one Cloudflare's code is sent
+   to). Unknown addresses see "No access". Push notifications work there too (HTTPS).
+
+"Logout" from outside ends the Cloudflare login (`/cdn-cgi/access/logout`), for every family app at once. The Family
+Dashboard is behind the Access login there as well.
+
+Never publish step 1 without step 2: the Access application is what keeps strangers out. Without it the app refuses
+everyone (no Cloudflare login), but the page itself and its login screen are open to anyone.
+
 ## Updates
 New versions are published as `latest` whenever a change is merged to `main` and CI passes.
 Set up [Automatic Updates](#automatic-updates) to install them nightly, or update by hand:

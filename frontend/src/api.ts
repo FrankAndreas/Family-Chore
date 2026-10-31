@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 import type { User } from './types';
+import { loginAddress, type HubLinks } from './utils/hubAddress';
 import { shrinkPhoto } from './utils/shrinkPhoto';
 
 // ── Logged out: the API's 401 sends the browser to the family hub's login ──
@@ -39,20 +40,26 @@ api.interceptors.response.use(
     }
 );
 
-// Where the family hub is (HUB_PUBLIC_URL), from the backend
-async function hubUrl(): Promise<string> {
-    return (await api.get<{ login_url: string }>('/hub')).data.login_url;
+// Where the family hub is (HUB_PUBLIC_URL), and where "Logout" goes (at home the hub, outside Cloudflare Access)
+async function hubLinks(): Promise<HubLinks> {
+    return (await api.get<HubLinks>('/hub')).data;
 }
 
-// To the hub's login; with next=, the hub sends the browser back here afterwards
+// To the hub's login; with next=, the hub sends the browser back here afterwards. Outside the page stays and shows
+// the error
 export async function goToHub(next: string | null = window.location.href): Promise<void> {
-    const login = await hubUrl();
-    window.location.href = next ? `${login}/?next=${encodeURIComponent(next)}` : login;
+    const address = loginAddress(await hubLinks(), next);
+    if (address) window.location.href = address;
 }
 
 // "Log out": the hub ends the login, for this app and every other family app, then shows its login (back here after)
 export async function goToHubLogout(): Promise<void> {
-    window.location.href = `${await hubUrl()}/logout?next=${encodeURIComponent(window.location.origin)}`;
+    const { logout_url } = await hubLinks();
+    // Outside, Cloudflare's logout (an address on this site) ends the e-mail-code login; at home the hub's page does,
+    // and leads back here after the next login
+    window.location.href = logout_url.startsWith('/')
+        ? logout_url
+        : `${logout_url}?next=${encodeURIComponent(window.location.origin)}`;
 }
 
 // User APIs

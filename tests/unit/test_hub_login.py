@@ -107,7 +107,10 @@ def test_events_need_a_login(hub_client):
 
 def test_hub_login_url(hub_client, monkeypatch):
     monkeypatch.setenv("HUB_PUBLIC_URL", "https://home.local.example.ch")
-    assert hub_client.get("/hub").json() == {"login_url": "https://home.local.example.ch"}
+    assert hub_client.get("/hub").json() == {
+        "login_url": "https://home.local.example.ch",
+        "logout_url": "https://home.local.example.ch/logout",
+    }
 
 
 def test_removed_endpoints(hub_client):
@@ -229,3 +232,113 @@ def test_removed_person_gets_no_daily_tasks(hub_client, db_session, family_hub):
     assert db_session.query(models.TaskInstance).filter(models.TaskInstance.user_id == lena.id).count() == 0
     admin = row(db_session, ADMIN)
     assert db_session.query(models.TaskInstance).filter(models.TaskInstance.user_id == admin.id).count() == 1
+
+
+# From outside (through the Cloudflare tunnel) the Cloudflare Access login counts, passed on to the hub (2026-10-30)
+OUTSIDE = {"Cf-Connecting-Ip": "203.0.113.7"}
+
+
+def outside(name=ADMIN, **extra):
+    return {**OUTSIDE, "Cf-Access-Jwt-Assertion": fake_hub.cloudflare_token(name), **extra}
+
+
+def test_cloudflare_login_from_outside(hub_client):
+    found = hub_client.get("/users/me", headers=outside())
+    assert found.status_code == 200 and found.json()["nickname"] == ADMIN
+
+
+def test_a_hub_login_counts_for_nothing_outside(hub_client):
+    assert hub_client.get("/users/me", headers={**OUTSIDE, **bearer(ADMIN)}).status_code == 401
+
+
+def test_changes_from_outside_need_the_header(hub_client):
+    body = {"name": "Helper", "multiplier_value": 1.1}
+    refused = hub_client.post("/roles/", json=body, headers=outside())
+    assert refused.status_code == 403 and refused.json()["detail"] == "csrf"
+    assert hub_client.post("/roles/", json=body, headers=outside(**{"X-Requested-With": "chores"})).status_code == 200
+
+
+def test_unknown_to_the_hub_from_outside(hub_client):
+    response = hub_client.get("/users/me", headers=outside("Nobody"))
+    assert response.status_code == 403 and response.json()["detail"] == "no_access"
+
+
+def test_logout_from_outside_is_cloudflares(hub_client, monkeypatch):
+    monkeypatch.setenv("HUB_PUBLIC_URL", "https://home.local.example.ch")
+    assert hub_client.get("/hub", headers=OUTSIDE).json()["logout_url"] == "/cdn-cgi/access/logout"
+    assert hub_client.get("/hub").json()["logout_url"] == "https://home.local.example.ch/logout"
+
+
+def test_outside_without_cloudflares_login(hub_client):
+    assert hub_client.get("/users/me", headers=OUTSIDE).status_code == 401
+
+
+def test_a_hub_cookie_beside_cloudflares_login_counts_for_nothing(hub_client, family_hub):
+    family_hub.add("Mia", "CHILD")
+    hub_client.cookies.set("hub_session", token("Mia"))
+    assert hub_client.get("/users/me", headers=outside()).json()["nickname"] == ADMIN
+    assert hub_client.get("/users/me", headers=outside(**bearer("Mia"))).json()["nickname"] == ADMIN
+    hub_client.cookies.clear()
+
+
+def test_a_cloudflare_token_at_home_is_no_login(hub_client):
+    # Which login a request carries depends on where it came from, never on the token's text (security review
+    # 2026-10-31): at home Cloudflare's token goes to the hub as a hub login, which it is not
+    for text in (fake_hub.cloudflare_token(ADMIN), "cf:" + fake_hub.cloudflare_token(ADMIN)):
+        assert hub_client.get("/users/me", headers={"Authorization": f"Bearer {text}"}).status_code == 401
+        hub_client.cookies.set("hub_session", text)
+        assert hub_client.get("/users/me").status_code == 401
+        hub_client.cookies.clear()
+
+
+def test_the_people_list_from_outside_asks_the_hub_with_cloudflares_login(hub_client, family_hub, monkeypatch):
+    family_hub.add("Mia", "CHILD")
+    asked = []
+    monkeypatch.setattr(hub, "fetch_people", lambda login: asked.append(login) or family_hub.fetch_people(login))
+    found = hub_client.get("/users/admin", headers=outside(**bearer("Mia")))
+    assert found.status_code == 200 and "Mia" in [u["nickname"] for u in found.json()]
+    assert asked and all(a.token == fake_hub.cloudflare_token(ADMIN) and a.outside_ip for a in asked)
+
+
+def test_someone_unknown_outside_gets_in_once_the_hub_knows_them(hub_client, family_hub):
+    # A "not logged in" from outside may be a hub without Cloudflare's keys or a just-confirmed address: not kept
+    assert hub_client.get("/users/me", headers=outside("Mia")).status_code == 403
+    family_hub.people["Mia"] = hub.HubPerson(id=99, name="Mia", role="CHILD", color=None, language="de")
+    family_hub.access.add("Mia")
+    assert hub_client.get("/users/me", headers=outside("Mia")).status_code == 200
+
+
+def test_changes_from_outside_need_the_header_for_uploads_and_deletes_too(hub_client):
+    upload = hub_client.post("/tasks/1/upload-photo", files={"file": ("a.jpg", b"x", "image/jpeg")}, headers=outside())
+    assert upload.status_code == 403 and upload.json()["detail"] == "csrf"
+    deleted = hub_client.delete("/tasks/1", headers=outside())
+    assert deleted.status_code == 403 and deleted.json()["detail"] == "csrf"
+
+
+def test_events_and_uploads_need_a_login_from_outside(hub_client):
+    assert hub_client.get("/uploads/x.jpg", headers=OUTSIDE).status_code == 401
+    assert hub_client.get("/events", headers=OUTSIDE).status_code == 401
+
+
+def test_the_hub_gets_the_login_with_the_right_headers(monkeypatch):
+    sent = []
+
+    class Answer:
+        status = 200
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_):
+            return False
+
+        def read(self):
+            return b'{"valid": false}'
+
+    monkeypatch.setattr(hub.urllib.request, "urlopen", lambda request, timeout: sent.append(request) or Answer())
+    hub._get("/api/session", hub.Login("cloudflares-token", outside_ip="203.0.113.7"))
+    hub._get("/api/session", hub.Login("hub-token"))
+    outside_call, home_call = (dict(r.header_items()) for r in sent)
+    # From outside the hub also gets Cf-Connecting-Ip, so it ignores any hub token as well (family-hub "For apps")
+    assert outside_call == {"Cf-access-jwt-assertion": "cloudflares-token", "Cf-connecting-ip": "203.0.113.7"}
+    assert home_call == {"Authorization": "Bearer hub-token"}
