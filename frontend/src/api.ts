@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 import type { User } from './types';
+import { loginAddress, type HubLinks } from './utils/hubAddress';
 import { shrinkPhoto } from './utils/shrinkPhoto';
 
 // ── Logged out: the API's 401 sends the browser to the family hub's login ──
@@ -40,18 +41,15 @@ api.interceptors.response.use(
 );
 
 // Where the family hub is (HUB_PUBLIC_URL), and where "Logout" goes (at home the hub, outside Cloudflare Access)
-async function hubLinks(): Promise<{ login_url: string; logout_url: string }> {
-    return (await api.get<{ login_url: string; logout_url: string }>('/hub')).data;
+async function hubLinks(): Promise<HubLinks> {
+    return (await api.get<HubLinks>('/hub')).data;
 }
 
-async function hubUrl(): Promise<string> {
-    return (await hubLinks()).login_url;
-}
-
-// To the hub's login; with next=, the hub sends the browser back here afterwards
+// To the hub's login; with next=, the hub sends the browser back here afterwards. Outside the page stays and shows
+// the error
 export async function goToHub(next: string | null = window.location.href): Promise<void> {
-    const login = await hubUrl();
-    window.location.href = next ? `${login}/?next=${encodeURIComponent(next)}` : login;
+    const address = loginAddress(await hubLinks(), next);
+    if (address) window.location.href = address;
 }
 
 // "Log out": the hub ends the login, for this app and every other family app, then shows its login (back here after)

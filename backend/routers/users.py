@@ -12,7 +12,7 @@ from ..dependencies import (
     get_current_admin_user,
     get_current_user,
     is_admin,
-    request_token,
+    request_login,
     require_self_or_admin,
 )
 from ..events import broadcaster
@@ -40,10 +40,10 @@ def read_me(current_user: models.User = Depends(get_current_user)):
 
 def _ask_the_hub(request: Request, db: Session) -> None:
     """The people lists show the hub's current state, not the one of up to a minute ago."""
-    token, _ = request_token(request)
-    if token:
+    login, _ = request_login(request)
+    if login:
         try:
-            hub_people.refresh(db, token, force=True)
+            hub_people.refresh(db, login, force=True)
         except hub.HubUnavailable:
             raise HTTPException(status_code=503, detail="hub_unavailable") from None
 

@@ -216,8 +216,11 @@ tunnel counts for nothing.
 4. Everyone who uses it from outside needs a **confirmed** e-mail address in the hub (the one Cloudflare's code is sent
    to). Unknown addresses see "No access". Push notifications work there too (HTTPS).
 
-"Logout" from outside ends the Cloudflare login (`/cdn-cgi/access/logout`). The Family Dashboard is behind the Access
-login there as well.
+"Logout" from outside ends the Cloudflare login (`/cdn-cgi/access/logout`), for every family app at once. The Family
+Dashboard is behind the Access login there as well.
+
+Never publish step 1 without step 2: the Access application is what keeps strangers out. Without it the app refuses
+everyone (no Cloudflare login), but the page itself and its login screen are open to anyone.
 
 ## Updates
 New versions are published as `latest` whenever a change is merged to `main` and CI passes.
