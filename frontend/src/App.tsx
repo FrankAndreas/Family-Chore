@@ -11,7 +11,7 @@ import NotFoundPage from './pages/NotFoundPage';
 import { SkeletonLoader } from './components/SkeletonLoader';
 import type { User } from './types';
 import i18n from './i18n';
-import { getMe, goToHubLogout } from './api';
+import { getMe, goToHubLogout, renewsAtHub } from './api';
 import { ADMIN_ROLE_NAME } from './constants';
 import './App.css';
 import './index.css';
@@ -48,6 +48,10 @@ function App() {
     if (window.location.pathname.startsWith('/family-dashboard')) return;
     getMe()
       .then((res) => {
+        if (renewsAtHub(res.headers)) {
+          setState('away');
+          return;
+        }
         setCurrentUser(res.data);
         // The language follows the person (from the hub)
         if (res.data.preferred_language) void i18n.changeLanguage(res.data.preferred_language);

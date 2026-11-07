@@ -40,6 +40,9 @@ The family logs in at the family hub (FrankAndreas/family-hub); this app has no 
 backend asks the hub (`HUB_URL`, default `http://localhost:8086`) who is logged in and whether they may
 use the app (app key `chores`). Parents in the hub are Admin here; a parent picks each child's game role
 here. See README_DOCKER.md, "Logging in: the family hub".
+Asking the hub, and the tests' fake hub, come from family-hub's client package (`family-hub-client`, pinned to a
+commit in `backend/requirements.txt`; family-hub's `client/README.md`). A login in its last week is renewed by one
+trip through the hub (the backend's `X-Hub-Renew`, at most once a day).
 
 ---
 

@@ -7,7 +7,7 @@ use the chores app; the app's people come from the hub too (hub_people.py). No P
 import logging
 from typing import Optional
 
-from fastapi import Depends, HTTPException, Request, status
+from fastapi import Depends, HTTPException, Request, Response, status
 from sqlalchemy.orm import Session
 
 from . import hub, hub_people, models
@@ -25,6 +25,8 @@ TUNNEL_HEADER = "Cf-Connecting-Ip"
 # From outside, Cloudflare Access sends the login it checked (the person's e-mail code) in this header
 CLOUDFLARE_HEADER = "Cf-Access-Jwt-Assertion"
 ADMIN_ROLE_NAME = "Admin"
+# The hub login is in its last week: the page sends the browser once through the hub, which renews it (api.ts)
+RENEW_HEADER = "X-Hub-Renew"
 
 
 def request_token(request: Request) -> tuple[Optional[str], bool]:
@@ -57,7 +59,7 @@ def _active(db: Session, hub_id: int) -> Optional[models.User]:
     return db.query(models.User).filter(models.User.hub_id == hub_id, models.User.is_active.is_(True)).first()
 
 
-def get_current_user(request: Request, db: Session = Depends(get_db)) -> models.User:
+def get_current_user(request: Request, response: Response, db: Session = Depends(get_db)) -> models.User:
     """The person behind the request's login. A plain function: FastAPI runs it in a worker thread (the hub)."""
     login, needs_header = request_login(request)
     outside = TUNNEL_HEADER in request.headers
@@ -66,17 +68,23 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> models.
     if needs_header and request.method not in SAFE_METHODS and request.headers.get(CSRF_HEADER) != CSRF_VALUE:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "csrf")
     try:
-        person, access = hub.session(login)
+        session = hub.client.session(login)
+        person = session.person
         if person is None:
             # Outside, Cloudflare let the address in, but the hub knows no one with it (not confirmed there)
             raise HTTPException(status.HTTP_403_FORBIDDEN, "no_access") if outside else _not_logged_in()
-        if not access:
+        if not session.access:
             raise HTTPException(status.HTTP_403_FORBIDDEN, "no_access")
         hub_people.refresh(db, login)
         user = _active(db, person.id)
         if user is None:
             # Given access a moment ago: the people kept here are older than that
             hub_people.refresh(db, login, force=True)
+            user = _active(db, person.id)
+        if user is None:
+            # Another request of theirs was refreshing at the same moment: wait for it, then look again (app
+            # integration review 2026-11-07)
+            hub_people.wait_for_running(hub.TIMEOUT_SECONDS)
             user = _active(db, person.id)
         elif is_admin(user) != (person.role == "PARENT"):
             # The hub's role is newer than the row's (refreshed once a minute)
@@ -87,6 +95,8 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> models.
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "hub_unavailable") from None
     if user is None:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "no_access")
+    if session.renew:
+        response.headers[RENEW_HEADER] = "1"
     return user
 
 
