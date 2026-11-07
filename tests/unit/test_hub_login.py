@@ -1,5 +1,8 @@
 """Logging in through the family hub, and the people the hub gives the chores app (spec 2026-10-30). Invented people."""
 
+import threading
+import time
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -19,13 +22,12 @@ def bearer(name):
 
 @pytest.fixture
 def family_hub(monkeypatch):
-    fake = fake_hub.FakeHub()
-    monkeypatch.setattr(fake_hub, "current", fake)
-    monkeypatch.setattr(hub, "fetch_session", fake.fetch_session)
-    monkeypatch.setattr(hub, "fetch_people", fake.fetch_people)
+    fake = fake_hub.FakeHub(hub.client, on_change=hub_people.forget)
+    monkeypatch.setattr(fake_hub, "current", fake, raising=False)
+    monkeypatch.setattr(hub.client, "transport", fake)
     fake.add(ADMIN, "PARENT")
     yield fake
-    hub.forget()
+    hub.client.forget()
     hub_people.forget()
 
 
@@ -294,7 +296,8 @@ def test_a_cloudflare_token_at_home_is_no_login(hub_client):
 def test_the_people_list_from_outside_asks_the_hub_with_cloudflares_login(hub_client, family_hub, monkeypatch):
     family_hub.add("Mia", "CHILD")
     asked = []
-    monkeypatch.setattr(hub, "fetch_people", lambda login: asked.append(login) or family_hub.fetch_people(login))
+    ask = hub.client.fetch_people
+    monkeypatch.setattr(hub.client, "fetch_people", lambda login: asked.append(login) or ask(login))
     found = hub_client.get("/users/admin", headers=outside(**bearer("Mia")))
     assert found.status_code == 200 and "Mia" in [u["nickname"] for u in found.json()]
     assert asked and all(a.token == fake_hub.cloudflare_token(ADMIN) and a.outside_ip for a in asked)
@@ -320,25 +323,35 @@ def test_events_and_uploads_need_a_login_from_outside(hub_client):
     assert hub_client.get("/events", headers=OUTSIDE).status_code == 401
 
 
-def test_the_hub_gets_the_login_with_the_right_headers(monkeypatch):
-    sent = []
+# App integration review 2026-11-07: someone who only opens this app never opens the hub, which renews a login. In its
+# last week the hub says so, and the page sends the browser through the hub once (frontend api.ts)
+def test_a_login_in_its_last_week_is_renewed_through_the_hub(hub_client, family_hub):
+    assert "X-Hub-Renew" not in me(hub_client).headers
+    family_hub.renewing.add(ADMIN)
+    hub.client.forget()
+    assert me(hub_client).headers["X-Hub-Renew"] == "1"
+    # A login from outside is Cloudflare's: nothing for the hub to renew
+    assert "X-Hub-Renew" not in hub_client.get("/users/me", headers=outside()).headers
 
-    class Answer:
-        status = 200
 
-        def __enter__(self):
-            return self
+# App integration review 2026-11-07 (as in the budget app): the first requests of someone given access come together;
+# the one that finds another refreshing waits for it instead of answering "no access"
+def test_a_new_persons_requests_at_the_same_moment(hub_client, family_hub, db_session):
+    assert me(hub_client).status_code == 200
+    family_hub.add("Mia", "CHILD")
+    with hub_people._lock:
+        hub_people._running = True
 
-        def __exit__(self, *_):
-            return False
+    def the_other_request():
+        time.sleep(0.2)
+        hub_people._apply(db_session, hub.client.fetch_people(hub.Login(token("Mia"))))
+        with hub_people._lock:
+            hub_people._running = False
+            hub_people._lock.notify_all()
 
-        def read(self):
-            return b'{"valid": false}'
-
-    monkeypatch.setattr(hub.urllib.request, "urlopen", lambda request, timeout: sent.append(request) or Answer())
-    hub._get("/api/session", hub.Login("cloudflares-token", outside_ip="203.0.113.7"))
-    hub._get("/api/session", hub.Login("hub-token"))
-    outside_call, home_call = (dict(r.header_items()) for r in sent)
-    # From outside the hub also gets Cf-Connecting-Ip, so it ignores any hub token as well (family-hub "For apps")
-    assert outside_call == {"Cf-access-jwt-assertion": "cloudflares-token", "Cf-connecting-ip": "203.0.113.7"}
-    assert home_call == {"Authorization": "Bearer hub-token"}
+    other = threading.Thread(target=the_other_request)
+    other.start()
+    try:
+        assert me(hub_client, "Mia").status_code == 200
+    finally:
+        other.join()

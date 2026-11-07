@@ -28,8 +28,8 @@ def hub_link(request: Request):
     """Where browsers log in (the family hub's address at home) and out: at home the hub's logout page, which ends the
     login for every app; from outside Cloudflare Access's logout (spec 2026-10-30)."""
     outside = TUNNEL_HEADER in request.headers
-    logout = "/cdn-cgi/access/logout" if outside else f"{hub.public_url()}/logout"
-    return {"login_url": hub.public_url(), "logout_url": logout}
+    logout = "/cdn-cgi/access/logout" if outside else f"{hub.client.public_url()}/logout"
+    return {"login_url": hub.client.public_url(), "logout_url": logout}
 
 
 @router.get("/users/me", response_model=schemas.User)
