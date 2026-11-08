@@ -108,7 +108,7 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
     }, [users, tasks]);
 
     if (loading) return (
-        <div className="family-dashboard fade-in">
+        <main className="family-dashboard fade-in">
             <div className="family-dashboard-header">
                 <div>
                     <h1 className="mb-2">🏡 {t('dashboard.familyDashboard')}</h1>
@@ -122,11 +122,11 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
                     <SkeletonLoader type="card" count={4} />
                 </div>
             </div>
-        </div>
+        </main>
     );
 
     return (
-        <div className="family-dashboard">
+        <main className="family-dashboard">
             <div className="family-dashboard-header">
                 <div>
                     <h1>🏡 {t('dashboard.familyDashboard')}</h1>
@@ -142,18 +142,21 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
             <div className="dashboard-tabs">
                 <button
                     className={`tab-btn ${activeTab === 'tasks' ? 'active' : ''}`}
+                    aria-pressed={activeTab === 'tasks'}
                     onClick={() => setActiveTab('tasks')}
                 >
                     📋 {t('navigation.tasks', 'Tasks')}
                 </button>
                 <button
                     className={`tab-btn ${activeTab === 'redeem' ? 'active' : ''}`}
+                    aria-pressed={activeTab === 'redeem'}
                     onClick={() => setActiveTab('redeem')}
                 >
                     🎁 {t('navigation.rewards')}
                 </button>
                 <button
                     className={`tab-btn ${activeTab === 'history' ? 'active' : ''}`}
+                    aria-pressed={activeTab === 'history'}
                     onClick={() => setActiveTab('history')}
                 >
                     📜 {t('navigation.history', 'History')}
@@ -161,6 +164,9 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
             </div>
 
             <div className="family-dashboard-content" {...swipeHandlers}>
+            <h2 className="sr-only">
+                {activeTab === 'tasks' ? t('navigation.tasks', 'Tasks') : activeTab === 'redeem' ? t('navigation.rewards') : t('navigation.history', 'History')}
+            </h2>
             {activeTab === 'tasks' && (
                 <TasksTab
                     users={users}
@@ -213,7 +219,7 @@ export default function FamilyDashboard({ onExit }: { onExit: () => void }) {
                     redeeming={redeeming}
                 />
             )}
-        </div>
+        </main>
     );
 }
 

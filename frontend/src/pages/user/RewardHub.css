@@ -383,6 +383,14 @@
     color: #aaa;
 }
 
+/* The rest of the grey text on the dark page: #666 gave 3.3:1, #aaa 7.8:1 (accessibility review 2026-11-08) */
+.goal-info p,
+.reward-progress .progress-text,
+.tier-info,
+.tier-section-subtitle {
+    color: #aaa;
+}
+
 .form-group input,
 .form-group select,
 .form-group textarea {

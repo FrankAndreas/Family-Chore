@@ -319,6 +319,7 @@ body {
   margin-bottom: var(--spacing-xs);
 }
 
+.empty-state h2,
 .empty-state h3 {
   font-size: var(--font-size-xl);
   color: var(--text-primary);
@@ -343,4 +344,14 @@ body {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border-width: 0;
+}
+/* A heading one level up from what it looked like (the page's outline needs h2 under the h1), at an h3's size
+   (accessibility review 2026-11-08) */
+.heading-h3 {
+  font-size: 1.17em;
+}
+
+/* The same for an h3 that looked like an h4 */
+.heading-h4 {
+  font-size: 1em;
 }

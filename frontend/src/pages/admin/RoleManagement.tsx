@@ -296,7 +296,7 @@ const RoleManagement: React.FC = () => {
             {/* Add Role Form */}
             {showAddForm && (
                 <div className="glass-panel mb-lg fade-in" style={{ padding: '1.5rem' }}>
-                    <h3 style={{ marginBottom: '1rem' }}>➕ Create New Role</h3>
+                    <h2 className="heading-h3" style={{ marginBottom: '1rem' }}>➕ Create New Role</h2>
                     <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                         <div style={{ flex: '2', minWidth: '200px' }}>
                             <label className="form-label" htmlFor="newRoleName">Role Name</label>
@@ -340,7 +340,7 @@ const RoleManagement: React.FC = () => {
                                         role.name === 'Child' ? '🧸' :
                                             role.name === 'Contributor' ? '👤' : '🏷️'}
                             </div>
-                            <h3>{role.name}</h3>
+                            <h2 className="heading-h3">{role.name}</h2>
                             <button
                                 className="btn btn-ghost btn-sm"
                                 onClick={() => initiateDelete(role)}

@@ -91,6 +91,7 @@
     box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 }
 
+.user-details h2,
 .user-details h3 {
     margin-bottom: var(--spacing-xs);
     font-size: var(--font-size-xl);

@@ -32,6 +32,15 @@ npm run dev
 ```
 **Status**: ✅ Currently running on http://localhost:5173
 
+### Browser tests
+```bash
+cd e2e && npm install && npx playwright install chromium
+E2E_PYTHON=../venv/bin/python npm test
+```
+Playwright starts its own family hub (from a family-hub checkout next to this repo, or `HUB_DIR`; Admin PIN 1111),
+the backend on a fresh database and the frontend, on ports of their own (8170, 8160, 3150), and runs axe on every
+page for a parent and a child, on a tablet and a phone (`e2e/tests/accessibility.spec.ts`).
+
 ---
 
 ## 🔑 Logging in
