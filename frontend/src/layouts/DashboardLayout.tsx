@@ -105,6 +105,7 @@ const DashboardLayout: React.FC = () => {
                         <h1 className="app-title">ChoreSpec</h1>
                         <div className="mobile-header-actions">
                             <span
+                                role="img"
                                 className={`mobile-connection-status ${sseConnected ? 'online' : 'offline'}`}
                                 title={sseConnected ? t('navigation.live_updates_active', 'Live updates active') : t('navigation.live_updates_disconnected', 'Live updates disconnected')}
                                 aria-label={sseConnected ? t('navigation.live_updates_active', 'Live updates active') : t('navigation.live_updates_disconnected', 'Live updates disconnected')}
@@ -141,30 +142,35 @@ const DashboardLayout: React.FC = () => {
                             <div className="nav-section-title">{t('navigation.admin')}</div>
                             <button
                                 className={`nav-item ${isActive('/admin') ? 'active' : ''}`}
+                                aria-current={isActive('/admin') ? 'page' : undefined}
                                 onClick={() => handleNavigation('/admin')}
                             >
                                 <span aria-hidden="true">📊</span> {t('navigation.dashboard')}
                             </button>
                             <button
                                 className={`nav-item ${isActive('/admin/users') ? 'active' : ''}`}
+                                aria-current={isActive('/admin/users') ? 'page' : undefined}
                                 onClick={() => handleNavigation('/admin/users')}
                             >
                                 <span aria-hidden="true">👥</span> {t('navigation.users')}
                             </button>
                             <button
                                 className={`nav-item ${isActive('/admin/tasks') ? 'active' : ''}`}
+                                aria-current={isActive('/admin/tasks') ? 'page' : undefined}
                                 onClick={() => handleNavigation('/admin/tasks')}
                             >
                                 <span aria-hidden="true">📋</span> {t('navigation.tasks')}
                             </button>
                             <button
                                 className={`nav-item ${isActive('/admin/roles') ? 'active' : ''}`}
+                                aria-current={isActive('/admin/roles') ? 'page' : undefined}
                                 onClick={() => handleNavigation('/admin/roles')}
                             >
                                 <span aria-hidden="true">⚙️</span> {t('navigation.roles')}
                             </button>
                             <button
                                 className={`nav-item ${isActive('/admin/analytics') ? 'active' : ''}`}
+                                aria-current={isActive('/admin/analytics') ? 'page' : undefined}
                                 onClick={() => handleNavigation('/admin/analytics')}
                             >
                                 <span aria-hidden="true">📈</span> {t('analytics.title')}
@@ -175,12 +181,14 @@ const DashboardLayout: React.FC = () => {
                     <div className="nav-section-title">{t('navigation.my_chores', 'MY CHORES')}</div>
                     <button
                         className={`nav-item ${isActive('/dashboard') ? 'active' : ''}`}
+                                aria-current={isActive('/dashboard') ? 'page' : undefined}
                         onClick={() => handleNavigation('/dashboard')}
                     >
                         <span aria-hidden="true">✅</span> {t('navigation.tasks')}
                     </button>
                     <button
                         className={`nav-item ${isActive('/rewards') ? 'active' : ''}`}
+                                aria-current={isActive('/rewards') ? 'page' : undefined}
                         onClick={() => handleNavigation('/rewards')}
                     >
                         <span aria-hidden="true">🎁</span> {t('navigation.rewards')}
@@ -188,6 +196,7 @@ const DashboardLayout: React.FC = () => {
                     <div className="nav-section-title">{t('navigation.general', 'GENERAL')}</div>
                     <button
                         className={`nav-item ${isActive('/settings') ? 'active' : ''}`}
+                                aria-current={isActive('/settings') ? 'page' : undefined}
                         onClick={() => handleNavigation('/settings')}
                     >
                         <span aria-hidden="true">🔧</span> {t('navigation.settings')}

@@ -54,13 +54,13 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ userId, isAdmin = f
 
     return (
         <div className="language-switcher glass-panel" style={{ padding: '1.5rem' }}>
-            <h3>{t('settings.language.title')}</h3>
+            <h2 className="heading-h3">{t('settings.language.title')}</h2>
 
             <p>{t('settings.language.inHub')}</p>
 
             {isAdmin && (
                 <div style={{ marginTop: '2rem', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1rem' }}>
-                    <h4>👮 {t('settings.language.familyDefault')}</h4>
+                    <h3 className="heading-h4">👮 {t('settings.language.familyDefault')}</h3>
                     <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
                         <button
                             className={`btn btn-sm ${familyDefault === 'en' ? 'btn-primary' : 'btn-outline'}`}

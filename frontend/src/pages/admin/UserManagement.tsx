@@ -171,7 +171,7 @@ const UserManagement: React.FC = () => {
                         <div className="user-card-header">
                             <div className="user-avatar-large">{user.nickname[0]}</div>
                             <div className="user-details">
-                                <h3>{user.nickname}</h3>
+                                <h2>{user.nickname}</h2>
                                 <span className="role-badge">{user.role?.name || 'Unknown Role'}</span>
                             </div>
                         </div>

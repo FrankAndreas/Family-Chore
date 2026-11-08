@@ -183,28 +183,28 @@ const AdminDashboard: React.FC = () => {
                 <div className="stat-card glass-panel">
                     <div className="stat-icon">👥</div>
                     <div className="stat-content">
-                        <h3>Total Users</h3>
+                        <h2>Total Users</h2>
                         <p className="stat-value">{totalUsers}</p>
                     </div>
                 </div>
                 <div className="stat-card glass-panel">
                     <div className="stat-icon">📋</div>
                     <div className="stat-content">
-                        <h3>Active Tasks</h3>
+                        <h2>Active Tasks</h2>
                         <p className="stat-value">{totalTasks}</p>
                     </div>
                 </div>
                 <div className="stat-card glass-panel">
                     <div className="stat-icon">💰</div>
                     <div className="stat-content">
-                        <h3>Current Points</h3>
+                        <h2>Current Points</h2>
                         <p className="stat-value">{totalCurrentPoints.toLocaleString()}</p>
                     </div>
                 </div>
                 <div className="stat-card glass-panel">
                     <div className="stat-icon">🏆</div>
                     <div className="stat-content">
-                        <h3>Lifetime Points</h3>
+                        <h2>Lifetime Points</h2>
                         <p className="stat-value">{totalPoints.toLocaleString()}</p>
                     </div>
                 </div>
@@ -306,6 +306,7 @@ const AdminDashboard: React.FC = () => {
                     <select
                         onChange={(e) => setFilters((prev: TransactionFilters) => ({ ...prev, user_id: e.target.value ? Number(e.target.value) : undefined }))}
                         className="filter-select"
+                        aria-label={t('admin.filterUser', 'Whose activity')}
                         value={filters.user_id || ''}
                     >
                         <option value="">All Users</option>
@@ -315,6 +316,7 @@ const AdminDashboard: React.FC = () => {
                     <select
                         onChange={(e) => setFilters((prev: TransactionFilters) => ({ ...prev, txn_type: e.target.value || undefined }))}
                         className="filter-select"
+                        aria-label={t('admin.filterType', 'Kind of activity')}
                         value={filters.txn_type || ''}
                     >
                         <option value="">All Activity</option>

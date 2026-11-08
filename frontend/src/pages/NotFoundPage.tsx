@@ -1,17 +1,15 @@
-import React from 'react';
-import { useNavigate, useOutletContext } from 'react-router-dom';
+import React, { useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import type { User } from '../types';
+import { UserContext } from '../context/UserContext';
 import './NotFoundPage.css';
-
-interface DashboardContext {
-    currentUser: User;
-}
 
 const NotFoundPage: React.FC = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
-    const { currentUser } = useOutletContext<DashboardContext>();
+    // The app's user, not the dashboard layout's: an unknown address shows this page outside the layout (it crashed
+    // there, reading the layout's context)
+    const currentUser = useContext(UserContext)?.currentUser;
 
     const goHome = () => {
         if (currentUser?.role?.name === 'Admin') {
@@ -22,7 +20,7 @@ const NotFoundPage: React.FC = () => {
     };
 
     return (
-        <div className="page-container fade-in not-found-page">
+        <main className="page-container fade-in not-found-page">
             <div className="glass-panel not-found-content">
                 <div className="not-found-icon" aria-hidden="true">🗺️</div>
                 <h1 className="page-title">{t('common.not_found_title', '404 - Page Not Found')}</h1>
@@ -35,7 +33,7 @@ const NotFoundPage: React.FC = () => {
                     </button>
                 </div>
             </div>
-        </div>
+        </main>
     );
 };
 
