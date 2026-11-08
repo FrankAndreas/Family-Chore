@@ -268,7 +268,7 @@ const UserManagement: React.FC = () => {
                                     <button type="button" className="btn btn-secondary" onClick={() => setSelectedUserForPenalty(null)}>
                                         Cancel
                                     </button>
-                                    <button type="submit" className="btn btn-primary" style={{ background: 'var(--warning-gradient)', border: 'none', color: '#fff' }}>
+                                    <button type="submit" className="btn btn-primary" style={{ background: 'linear-gradient(135deg, #be123c 0%, #b45309 100%)', border: 'none', color: '#fff' }}>
                                         Deduct {penaltyPoints || 0} Points
                                     </button>
                                 </div>
