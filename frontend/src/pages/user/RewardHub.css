@@ -387,7 +387,7 @@
 .form-group select,
 .form-group textarea {
     background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
+    border-color: var(--field-border);
     color: #f0f0f0;
 }
 

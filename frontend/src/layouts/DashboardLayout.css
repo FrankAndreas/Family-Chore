@@ -449,7 +449,7 @@
     position: absolute;
     top: -40px;
     left: 0;
-    background: var(--primary-color);
+    background: var(--primary-strong);
     color: white;
     padding: var(--spacing-sm) var(--spacing-md);
     z-index: 1000;
