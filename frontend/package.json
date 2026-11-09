@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@types/canvas-confetti": "^1.9.0",
-    "axios": "^1.20.0",
+    "axios": "^1.21.0",
     "canvas-confetti": "^1.9.4",
     "i18next": "^26.7.2",
     "i18next-browser-languagedetector": "^8.2.3",
