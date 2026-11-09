@@ -291,6 +291,10 @@ curl -X POST http://localhost:8000/tasks/1/complete
 
 ---
 
+## Pre-commit checks
+
+`.githooks/pre-commit` runs the fast checks CI runs (lint, types) for the parts a commit touches. `npm install` in the repo root enables it; or once per clone: `git config core.hooksPath .githooks`. Skip once with `git commit --no-verify`.
+
 ## License
 
 Released under the [MIT License](LICENSE).

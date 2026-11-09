@@ -9,10 +9,9 @@
     "typecheck:frontend": "cd frontend && npx tsc --noEmit",
     "test:backend": "pytest tests/ -v",
     "precommit": "npm run lint:frontend && npm run typecheck:frontend",
-    "prepare": "husky"
+    "prepare": "git config core.hooksPath .githooks || true"
   },
   "devDependencies": {
-    "baseline-browser-mapping": "^2.11.35",
-    "husky": "^9.1.7"
+    "baseline-browser-mapping": "^2.11.35"
   }
 }
