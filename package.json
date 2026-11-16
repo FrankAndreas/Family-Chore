@@ -12,6 +12,6 @@
     "prepare": "git config core.hooksPath .githooks || true"
   },
   "devDependencies": {
-    "baseline-browser-mapping": "^2.11.35"
+    "baseline-browser-mapping": "^2.11.37"
   }
 }
