@@ -14,7 +14,7 @@ ENV VITE_API_BASE_URL=/api
 RUN npm run build
 
 # Stage 2: Serve
-FROM nginxinc/nginx-unprivileged:alpine
+FROM nginxinc/nginx-unprivileged:1.31.7-alpine
 
 COPY --from=build --chown=nginx:nginx /app/dist /usr/share/nginx/html
 
